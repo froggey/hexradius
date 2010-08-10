@@ -6,16 +6,35 @@
 #include <vector>
 #include <fstream>
 #include <string.h>
+#include <map>
 
 #include "loadimage.hpp"
 
 namespace OctRadius {
 	enum Colour { BLUE, RED, GREEN, YELLOW };
 	
-	struct Pawn {
-		Colour colour;
-		
-		Pawn(Colour c) : colour(c) {}
+	struct Power {
+		const char *name;
+		int (*func)(void);
+	};
+	
+	typedef std::map<const OctRadius::Power*,int> PowerList;
+	
+	class Pawn {
+		public:
+			Colour colour;
+			PowerList m_powers;
+			
+			Pawn(Colour c) : colour(c) {}
+			
+			void AddPower(const Power* power) {
+				PowerList::iterator i = m_powers.find(power);
+				if(i != m_powers.end()) {
+					i->second++;
+				}else{
+					m_powers.insert(std::make_pair(power, 1));
+				}
+			}
 	};
 	
 	class Tile {
@@ -26,9 +45,9 @@ namespace OctRadius {
 			int screen_x, screen_y;
 			
 			Pawn* pawn;
-			int power;
+			const Power *power;
 			
-			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL), power(0) {}
+			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL), power(NULL) {}
 			
 			~Tile() {
 				delete pawn;
@@ -106,6 +125,12 @@ namespace OctRadius {
 const uint TILE_SIZE = 50;
 const uint BOARD_OFFSET = 20;
 const uint TORUS_FRAMES = 11;
+
+const OctRadius::Power POWERS[] = {
+	{"Do something", NULL},
+	{"Do something else", NULL},
+	{NULL, NULL}
+};
 
 void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn) {
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
@@ -259,9 +284,12 @@ void OctRadius::SpawnPowers(TileTable &tiles, int num) {
 	TileList stiles = ChooseRandomTiles(ctiles, num, 1);
 	TileList::iterator i = stiles.begin();
 	
+	static int pcount = 0;
+	while(POWERS[pcount].name) { pcount++; }
+	
 	for(; i != stiles.end(); i++) {
-		(*i)->power = 1;
-		std::cout << "Spawned power at (" << (*i)->col << "," << (*i)->row << ")" << std::endl;
+		(*i)->power = &POWERS[rand() % pcount];
+		std::cout << "Spawned " << (*i)->power->name << " at (" << (*i)->col << "," << (*i)->row << ")" << std::endl;
 	}
 }
 
@@ -364,6 +392,11 @@ int main(int argc, char **argv) {
 						}
 						
 						tile->pawn = dpawn;
+						
+						if(tile->power) {
+							dpawn->AddPower(tile->power);
+							tile->power = NULL;
+						}
 						
 						OctRadius::SpawnPowers(tiles, 1);
 					}
