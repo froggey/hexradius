@@ -39,6 +39,64 @@ typedef std::vector<OctRadius::Tile*> TileList;
 typedef std::vector<TileList> TileTable;
 
 namespace OctRadius {
+	class TileLoopThing {
+		public:
+			TileLoopThing(TileTable &ttable) : m_ttable(ttable), c(0), r(0) {
+				m_cols = ttable.size();
+				m_rows = ttable[0].size();
+			}
+			
+			void first(void) {
+				c = 0;
+				r = 0;
+			}
+			
+			void last(void) {
+				c = m_cols-1;
+				r = m_rows-1;
+			}
+			
+			int valid(void) {
+				return c >= 0 && c < m_cols && r >= 0 && r < m_rows;
+			}
+			
+			TileLoopThing& operator++() {
+				if(++c == m_cols) {
+					c = 0;
+					r++;
+				}
+				
+				return *this;
+			}
+			
+			void operator++(int) {
+				operator++();
+			}
+			
+			TileLoopThing& operator--() {
+				if(c-- == 0) {
+					c = m_cols-1;
+					r--;
+				}
+				
+				return *this;
+			}
+			
+			void operator--(int) {
+				operator--();
+			}
+			
+			Tile *tile(void) {
+				return m_ttable[c][r];
+			}
+			
+		private:
+			TileTable &m_ttable;
+			int m_cols, m_rows, c, r;
+	};
+}
+
+namespace OctRadius {
 	void DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn);
 	OctRadius::Tile *TileAtXY(TileTable &tiles, int x, int y);
 	void LoadScenario(std::string filename, TileTable &tiles);
@@ -49,9 +107,6 @@ const uint BOARD_OFFSET = 20;
 const uint TORUS_FRAMES = 11;
 
 void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn) {
-	int cols = tiles.size();
-	int rows = tiles[0].size();
-
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
@@ -64,31 +119,25 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
-	for(int r = 0; r < rows; r++) {
-		for(int c = 0; c < cols; c++) {
-			OctRadius::Tile *tile = tiles[c][r];
-			
-			if(!tile) {
-				continue;
-			}
-			
-			SDL_Rect rect;
-			rect.x = BOARD_OFFSET + TILE_SIZE * c;
-			rect.y = BOARD_OFFSET + TILE_SIZE * r;
-			rect.w = rect.h = 0;
-			
-			rect.x += (-1 * tile->height) * 10;
-			rect.y += (-1 * tile->height) * 10;
-			
-			tile->screen_x = rect.x;
-			tile->screen_y = rect.y;
-			
-			assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
-			
-			if (tile->pawn && tile->pawn != dpawn) {
-				SDL_Rect srect = { torus_frame * 50, tile->pawn->colour*50, 50, 50 };
-				assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
-			}
+	OctRadius::TileLoopThing tl(tiles);
+	
+	for(; tl.valid(); tl++) {
+		SDL_Rect rect;
+		rect.x = BOARD_OFFSET + TILE_SIZE * tl.tile()->col;
+		rect.y = BOARD_OFFSET + TILE_SIZE * tl.tile()->row;
+		rect.w = rect.h = 0;
+		
+		rect.x += (-1 * tl.tile()->height) * 10;
+		rect.y += (-1 * tl.tile()->height) * 10;
+		
+		tl.tile()->screen_x = rect.x;
+		tl.tile()->screen_y = rect.y;
+		
+		assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
+		
+		if (tl.tile()->pawn && tl.tile()->pawn != dpawn) {
+			SDL_Rect srect = { torus_frame * 50, tl.tile()->pawn->colour * 50, 50, 50 };
+			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 		}
 	}
 	
@@ -109,21 +158,14 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
  * there is no tile at that location.
 */
 OctRadius::Tile *OctRadius::TileAtXY(TileTable &tiles, int x, int y) {
-	int cols = tiles.size();
-	int rows = tiles[0].size();
+	OctRadius::TileLoopThing tl(tiles);
 	
-	for(int c = cols-1; c >= 0; c--) {
-		for(int r = rows-1; r >= 0; r--) {
-			if(!tiles[c][r]) {
-				continue;
-			}
-			
-			int tx = tiles[c][r]->screen_x;
-			int ty = tiles[c][r]->screen_y;
-			
-			if(tx <= x && tx+(int)TILE_SIZE > x && ty <= y && ty+(int)TILE_SIZE > y) {
-				return tiles[c][r];
-			}
+	for(tl.last(); tl.valid(); tl--) {
+		int tx = tl.tile()->screen_x;
+		int ty = tl.tile()->screen_y;
+		
+		if(tx <= x && tx+(int)TILE_SIZE > x && ty <= y && ty+(int)TILE_SIZE > y) {
+			return tl.tile();
 		}
 	}
 	
@@ -268,11 +310,11 @@ int main(int argc, char **argv) {
 							tile->pawn = NULL;
 						}
 						
-						for(int c = 0; c < cols; c++) {
-							for(int r = 0; r < rows; r++) {
-								if(tiles[c][r] && tiles[c][r]->pawn == dpawn) {
-									tiles[c][r]->pawn = NULL;
-								}
+						OctRadius::TileLoopThing tl(tiles);
+						
+						for(; tl.valid(); tl++) {
+							if(tl.tile()->pawn == dpawn) {
+								tl.tile()->pawn = NULL;
 							}
 						}
 						
