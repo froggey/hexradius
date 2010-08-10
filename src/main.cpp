@@ -143,6 +143,11 @@ void OctRadius::Pawn::Move(Tile *tile) {
 		return;
 	}
 	
+	if(tile->height-1 > m_tile->height) {
+		std::cerr << "Square is too high" << std::endl;
+		return;
+	}
+	
 	if(tile->pawn) {
 		if(tile->pawn->colour == colour) {
 			std::cerr << "Square is blocked by friendly pawn" << std::endl;
