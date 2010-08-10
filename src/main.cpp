@@ -180,11 +180,13 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 	}
 	
 	if(uistate.mpawn) {
-		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, 100, uistate.mpawn->powers.size() * 18 };
-		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
-		
 		TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf", 14);
 		assert(font);
+		
+		int fh = TTF_FontLineSkip(font);
+		
+		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, 100, uistate.mpawn->powers.size() * fh };
+		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 		
 		SDL_Color colour = {255,0,0};
 		
@@ -198,7 +200,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 			
 			SDL_FreeSurface(text);
 			
-			rect.y += 18;
+			rect.y += fh;
 		}
 		
 		TTF_CloseFont(font);
