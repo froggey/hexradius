@@ -81,7 +81,7 @@ namespace OctRadius {
 	OctRadius::Tile *TileAtXY(TileList &tiles, int x, int y);
 	void LoadScenario(std::string filename, TileList &tiles, int &cols, int &rows);
 	void SpawnPowers(TileList &tiles, int num);
-	TileList ChooseRandomTiles(TileList tiles, int num, int uniq);
+	TileList ChooseRandomTiles(TileList tiles, int num, bool uniq);
 	Tile *FindTile(TileList &list, int c, int r);
 }
 
@@ -125,10 +125,11 @@ const uint BOARD_OFFSET = 20;
 const uint TORUS_FRAMES = 11;
 
 const OctRadius::Power POWERS[] = {
-	{"Do something", NULL},
-	{"Do something else", NULL},
-	{NULL, NULL}
+	{"Do something", NULL, 100},
+	{"Do something else", NULL, 50}
 };
+const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
+
 
 void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &uistate) {
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
@@ -309,6 +310,20 @@ void OctRadius::LoadScenario(std::string filename, TileList &tiles, int &cols, i
 	}
 }
 
+const OctRadius::Power* OctRadius::ChooseRandomPower() {
+	int total = 0;
+	for (int i = 0; i < N_POWERS; i++) {
+		total += POWERS[i].spawn_rate;
+	}
+	
+	int n = rand() % total;
+	for (int i = 0; i < N_POWERS; i++) {
+		if (n < POWERS[i].spawn_rate)
+			return &POWERS[i];
+		n -= POWERS[i].spawn_rate;
+	}
+}
+
 void OctRadius::SpawnPowers(TileList &tiles, int num) {
 	TileList::iterator ti = tiles.begin();
 	TileList ctiles;
@@ -322,16 +337,13 @@ void OctRadius::SpawnPowers(TileList &tiles, int num) {
 	TileList stiles = ChooseRandomTiles(ctiles, num, 1);
 	TileList::iterator i = stiles.begin();
 	
-	static int pcount = 0;
-	while(POWERS[pcount].name) { pcount++; }
-	
 	for(; i != stiles.end(); i++) {
-		(*i)->power = &POWERS[rand() % pcount];
+		(*i)->power = ChooseRandomPower();
 		std::cout << "Spawned " << (*i)->power->name << " at (" << (*i)->col << "," << (*i)->row << ")" << std::endl;
 	}
 }
 
-OctRadius::TileList OctRadius::ChooseRandomTiles(TileList tiles, int num, int uniq) {
+OctRadius::TileList OctRadius::ChooseRandomTiles(TileList tiles, int num, bool uniq) {
 	TileList ret;
 	
 	while(tiles.size() && num) {
