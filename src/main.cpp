@@ -11,112 +11,7 @@
 
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
-
-namespace OctRadius {
-	enum Colour { BLUE, RED, GREEN, YELLOW };
-	
-	class Pawn;
-	
-	struct Power {
-		const char *name;
-		int (*func)(OctRadius::Pawn*);
-		int spawn_rate;
-	};
-	
-	typedef std::map<const OctRadius::Power*,int> PowerList;
-	
-	class Tile;
-	
-	typedef std::vector<OctRadius::Tile*> TileList;
-	typedef std::vector<OctRadius::TileList> TileTable;
-	
-	class Pawn {
-		public:
-			Colour colour;
-			PowerList powers;
-			
-			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile) {}
-			
-			void AddPower(const Power* power) {
-				PowerList::iterator i = powers.find(power);
-				if(i != powers.end()) {
-					i->second++;
-				}else{
-					powers.insert(std::make_pair(power, 1));
-				}
-			}
-			
-			void UsePower(const Power *power) {
-				PowerList::iterator i = powers.find(power);
-				if(i == powers.end()) {
-					return;
-				}
-				
-				if(!i->first->func(this)) {
-					return;
-				}
-				
-				if(i->second == 1) {
-					powers.erase(i);
-				}else{
-					i->second--;
-				}
-			}
-			
-			void Move(Tile *tile);
-			Tile *OnTile(void) { return m_tile; }
-			
-			TileList ColumnList(void);
-			TileList RowList(void);
-			TileList RadialList(void);
-			
-		private:
-			TileList &m_tiles;
-			Tile *m_tile;
-	};
-	
-	class Tile {
-		public:
-			int col, row;
-			int height;
-			
-			int screen_x, screen_y;
-			
-			Pawn* pawn;
-			const Power *power;
-			
-			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL), power(NULL) {}
-			
-			~Tile() {
-				delete pawn;
-			}
-	};
-}
-
-struct pmenu_entry {
-	SDL_Rect rect;
-	const OctRadius::Power *power;
-};
-
-struct uistate {
-	OctRadius::Pawn *dpawn;
-	OctRadius::Pawn *mpawn;
-	
-	std::vector<struct pmenu_entry> pmenu;
-	SDL_Rect pmenu_area;
-	
-	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {}
-};
-
-namespace OctRadius {
-	void DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &uistate);
-	OctRadius::Tile *TileAtXY(TileList &tiles, int x, int y);
-	void LoadScenario(std::string filename, TileList &tiles, int &cols, int &rows);
-	void SpawnPowers(TileList &tiles, int num);
-	TileList ChooseRandomTiles(TileList tiles, int num, bool uniq);
-	Tile *FindTile(TileList &list, int c, int r);
-	const Power* ChooseRandomPower();
-}
+#include "powers.hpp"
 
 void OctRadius::Pawn::Move(Tile *tile) {
 	if(
@@ -202,32 +97,13 @@ const uint TILE_SIZE = 50;
 const uint BOARD_OFFSET = 20;
 const uint TORUS_FRAMES = 11;
 
-static int destroy_column(OctRadius::Pawn *pawn) {
-	OctRadius::TileList tiles = pawn->ColumnList();
-	OctRadius::TileList::iterator i = tiles.begin();
-	int ret = 0;
-	
-	while(i != tiles.end()) {
-		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
-			delete (*i)->pawn;
-			(*i)->pawn = NULL;
-			
-			ret = 1;
-		}
-		
-		i++;
-	}
-	
-	return ret;
-}
-
 const OctRadius::Power POWERS[] = {
-	{"Destroy Column", &destroy_column, 100}
+	{"Destroy Column", &Powers::destroy_column, 100},
+	{"Moar Range", &Powers::moar_range, 20}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
-
-void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &uistate) {
+void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate) {
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
@@ -237,7 +113,8 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 	
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
-	assert(pawn_graphics && pickup);
+	SDL_Surface* moar_range = OctRadius::LoadImage("graphics/upgrades/range.png");
+	assert(pawn_graphics && pickup && moar_range);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -264,6 +141,9 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 		if ((*ti)->pawn && (*ti)->pawn != uistate.dpawn) {
 			SDL_Rect srect = { (*ti)->pawn->powers.size() ? (torus_frame * 50) : 0, (*ti)->pawn->colour * 50, 50, 50 };
 			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+			srect.x = (*ti)->pawn->range * 50;
+			srect.y = 0;
+			assert(SDL_BlitSurface(moar_range, &srect, screen, &rect) == 0);
 		}
 	}
 	
