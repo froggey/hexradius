@@ -23,16 +23,16 @@ namespace OctRadius {
 	class Pawn {
 		public:
 			Colour colour;
-			PowerList m_powers;
+			PowerList powers;
 			
 			Pawn(Colour c) : colour(c) {}
 			
 			void AddPower(const Power* power) {
-				PowerList::iterator i = m_powers.find(power);
-				if(i != m_powers.end()) {
+				PowerList::iterator i = powers.find(power);
+				if(i != powers.end()) {
 					i->second++;
 				}else{
-					m_powers.insert(std::make_pair(power, 1));
+					powers.insert(std::make_pair(power, 1));
 				}
 			}
 	};
@@ -167,7 +167,7 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
 		}
 		
 		if (tl.tile()->pawn && tl.tile()->pawn != dpawn) {
-			SDL_Rect srect = { torus_frame * 50, tl.tile()->pawn->colour * 50, 50, 50 };
+			SDL_Rect srect = { tl.tile()->pawn->powers.size() ? (torus_frame * 50) : 0, tl.tile()->pawn->colour * 50, 50, 50 };
 			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 		}
 	}
@@ -176,7 +176,7 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
 		int mouse_x, mouse_y;
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		
-		SDL_Rect srect = { torus_frame * 50, dpawn->colour*50, 50, 50 };
+		SDL_Rect srect = { dpawn->powers.size() ? (torus_frame * 50) : 0, dpawn->colour*50, 50, 50 };
 		SDL_Rect rect = { mouse_x-30, mouse_y-30, 0, 0 };
 		
 		assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
