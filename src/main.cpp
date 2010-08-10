@@ -28,8 +28,8 @@ namespace OctRadius {
 	void FreeImages(void);
 }
 
-#define TILE_SIZE 100
-#define BOARD_OFFSET 20
+const uint TILE_SIZE = 100;
+const int BOARD_OFFSET = 20;
 
 void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
 	int cols = tiles.size();
