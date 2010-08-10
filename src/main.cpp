@@ -439,7 +439,7 @@ int main(int argc, char **argv) {
 				if(event.button.button == SDL_BUTTON_LEFT && uistate.dpawn) {
 					if(xd == event.button.x && yd == event.button.y) {
 						uistate.mpawn = tile->pawn;
-					}else if(tile != uistate.dpawn->OnTile()) {
+					}else if(tile && tile != uistate.dpawn->OnTile()) {
 						uistate.dpawn->Move(tile);
 						
 						OctRadius::SpawnPowers(tiles, 1);
