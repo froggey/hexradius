@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <vector>
+#include <map>
 
 namespace OctRadius {
 	class Tile {
@@ -23,6 +24,8 @@ typedef std::vector<tile_list> tile_table;
 
 namespace OctRadius {
 	void DrawBoard(tile_table &tiles, SDL_Surface *screen);
+	SDL_Surface *LoadImage(std::string filename);
+	void FreeImages(void);
 }
 
 #define TILE_SIZE 100
@@ -32,7 +35,7 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
 	int cols = tiles.size();
 	int rows = tiles[0].size();
 	
-	SDL_Surface *square = IMG_Load("graphics/tile.png");
+	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	assert(square != NULL);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
@@ -55,6 +58,34 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
 	}
 	
 	SDL_UpdateRect(screen, 0,0,0,0);
+}
+
+static std::map<std::string,SDL_Surface*> image_cache;
+
+SDL_Surface *OctRadius::LoadImage(std::string filename) {
+	std::map<std::string,SDL_Surface*>::iterator i = image_cache.find(filename);
+	if(i != image_cache.end()) {
+		return i->second;
+	}
+	
+	SDL_Surface *s = IMG_Load(filename.c_str());
+	if(!s) {
+		return NULL;
+	}
+	
+	image_cache.insert(std::make_pair(filename, s));
+	return s;
+}
+
+void OctRadius::FreeImages(void) {
+	std::map<std::string,SDL_Surface*>::iterator i = image_cache.begin();
+	
+	while(i != image_cache.end()) {
+		SDL_FreeSurface(i->second);
+		i++;
+	}
+	
+	image_cache.clear();
 }
 
 int main(int argc, char **argv) {
@@ -131,6 +162,8 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
+	
+	OctRadius::FreeImages();
 	
 	SDL_Quit();
 	
