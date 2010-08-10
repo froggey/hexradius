@@ -9,12 +9,12 @@
 #include "loadimage.hpp"
 
 namespace OctRadius {
-	enum Color { BLUE, RED, GREEN, YELLOW };
+	enum Colour { BLUE, RED, GREEN, YELLOW };
 	
 	struct Pawn {
-		Color color;
+		Colour colour;
 		
-		Pawn(Color c) : color(c) {}
+		Pawn(Colour c) : colour(c) {}
 	};
 	
 	class Tile {
@@ -78,7 +78,7 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen, OctRadius::Paw
 			
 			if (tiles[c][r].pawn && tiles[c][r].pawn != dpawn) {
 				SDL_Rect srect = { torus_frame * 50, 0, 50, 50 };
-				switch (tiles[c][r].pawn->color) {
+				switch (tiles[c][r].pawn->colour) {
 				case BLUE:
 					assert(SDL_BlitSurface(blue_torii, &srect, screen, &rect) == 0);
 					break;
@@ -103,7 +103,7 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen, OctRadius::Paw
 		SDL_Rect srect = { torus_frame * 50, 0, 50, 50 };
 		SDL_Rect rect = { mouse_x-30, mouse_y-30, 0, 0 };
 		
-		switch(dpawn->color) {
+		switch(dpawn->colour) {
 			case BLUE:
 				assert(SDL_BlitSurface(blue_torii, &srect, screen, &rect) == 0);
 				break;
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
 						if(tile->pawn) {
 							dpawn = tile->pawn;
 						}else{
-							tile->pawn = new OctRadius::Pawn((OctRadius::Color)(rand() % 4));
+							tile->pawn = new OctRadius::Pawn((OctRadius::Colour)(rand() % 4));
 						}
 					}
 				}
@@ -209,7 +209,14 @@ int main(int argc, char **argv) {
 				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
 				
 				if(event.button.button == SDL_BUTTON_LEFT && dpawn) {
-					if(tile && !tile->pawn) {
+					if(tile && (!tile->pawn || tile->pawn->colour != dpawn->colour)) {
+						if(tile->pawn && tile->pawn->colour != dpawn->colour) {
+							std::cout << "Pawn at (" << tile->col << "," << tile->row << ") destroyed" << std::endl;
+							
+							delete tile->pawn;
+							tile->pawn = NULL;
+						}
+						
 						for(int c = 0; c < width; c++) {
 							for(int r = 0; r < height; r++) {
 								if(tiles[c][r].pawn == dpawn) {
