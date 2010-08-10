@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 	
 	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 	
-	SDL_Surface *screen = SDL_SetVideoMode((width*TILE_SIZE) + (2*BOARD_OFFSET), (width*TILE_SIZE) + (2*BOARD_OFFSET), 0, SDL_SWSURFACE);
+	SDL_Surface *screen = SDL_SetVideoMode((width*TILE_SIZE) + (2*BOARD_OFFSET), (height*TILE_SIZE) + (2*BOARD_OFFSET), 0, SDL_SWSURFACE);
 	assert(screen != NULL);
 	
 	SDL_WM_SetCaption("OctRadius", "OctRadius");
