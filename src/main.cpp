@@ -79,10 +79,12 @@ namespace OctRadius {
 			}
 			
 			TileLoopThing& operator++() {
-				if(++c == m_cols) {
-					c = 0;
-					r++;
-				}
+				do {
+					if(++c == m_cols) {
+						c = 0;
+						r++;
+					}
+				} while(valid() && !tile());
 				
 				return *this;
 			}
@@ -92,10 +94,12 @@ namespace OctRadius {
 			}
 			
 			TileLoopThing& operator--() {
-				if(c-- == 0) {
-					c = m_cols-1;
-					r--;
-				}
+				do {
+					if(c-- == 0) {
+						c = m_cols-1;
+						r--;
+					}
+				} while(valid() && !tile());
 				
 				return *this;
 			}
