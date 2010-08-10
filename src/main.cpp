@@ -33,12 +33,10 @@ namespace OctRadius {
 				delete pawn;
 			}
 	};
-}
-
-typedef std::vector<OctRadius::Tile*> TileList;
-typedef std::vector<TileList> TileTable;
-
-namespace OctRadius {
+	
+	typedef std::vector<OctRadius::Tile*> TileList;
+	typedef std::vector<OctRadius::TileList> TileTable;
+	
 	class TileLoopThing {
 		public:
 			TileLoopThing(TileTable &ttable) : m_ttable(ttable), c(0), r(0) {
@@ -246,7 +244,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	TileTable tiles;
+	OctRadius::TileTable tiles;
 	
 	if(argc == 1) {
 		OctRadius::LoadScenario("scenario/default.txt", tiles);
@@ -315,6 +313,7 @@ int main(int argc, char **argv) {
 						for(; tl.valid(); tl++) {
 							if(tl.tile()->pawn == dpawn) {
 								tl.tile()->pawn = NULL;
+								break;
 							}
 						}
 						
