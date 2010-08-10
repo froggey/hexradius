@@ -30,7 +30,7 @@ namespace OctRadius {
 			Colour colour;
 			PowerList powers;
 			
-			Pawn(Colour c, TileTable &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile) {}
+			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile) {}
 			
 			void AddPower(const Power* power) {
 				PowerList::iterator i = powers.find(power);
@@ -45,7 +45,7 @@ namespace OctRadius {
 			Tile *OnTile(void) { return m_tile; }
 			
 		private:
-			TileTable &m_tiles;
+			TileList &m_tiles;
 			Tile *m_tile;
 	};
 	
@@ -65,66 +65,6 @@ namespace OctRadius {
 				delete pawn;
 			}
 	};
-	
-	class TileLoopThing {
-		public:
-			TileLoopThing(TileTable &ttable) : m_ttable(ttable), c(0), r(0) {
-				m_cols = ttable.size();
-				m_rows = ttable[0].size();
-			}
-			
-			void first(void) {
-				c = 0;
-				r = 0;
-			}
-			
-			void last(void) {
-				c = m_cols-1;
-				r = m_rows-1;
-			}
-			
-			int valid(void) {
-				return c >= 0 && c < m_cols && r >= 0 && r < m_rows;
-			}
-			
-			TileLoopThing& operator++() {
-				do {
-					if(++c == m_cols) {
-						c = 0;
-						r++;
-					}
-				} while(valid() && !tile());
-				
-				return *this;
-			}
-			
-			void operator++(int) {
-				operator++();
-			}
-			
-			TileLoopThing& operator--() {
-				do {
-					if(c-- == 0) {
-						c = m_cols-1;
-						r--;
-					}
-				} while(valid() && !tile());
-				
-				return *this;
-			}
-			
-			void operator--(int) {
-				operator--();
-			}
-			
-			Tile *tile(void) {
-				return m_ttable[c][r];
-			}
-			
-		private:
-			TileTable &m_ttable;
-			int m_cols, m_rows, c, r;
-	};
 }
 
 struct uistate {
@@ -135,11 +75,12 @@ struct uistate {
 };
 
 namespace OctRadius {
-	void DrawBoard(TileTable &tiles, SDL_Surface *screen, struct uistate &uistate);
-	OctRadius::Tile *TileAtXY(TileTable &tiles, int x, int y);
-	void LoadScenario(std::string filename, TileTable &tiles);
-	void SpawnPowers(TileTable &tiles, int num);
+	void DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &uistate);
+	OctRadius::Tile *TileAtXY(TileList &tiles, int x, int y);
+	void LoadScenario(std::string filename, TileList &tiles, int &cols, int &rows);
+	void SpawnPowers(TileList &tiles, int num);
 	TileList ChooseRandomTiles(TileList tiles, int num, int uniq);
+	Tile *FindTile(TileList &list, int c, int r);
 }
 
 void OctRadius::Pawn::Move(Tile *tile) {
@@ -187,7 +128,7 @@ const OctRadius::Power POWERS[] = {
 	{NULL, NULL}
 };
 
-void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, struct uistate &uistate) {
+void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &uistate) {
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
@@ -201,28 +142,28 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, struct uistate 
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
-	OctRadius::TileLoopThing tl(tiles);
+	TileList::iterator ti = tiles.begin();
 	
-	for(; tl.valid(); tl++) {
+	for(; ti != tiles.end(); ti++) {
 		SDL_Rect rect;
-		rect.x = BOARD_OFFSET + TILE_SIZE * tl.tile()->col;
-		rect.y = BOARD_OFFSET + TILE_SIZE * tl.tile()->row;
+		rect.x = BOARD_OFFSET + TILE_SIZE * (*ti)->col;
+		rect.y = BOARD_OFFSET + TILE_SIZE * (*ti)->row;
 		rect.w = rect.h = 0;
 		
-		rect.x += (-1 * tl.tile()->height) * 10;
-		rect.y += (-1 * tl.tile()->height) * 10;
+		rect.x += (-1 * (*ti)->height) * 10;
+		rect.y += (-1 * (*ti)->height) * 10;
 		
-		tl.tile()->screen_x = rect.x;
-		tl.tile()->screen_y = rect.y;
+		(*ti)->screen_x = rect.x;
+		(*ti)->screen_y = rect.y;
 		
 		assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
 		
-		if(tl.tile()->power) {
+		if((*ti)->power) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
 		}
 		
-		if (tl.tile()->pawn && tl.tile()->pawn != uistate.dpawn) {
-			SDL_Rect srect = { tl.tile()->pawn->powers.size() ? (torus_frame * 50) : 0, tl.tile()->pawn->colour * 50, 50, 50 };
+		if ((*ti)->pawn && (*ti)->pawn != uistate.dpawn) {
+			SDL_Rect srect = { (*ti)->pawn->powers.size() ? (torus_frame * 50) : 0, (*ti)->pawn->colour * 50, 50, 50 };
 			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 		}
 	}
@@ -248,17 +189,19 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, struct uistate 
 /* Return the "topmost" tile rendered at the given X,Y co-ordinates or NULL if
  * there is no tile at that location.
 */
-OctRadius::Tile *OctRadius::TileAtXY(TileTable &tiles, int x, int y) {
-	OctRadius::TileLoopThing tl(tiles);
+OctRadius::Tile *OctRadius::TileAtXY(TileList &tiles, int x, int y) {
+	TileList::iterator ti = tiles.end();
 	
-	for(tl.last(); tl.valid(); tl--) {
-		int tx = tl.tile()->screen_x;
-		int ty = tl.tile()->screen_y;
+	do {
+		ti--;
+		
+		int tx = (*ti)->screen_x;
+		int ty = (*ti)->screen_y;
 		
 		if(tx <= x && tx+(int)TILE_SIZE > x && ty <= y && ty+(int)TILE_SIZE > y) {
-			return tl.tile();
+			return *ti;
 		}
-	}
+	} while(ti != tiles.begin());
 	
 	return NULL;
 }
@@ -274,13 +217,11 @@ static char *next_value(char *str) {
 	return r;
 }
 
-void OctRadius::LoadScenario(std::string filename, TileTable &tiles) {
+void OctRadius::LoadScenario(std::string filename, TileList &tiles, int &cols, int &rows) {
 	std::fstream file(filename.c_str(), std::fstream::in);
 	assert(file.is_open());
 	
 	char buf[1024], *bp;
-	
-	int grid_cols = 0, grid_rows = 0;
 	
 	while(file.good()) {
 		file.getline(buf, sizeof(buf));
@@ -290,23 +231,19 @@ void OctRadius::LoadScenario(std::string filename, TileTable &tiles) {
 		std::string name = buf;
 		
 		if(name == "GRID") {
-			grid_cols = atoi(bp);
-			grid_rows = atoi(next_value(bp));
+			cols = atoi(bp);
+			rows = atoi(next_value(bp));
 			
-			assert(grid_cols > 0 && grid_rows > 0);
-	
-			for(int c = 0; c < grid_cols; c++) {
-				TileList col;
-				
-				for(int r = 0; r < grid_rows; r++) {
-					col.push_back(new OctRadius::Tile(c, r));
+			assert(cols > 0 && rows > 0);
+			
+			for(int c = 0; c < cols; c++) {
+				for(int r = 0; r < rows; r++) {
+					tiles.push_back(new OctRadius::Tile(c, r));
 				}
-				
-				tiles.push_back(col);
 			}
 		}
 		if(name == "SPAWN") {
-			assert(grid_cols > 0 && grid_rows > 0);
+			assert(cols > 0 && rows > 0);
 			
 			/* SPAWN x y c */
 			
@@ -314,30 +251,38 @@ void OctRadius::LoadScenario(std::string filename, TileTable &tiles) {
 			int y = atoi((bp = next_value(bp)));
 			int c = atoi((bp = next_value(bp)));
 			
-			assert(x >= 0 && x < grid_cols && y >= 0 && y < grid_rows);
-			assert(c >= 0 && c < 4);
+			Tile *tile = FindTile(tiles, x, y);
+			assert(tile);
 			
-			tiles[x][y]->pawn = new Pawn((OctRadius::Colour)c, tiles, tiles[x][y]);
+			tile->pawn = new Pawn((OctRadius::Colour)c, tiles, tile);
 		}
 		if(name == "HOLE") {
 			int x = atoi(bp);
 			int y = atoi(next_value(bp));
 			
-			assert(x >= 0 && x < grid_cols && y >= 0 && y < grid_rows);
+			TileList::iterator i = tiles.begin();
 			
-			delete tiles[x][y];
-			tiles[x][y] = NULL;
+			while(i != tiles.end()) {
+				if((*i)->col == x && (*i)->row == y) {
+					delete *i;
+					tiles.erase(i);
+					
+					break;
+				}
+				
+				i++;
+			}
 		}
 	}
 }
 
-void OctRadius::SpawnPowers(TileTable &tiles, int num) {
-	TileLoopThing tl(tiles);
+void OctRadius::SpawnPowers(TileList &tiles, int num) {
+	TileList::iterator ti = tiles.begin();
 	TileList ctiles;
 	
-	for(; tl.valid(); tl++) {
-		if(!tl.tile()->pawn && !tl.tile()->power) {
-			ctiles.push_back(tl.tile());
+	for(; ti != tiles.end(); ti++) {
+		if(!(*ti)->pawn && !(*ti)->power) {
+			ctiles.push_back(*ti);
 		}
 	}
 	
@@ -372,22 +317,34 @@ OctRadius::TileList OctRadius::ChooseRandomTiles(TileList tiles, int num, int un
 	return ret;
 }
 
+OctRadius::Tile *OctRadius::FindTile(TileList &list, int c, int r) {
+	TileList::iterator i = list.begin();
+	
+	while(i != list.end()) {
+		if((*i)->col == c && (*i)->row == r) {
+			return *i;
+		}
+		
+		i++;
+	}
+	
+	return NULL;
+}
+
 int main(int argc, char **argv) {
 	if(argc > 2) {
 		std::cerr << "Usage: " << argv[0] << " [scenario]" << std::endl;
 		return 1;
 	}
 	
-	OctRadius::TileTable tiles;
+	OctRadius::TileList tiles;
+	int cols, rows;
 	
 	if(argc == 1) {
-		OctRadius::LoadScenario("scenario/default.txt", tiles);
+		OctRadius::LoadScenario("scenario/default.txt", tiles, cols, rows);
 	}else{
-		OctRadius::LoadScenario(argv[1], tiles);
+		OctRadius::LoadScenario(argv[1], tiles, cols, rows);
 	}
-	
-	int cols = tiles.size();
-	int rows = tiles[0].size();
 	
 	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 	
