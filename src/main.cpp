@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string.h>
 #include <map>
+#include <SDL/SDL_ttf.h>
 
 #include "loadimage.hpp"
 
@@ -179,8 +180,28 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 	}
 	
 	if(uistate.mpawn) {
-		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, 100, 140 };
+		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, 100, uistate.mpawn->powers.size() * 18 };
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
+		
+		TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf", 14);
+		assert(font);
+		
+		SDL_Color colour = {255,0,0};
+		
+		PowerList::iterator i = uistate.mpawn->powers.begin();
+		
+		for(; i != uistate.mpawn->powers.end(); i++) {
+			SDL_Surface *text = TTF_RenderText_Blended(font, i->first->name, colour);
+			assert(text);
+			
+			assert(SDL_BlitSurface(text, NULL, screen, &rect) == 0);
+			
+			SDL_FreeSurface(text);
+			
+			rect.y += 18;
+		}
+		
+		TTF_CloseFont(font);
 	}
 	
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
@@ -347,6 +368,7 @@ int main(int argc, char **argv) {
 	}
 	
 	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+	assert(TTF_Init() == 0);
 	
 	SDL_Surface *screen = SDL_SetVideoMode((cols*TILE_SIZE) + (2*BOARD_OFFSET), (rows*TILE_SIZE) + (2*BOARD_OFFSET), 0, SDL_SWSURFACE);
 	assert(screen != NULL);
@@ -395,7 +417,9 @@ int main(int argc, char **argv) {
 				
 				if(event.button.button == SDL_BUTTON_LEFT && uistate.dpawn) {
 					if(xd == event.button.x && yd == event.button.y) {
-						uistate.mpawn = tile->pawn;
+						if(tile->pawn->powers.size()) {
+							uistate.mpawn = tile->pawn;
+						}
 					}else if(tile && tile != uistate.dpawn->OnTile()) {
 						uistate.dpawn->Move(tile);
 						
