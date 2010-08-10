@@ -180,7 +180,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 	}
 	
 	if(uistate.mpawn) {
-		TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf", 14);
+		TTF_Font *font = TTF_OpenFont("fonts/DejaVuSansMono.ttf", 14);
 		assert(font);
 		
 		int fh = TTF_FontLineSkip(font), fw = 0;
