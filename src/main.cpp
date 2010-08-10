@@ -18,6 +18,7 @@ namespace OctRadius {
 	struct Power {
 		const char *name;
 		int (*func)(void);
+		int spawn_rate;
 	};
 	
 	typedef std::map<const OctRadius::Power*,int> PowerList;
@@ -83,6 +84,7 @@ namespace OctRadius {
 	void SpawnPowers(TileList &tiles, int num);
 	TileList ChooseRandomTiles(TileList tiles, int num, bool uniq);
 	Tile *FindTile(TileList &list, int c, int r);
+	const Power* ChooseRandomPower();
 }
 
 void OctRadius::Pawn::Move(Tile *tile) {
