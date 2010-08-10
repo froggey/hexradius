@@ -1,11 +1,12 @@
 #include <iostream>
 #include <stdlib.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
 #include <unistd.h>
 #include <assert.h>
 #include <vector>
 #include <map>
+
+#include "loadimage.hpp"
 
 namespace OctRadius {
 	enum Color { BLUE, RED, GREEN, YELLOW };
@@ -34,8 +35,6 @@ typedef std::vector<tile_list> tile_table;
 
 namespace OctRadius {
 	void DrawBoard(tile_table &tiles, SDL_Surface *screen);
-	SDL_Surface *LoadImage(std::string filename);
-	void FreeImages(void);
 }
 
 const uint TILE_SIZE = 50;
@@ -99,34 +98,6 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-static std::map<std::string,SDL_Surface*> image_cache;
-
-SDL_Surface *OctRadius::LoadImage(std::string filename) {
-	std::map<std::string,SDL_Surface*>::iterator i = image_cache.find(filename);
-	if(i != image_cache.end()) {
-		return i->second;
-	}
-	
-	SDL_Surface *s = IMG_Load(filename.c_str());
-	if(!s) {
-		return NULL;
-	}
-	
-	image_cache.insert(std::make_pair(filename, s));
-	return s;
-}
-
-void OctRadius::FreeImages(void) {
-	std::map<std::string,SDL_Surface*>::iterator i = image_cache.begin();
-	
-	while(i != image_cache.end()) {
-		SDL_FreeSurface(i->second);
-		i++;
-	}
-	
-	image_cache.clear();
-}
-
 int main(int argc, char **argv) {
 	if(argc != 3) {
 		std::cerr << "Usage: " << argv[0] << " <width> <height>" << std::endl;
@@ -172,7 +143,7 @@ int main(int argc, char **argv) {
 				OctRadius::Tile *tile = NULL;
 				
 				for(int c = width-1; c >= 0 && !tile; c--) {
-					for(int r = rows-1; r >= 0 && !tile; r--) {
+					for(int r = height-1; r >= 0 && !tile; r--) {
 						int tile_x = tiles[c][r].screen_x;
 						int tile_y = tiles[c][r].screen_y;
 						
