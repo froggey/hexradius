@@ -94,7 +94,7 @@ namespace OctRadius {
 }
 
 struct pmenu_entry {
-	int x, y, w, h;
+	SDL_Rect rect;
 	const OctRadius::Power *power;
 };
 
@@ -103,9 +103,9 @@ struct uistate {
 	OctRadius::Pawn *mpawn;
 	
 	std::vector<struct pmenu_entry> pmenu;
-	int pmx, pmy, pmw, pmh;
+	SDL_Rect pmenu_area;
 	
-	uistate() : dpawn(NULL), mpawn(NULL), pmw(0), pmh(0) {}
+	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {}
 };
 
 namespace OctRadius {
@@ -278,8 +278,8 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 	}
 	
 	uistate.pmenu.clear();
-	uistate.pmw = 0;
-	uistate.pmh = 0;
+	uistate.pmenu_area.w = 0;
+	uistate.pmenu_area.h = 0;
 	
 	if(uistate.mpawn) {
 		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
@@ -300,10 +300,8 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, fw+30, uistate.mpawn->powers.size() * fh };
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 		
-		uistate.pmx = rect.x;
-		uistate.pmy = rect.y;
-		uistate.pmw = rect.w;
-		uistate.pmh = rect.h;
+		uistate.pmenu_area = rect;
+		rect.h = fh;
 		
 		SDL_Color colour = {255,0,0};
 		
@@ -311,7 +309,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 			char ns[4];
 			sprintf(ns, "%d", i->second);
 			
-			uistate.pmenu.push_back((struct pmenu_entry){rect.x, rect.y, fw+30, fh, i->first});
+			uistate.pmenu.push_back((struct pmenu_entry){rect, i->first});
 			
 			FontStuff::BlitText(screen, rect, font, colour, ns);
 			
@@ -483,6 +481,10 @@ OctRadius::Tile *OctRadius::FindTile(TileList &list, int c, int r) {
 	return NULL;
 }
 
+int within_rect(SDL_Rect rect, int x, int y) {
+	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
+}
+
 int main(int argc, char **argv) {
 	if(argc > 2) {
 		std::cerr << "Usage: " << argv[0] << " [scenario]" << std::endl;
@@ -522,6 +524,11 @@ int main(int argc, char **argv) {
 			else if(event.type == SDL_MOUSEBUTTONDOWN) {
 				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
 				
+				if(event.button.button == SDL_BUTTON_LEFT) {
+					xd = event.button.x;
+					yd = event.button.y;
+				}
+				
 				if(tile) {
 					if(event.button.button == SDL_BUTTON_WHEELUP && tile->height < 2) {
 						tile->height++;
@@ -534,9 +541,6 @@ int main(int argc, char **argv) {
 						last_redraw = SDL_GetTicks();
 					}
 					else if (event.button.button == SDL_BUTTON_LEFT) {
-						xd = event.button.x;
-						yd = event.button.y;
-						
 						if(tile->pawn) {
 							uistate.dpawn = tile->pawn;
 						}
@@ -546,11 +550,11 @@ int main(int argc, char **argv) {
 				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
 				
 				if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
-					if(event.button.x >= uistate.pmx && event.button.x < uistate.pmx+uistate.pmw && event.button.y >= uistate.pmy && event.button.y < uistate.pmy+uistate.pmh) {
+					if(within_rect(uistate.pmenu_area, event.button.x, event.button.y)) {
 						std::vector<struct pmenu_entry>::iterator i = uistate.pmenu.begin();
 						
 						while(i != uistate.pmenu.end()) {
-							if(event.button.x >= (*i).x && event.button.x < (*i).x+(*i).w && event.button.y >= (*i).y && event.button.y < (*i).y+(*i).h) {
+							if(within_rect((*i).rect, event.button.x, event.button.y)) {
 								uistate.mpawn->UsePower((*i).power);
 							}
 							
