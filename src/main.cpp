@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <assert.h>
 #include <vector>
-#include <map>
+#include <fstream>
+#include <string.h>
 
 #include "loadimage.hpp"
 
@@ -36,6 +37,7 @@ typedef std::vector<tile_list> tile_table;
 namespace OctRadius {
 	void DrawBoard(tile_table &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn);
 	OctRadius::Tile *TileAtXY(tile_table &tiles, int x, int y);
+	void LoadScenario(std::string filename, tile_table &tiles);
 }
 
 const uint TILE_SIZE = 50;
@@ -114,30 +116,85 @@ OctRadius::Tile *OctRadius::TileAtXY(tile_table &tiles, int x, int y) {
 	return NULL;
 }
 
+static char *next_value(char *str) {
+	char *r = str+strcspn(str, "\t ");
+	
+	if(r[0]) {
+		r[0] = '\0';
+		r += strspn(r+1, "\t ")+1;
+	}
+	
+	return r;
+}
+
+void OctRadius::LoadScenario(std::string filename, tile_table &tiles) {
+	std::fstream file(filename.c_str(), std::fstream::in);
+	assert(file.is_open());
+	
+	char buf[1024], *bp;
+	
+	int grid_cols = 0, grid_rows = 0;
+	
+	while(file.good()) {
+		file.getline(buf, sizeof(buf));
+		buf[strcspn(buf, "\n")] = '\0';
+		
+		bp = next_value(buf);
+		std::string name = buf;
+		
+		if(name == "GRID") {
+			grid_cols = atoi(bp);
+			grid_rows = atoi(next_value(bp));
+			
+			assert(grid_cols > 0 && grid_rows > 0);
+	
+			for(int c = 0; c < grid_cols; c++) {
+				tile_list col;
+				
+				for(int r = 0; r < grid_rows; r++) {
+					col.push_back(OctRadius::Tile(c, r));
+				}
+				
+				tiles.push_back(col);
+			}
+		}
+		if(name == "SPAWN") {
+			assert(grid_cols > 0 && grid_rows > 0);
+			
+			/* SPAWN x y c */
+			
+			int x = atoi(bp);
+			int y = atoi((bp = next_value(bp)));
+			int c = atoi((bp = next_value(bp)));
+			
+			assert(x >= 0 && x < grid_cols && y >= 0 && y < grid_rows);
+			assert(c >= 0 && c < 4);
+			
+			tiles[x][y].pawn = new Pawn((OctRadius::Colour)c);
+		}
+	}
+}
+
 int main(int argc, char **argv) {
-	if(argc != 3) {
-		std::cerr << "Usage: " << argv[0] << " <width> <height>" << std::endl;
+	if(argc > 2) {
+		std::cerr << "Usage: " << argv[0] << " [scenario]" << std::endl;
 		return 1;
 	}
 	
-	int width = atoi(argv[1]), height = atoi(argv[2]);
-	
 	tile_table tiles;
-	int row, col;
 	
-	for(col = 0; col < width; col++) {
-		tile_list rlist;
-		
-		for(row = 0; row < height; row++) {
-			rlist.push_back(OctRadius::Tile(col, row));
-		}
-		
-		tiles.push_back(rlist);
+	if(argc == 1) {
+		OctRadius::LoadScenario("scenario/default.txt", tiles);
+	}else{
+		OctRadius::LoadScenario(argv[1], tiles);
 	}
+	
+	int cols = tiles.size();
+	int rows = tiles[0].size();
 	
 	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 	
-	SDL_Surface *screen = SDL_SetVideoMode((width*TILE_SIZE) + (2*BOARD_OFFSET), (height*TILE_SIZE) + (2*BOARD_OFFSET), 0, SDL_SWSURFACE);
+	SDL_Surface *screen = SDL_SetVideoMode((cols*TILE_SIZE) + (2*BOARD_OFFSET), (rows*TILE_SIZE) + (2*BOARD_OFFSET), 0, SDL_SWSURFACE);
 	assert(screen != NULL);
 	
 	SDL_WM_SetCaption("OctRadius", "OctRadius");
@@ -188,8 +245,8 @@ int main(int argc, char **argv) {
 							tile->pawn = NULL;
 						}
 						
-						for(int c = 0; c < width; c++) {
-							for(int r = 0; r < height; r++) {
+						for(int c = 0; c < cols; c++) {
+							for(int r = 0; r < rows; r++) {
 								if(tiles[c][r].pawn == dpawn) {
 									tiles[c][r].pawn = NULL;
 								}
