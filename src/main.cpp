@@ -183,23 +183,41 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 		TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf", 14);
 		assert(font);
 		
-		int fh = TTF_FontLineSkip(font);
-		
-		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, 100, uistate.mpawn->powers.size() * fh };
-		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
-		
-		SDL_Color colour = {255,0,0};
+		int fh = TTF_FontLineSkip(font), fw = 0;
 		
 		PowerList::iterator i = uistate.mpawn->powers.begin();
 		
 		for(; i != uistate.mpawn->powers.end(); i++) {
-			SDL_Surface *text = TTF_RenderText_Blended(font, i->first->name, colour);
+			int w;
+			TTF_SizeText(font, i->first->name, &w, NULL);
+			
+			if(w > fw) {
+				fw = w;
+			}
+		}
+		
+		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, fw+30, uistate.mpawn->powers.size() * fh };
+		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
+		
+		SDL_Color colour = {255,0,0};
+		
+		for(i = uistate.mpawn->powers.begin(); i != uistate.mpawn->powers.end(); i++) {
+			char ns[4];
+			sprintf(ns, "%d", i->second);
+			
+			SDL_Surface *text = TTF_RenderText_Blended(font, ns, colour);
 			assert(text);
-			
 			assert(SDL_BlitSurface(text, NULL, screen, &rect) == 0);
-			
 			SDL_FreeSurface(text);
 			
+			rect.x += 30;
+			
+			text = TTF_RenderText_Blended(font, i->first->name, colour);
+			assert(text);
+			assert(SDL_BlitSurface(text, NULL, screen, &rect) == 0);
+			SDL_FreeSurface(text);
+			
+			rect.x -= 30;
 			rect.y += fh;
 		}
 		
