@@ -13,6 +13,10 @@
 #include "fontstuff.hpp"
 #include "powers.hpp"
 
+int within_rect(SDL_Rect rect, int x, int y) {
+	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
+}
+
 void OctRadius::Pawn::Move(Tile *tile) {
 	if(
 		!(tile->col == m_tile->col && (tile->row == m_tile->row+1 || tile->row == m_tile->row-1)) &&
@@ -52,8 +56,11 @@ OctRadius::TileList OctRadius::Pawn::ColumnList(void) {
 	TileList tiles;
 	TileList::iterator i = m_tiles.begin();
 	
+	int min = m_tile->col-range;
+	int max = m_tile->col+range;
+	
 	while(i != m_tiles.end()) {
-		if((*i)->col == m_tile->col) {
+		if((*i)->col >= min && (*i)->col <= max) {
 			tiles.push_back(*i);
 		}
 		
@@ -67,8 +74,11 @@ OctRadius::TileList OctRadius::Pawn::RowList(void) {
 	TileList tiles;
 	TileList::iterator i = m_tiles.begin();
 	
+	int min = m_tile->row-range;
+	int max = m_tile->row+range;
+	
 	while(i != m_tiles.end()) {
-		if((*i)->row == m_tile->row) {
+		if((*i)->row >= min && (*i)->row <= max) {
 			tiles.push_back(*i);
 		}
 		
@@ -82,8 +92,10 @@ OctRadius::TileList OctRadius::Pawn::RadialList(void) {
 	TileList tiles;
 	TileList::iterator i = m_tiles.begin();
 	
+	SDL_Rect rect = {(*i)->col-1-range, (*i)->row-1-range, 3+2*range, 3+2*range};
+	
 	while(i != m_tiles.end()) {
-		if((*i)->row >= m_tile->row-1 && (*i)->row <= m_tile->row+1 && (*i)->col >= m_tile->col-1 && (*i)->col <= m_tile->col+1) {
+		if(within_rect(rect, (*i)->col, (*i)->row)) {
 			tiles.push_back(*i);
 		}
 		
@@ -359,10 +371,6 @@ OctRadius::Tile *OctRadius::FindTile(TileList &list, int c, int r) {
 	}
 	
 	return NULL;
-}
-
-int within_rect(SDL_Rect rect, int x, int y) {
-	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
 int main(int argc, char **argv) {
