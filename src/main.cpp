@@ -20,12 +20,17 @@ namespace OctRadius {
 	
 	typedef std::map<const OctRadius::Power*,int> PowerList;
 	
+	class Tile;
+	
+	typedef std::vector<OctRadius::Tile*> TileList;
+	typedef std::vector<OctRadius::TileList> TileTable;
+	
 	class Pawn {
 		public:
 			Colour colour;
 			PowerList powers;
 			
-			Pawn(Colour c) : colour(c) {}
+			Pawn(Colour c, TileTable &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile) {}
 			
 			void AddPower(const Power* power) {
 				PowerList::iterator i = powers.find(power);
@@ -35,6 +40,12 @@ namespace OctRadius {
 					powers.insert(std::make_pair(power, 1));
 				}
 			}
+			
+			void Move(Tile *tile);
+			
+		private:
+			TileTable &m_tiles;
+			Tile *m_tile;
 	};
 	
 	class Tile {
@@ -53,9 +64,6 @@ namespace OctRadius {
 				delete pawn;
 			}
 	};
-	
-	typedef std::vector<OctRadius::Tile*> TileList;
-	typedef std::vector<OctRadius::TileList> TileTable;
 	
 	class TileLoopThing {
 		public:
@@ -124,6 +132,36 @@ namespace OctRadius {
 	void LoadScenario(std::string filename, TileTable &tiles);
 	void SpawnPowers(TileTable &tiles, int num);
 	TileList ChooseRandomTiles(TileList tiles, int num, int uniq);
+}
+
+void OctRadius::Pawn::Move(Tile *tile) {
+	if(
+		!(tile->col == m_tile->col && (tile->row == m_tile->row+1 || tile->row == m_tile->row-1)) &&
+		!(tile->row == m_tile->row && (tile->col == m_tile->col+1 || tile->col == m_tile->col-1))
+	) {
+		std::cerr << "Square out of range" << std::endl;
+		return;
+	}
+	
+	if(tile->pawn) {
+		if(tile->pawn->colour == colour) {
+			std::cerr << "Square is blocked by friendly pawn" << std::endl;
+			return;
+		}else{
+			std::cerr << "Deleting enemy pawn" << std::endl;
+			delete tile->pawn;
+		}
+	}
+	
+	m_tile->pawn = NULL;
+	m_tile = tile;
+	
+	tile->pawn = this;
+	
+	if(tile->power) {
+		AddPower(tile->power);
+		tile->power = NULL;
+	}
 }
 
 const uint TILE_SIZE = 50;
@@ -261,7 +299,7 @@ void OctRadius::LoadScenario(std::string filename, TileTable &tiles) {
 			assert(x >= 0 && x < grid_cols && y >= 0 && y < grid_rows);
 			assert(c >= 0 && c < 4);
 			
-			tiles[x][y]->pawn = new Pawn((OctRadius::Colour)c);
+			tiles[x][y]->pawn = new Pawn((OctRadius::Colour)c, tiles, tiles[x][y]);
 		}
 		if(name == "HOLE") {
 			int x = atoi(bp);
@@ -370,7 +408,7 @@ int main(int argc, char **argv) {
 						if(tile->pawn) {
 							dpawn = tile->pawn;
 						}else{
-							tile->pawn = new OctRadius::Pawn((OctRadius::Colour)(rand() % 4));
+							tile->pawn = new OctRadius::Pawn((OctRadius::Colour)(rand() % 4), tiles, tile);
 						}
 					}
 				}
@@ -378,29 +416,8 @@ int main(int argc, char **argv) {
 				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
 				
 				if(event.button.button == SDL_BUTTON_LEFT && dpawn) {
-					if(tile && (!tile->pawn || tile->pawn->colour != dpawn->colour)) {
-						if(tile->pawn && tile->pawn->colour != dpawn->colour) {
-							std::cout << "Pawn at (" << tile->col << "," << tile->row << ") destroyed" << std::endl;
-							
-							delete tile->pawn;
-							tile->pawn = NULL;
-						}
-						
-						OctRadius::TileLoopThing tl(tiles);
-						
-						for(; tl.valid(); tl++) {
-							if(tl.tile()->pawn == dpawn) {
-								tl.tile()->pawn = NULL;
-								break;
-							}
-						}
-						
-						tile->pawn = dpawn;
-						
-						if(tile->power) {
-							dpawn->AddPower(tile->power);
-							tile->power = NULL;
-						}
+					if(tile) {
+						dpawn->Move(tile);
 						
 						OctRadius::SpawnPowers(tiles, 1);
 					}
