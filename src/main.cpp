@@ -42,6 +42,7 @@ namespace OctRadius {
 			}
 			
 			void Move(Tile *tile);
+			Tile *OnTile(void) { return m_tile; }
 			
 		private:
 			TileTable &m_tiles;
@@ -126,8 +127,15 @@ namespace OctRadius {
 	};
 }
 
+struct uistate {
+	OctRadius::Pawn *dpawn;
+	OctRadius::Pawn *mpawn;
+	
+	uistate() : dpawn(NULL), mpawn(NULL) {}
+};
+
 namespace OctRadius {
-	void DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn);
+	void DrawBoard(TileTable &tiles, SDL_Surface *screen, struct uistate &uistate);
 	OctRadius::Tile *TileAtXY(TileTable &tiles, int x, int y);
 	void LoadScenario(std::string filename, TileTable &tiles);
 	void SpawnPowers(TileTable &tiles, int num);
@@ -179,7 +187,7 @@ const OctRadius::Power POWERS[] = {
 	{NULL, NULL}
 };
 
-void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn) {
+void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, struct uistate &uistate) {
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
@@ -213,20 +221,25 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
 		}
 		
-		if (tl.tile()->pawn && tl.tile()->pawn != dpawn) {
+		if (tl.tile()->pawn && tl.tile()->pawn != uistate.dpawn) {
 			SDL_Rect srect = { tl.tile()->pawn->powers.size() ? (torus_frame * 50) : 0, tl.tile()->pawn->colour * 50, 50, 50 };
 			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 		}
 	}
 	
-	if(dpawn) {
+	if(uistate.dpawn) {
 		int mouse_x, mouse_y;
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		
-		SDL_Rect srect = { dpawn->powers.size() ? (torus_frame * 50) : 0, dpawn->colour*50, 50, 50 };
+		SDL_Rect srect = { uistate.dpawn->powers.size() ? (torus_frame * 50) : 0, uistate.dpawn->colour*50, 50, 50 };
 		SDL_Rect rect = { mouse_x-30, mouse_y-30, 0, 0 };
 		
 		assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+	}
+	
+	if(uistate.mpawn) {
+		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, 100, 140 };
+		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	}
 	
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
@@ -388,7 +401,8 @@ int main(int argc, char **argv) {
 	SDL_Event event;
 	
 	uint last_redraw = 0;
-	OctRadius::Pawn *dpawn = NULL;
+	struct uistate uistate;
+	int xd, yd;
 	
 	while(1) {
 		if(SDL_PollEvent(&event)) {
@@ -401,43 +415,47 @@ int main(int argc, char **argv) {
 				if(tile) {
 					if(event.button.button == SDL_BUTTON_WHEELUP && tile->height < 2) {
 						tile->height++;
-						OctRadius::DrawBoard(tiles, screen, dpawn);
+						OctRadius::DrawBoard(tiles, screen, uistate);
 						last_redraw = SDL_GetTicks();
 					}
 					else if(event.button.button == SDL_BUTTON_WHEELDOWN && tile->height > -2) {
 						tile->height--;
-						OctRadius::DrawBoard(tiles, screen, dpawn);
+						OctRadius::DrawBoard(tiles, screen, uistate);
 						last_redraw = SDL_GetTicks();
 					}
 					else if (event.button.button == SDL_BUTTON_LEFT) {
+						uistate.mpawn = NULL;
+						xd = event.button.x;
+						yd = event.button.y;
+						
 						if(tile->pawn) {
-							dpawn = tile->pawn;
-						}else{
-							tile->pawn = new OctRadius::Pawn((OctRadius::Colour)(rand() % 4), tiles, tile);
+							uistate.dpawn = tile->pawn;
 						}
 					}
 				}
 			}else if(event.type == SDL_MOUSEBUTTONUP) {
 				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
 				
-				if(event.button.button == SDL_BUTTON_LEFT && dpawn) {
-					if(tile) {
-						dpawn->Move(tile);
+				if(event.button.button == SDL_BUTTON_LEFT && uistate.dpawn) {
+					if(xd == event.button.x && yd == event.button.y) {
+						uistate.mpawn = tile->pawn;
+					}else if(tile != uistate.dpawn->OnTile()) {
+						uistate.dpawn->Move(tile);
 						
 						OctRadius::SpawnPowers(tiles, 1);
 					}
 					
-					dpawn = NULL;
+					uistate.dpawn = NULL;
 				}
-			}else if(event.type == SDL_MOUSEMOTION && dpawn) {
-				OctRadius::DrawBoard(tiles, screen, dpawn);
+			}else if(event.type == SDL_MOUSEMOTION && uistate.dpawn) {
+				OctRadius::DrawBoard(tiles, screen, uistate);
 				last_redraw = SDL_GetTicks();
 			}
 		}
 		
 		// force a redraw if it's been too long (for animations)
 		if (SDL_GetTicks() >= last_redraw + 50) {
-			OctRadius::DrawBoard(tiles, screen, dpawn);
+			OctRadius::DrawBoard(tiles, screen, uistate);
 			last_redraw = SDL_GetTicks();
 		}
 	}
