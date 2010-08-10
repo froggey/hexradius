@@ -15,9 +15,11 @@
 namespace OctRadius {
 	enum Colour { BLUE, RED, GREEN, YELLOW };
 	
+	class Pawn;
+	
 	struct Power {
 		const char *name;
-		int (*func)(void);
+		int (*func)(OctRadius::Pawn*);
 		int spawn_rate;
 	};
 	
@@ -175,9 +177,27 @@ const uint TILE_SIZE = 50;
 const uint BOARD_OFFSET = 20;
 const uint TORUS_FRAMES = 11;
 
+static int destroy_column(OctRadius::Pawn *pawn) {
+	OctRadius::TileList tiles = pawn->ColumnList();
+	OctRadius::TileList::iterator i = tiles.begin();
+	int ret = 0;
+	
+	while(i != tiles.end()) {
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
+			delete (*i)->pawn;
+			(*i)->pawn = NULL;
+			
+			ret = 1;
+		}
+		
+		i++;
+	}
+	
+	return ret;
+}
+
 const OctRadius::Power POWERS[] = {
-	{"Do something", NULL, 100},
-	{"Do something else", NULL, 9001}
+	{"Destroy Column", &destroy_column, 100}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
