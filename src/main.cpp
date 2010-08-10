@@ -171,8 +171,8 @@ int main(int argc, char **argv) {
 				
 				OctRadius::Tile *tile = NULL;
 				
-				for(int c = 0; c < width; c++) {
-					for(int r = 0; r < height; r++) {
+				for(int c = width-1; c >= 0 && !tile; c--) {
+					for(int r = rows-1; r >= 0 && !tile; r--) {
 						int tile_x = tiles[c][r].screen_x;
 						int tile_y = tiles[c][r].screen_y;
 						
