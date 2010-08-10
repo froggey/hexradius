@@ -28,7 +28,7 @@ namespace OctRadius {
 	void FreeImages(void);
 }
 
-const uint TILE_SIZE = 100;
+const uint TILE_SIZE = 50;
 const int BOARD_OFFSET = 20;
 
 void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
