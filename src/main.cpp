@@ -26,8 +26,9 @@ namespace OctRadius {
 			int screen_x, screen_y;
 			
 			Pawn* pawn;
+			int power;
 			
-			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL) {}
+			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL), power(0) {}
 			
 			~Tile() {
 				delete pawn;
@@ -98,6 +99,8 @@ namespace OctRadius {
 	void DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn *dpawn);
 	OctRadius::Tile *TileAtXY(TileTable &tiles, int x, int y);
 	void LoadScenario(std::string filename, TileTable &tiles);
+	void SpawnPowers(TileTable &tiles, int num);
+	TileList ChooseRandomTiles(TileList tiles, int num, int uniq);
 }
 
 const uint TILE_SIZE = 50;
@@ -113,7 +116,8 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
 	assert(square != NULL);
 	
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
-	assert(pawn_graphics);
+	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
+	assert(pawn_graphics && pickup);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -132,6 +136,10 @@ void OctRadius::DrawBoard(TileTable &tiles, SDL_Surface *screen, OctRadius::Pawn
 		tl.tile()->screen_y = rect.y;
 		
 		assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
+		
+		if(tl.tile()->power) {
+			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
+		}
 		
 		if (tl.tile()->pawn && tl.tile()->pawn != dpawn) {
 			SDL_Rect srect = { torus_frame * 50, tl.tile()->pawn->colour * 50, 50, 50 };
@@ -238,6 +246,44 @@ void OctRadius::LoadScenario(std::string filename, TileTable &tiles) {
 	}
 }
 
+void OctRadius::SpawnPowers(TileTable &tiles, int num) {
+	TileLoopThing tl(tiles);
+	TileList ctiles;
+	
+	for(; tl.valid(); tl++) {
+		if(!tl.tile()->pawn && !tl.tile()->power) {
+			ctiles.push_back(tl.tile());
+		}
+	}
+	
+	TileList stiles = ChooseRandomTiles(ctiles, num, 1);
+	TileList::iterator i = stiles.begin();
+	
+	for(; i != stiles.end(); i++) {
+		(*i)->power = 1;
+		std::cout << "Spawned power at (" << (*i)->col << "," << (*i)->row << ")" << std::endl;
+	}
+}
+
+OctRadius::TileList OctRadius::ChooseRandomTiles(TileList tiles, int num, int uniq) {
+	TileList ret;
+	
+	while(tiles.size() && num) {
+		TileList::iterator i = tiles.begin();
+		i += rand() % tiles.size();
+		
+		ret.push_back(*i);
+		
+		if(uniq) {
+			tiles.erase(i);
+		}
+		
+		num--;
+	}
+	
+	return ret;
+}
+
 int main(int argc, char **argv) {
 	if(argc > 2) {
 		std::cerr << "Usage: " << argv[0] << " [scenario]" << std::endl;
@@ -318,6 +364,8 @@ int main(int argc, char **argv) {
 						}
 						
 						tile->pawn = dpawn;
+						
+						OctRadius::SpawnPowers(tiles, 1);
 					}
 					
 					dpawn = NULL;
