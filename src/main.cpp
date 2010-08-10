@@ -53,11 +53,8 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen, OctRadius::Paw
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	assert(square != NULL);
 	
-	SDL_Surface *blue_torii = OctRadius::LoadImage("graphics/pawns/blue.png");
-	SDL_Surface *red_torii = OctRadius::LoadImage("graphics/pawns/red.png");
-	SDL_Surface *green_torii = OctRadius::LoadImage("graphics/pawns/green.png");
-	SDL_Surface *yellow_torii = OctRadius::LoadImage("graphics/pawns/yellow.png");
-	assert(blue_torii != NULL && red_torii != NULL && green_torii != NULL && yellow_torii != NULL);
+	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
+	assert(pawn_graphics);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -77,21 +74,8 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen, OctRadius::Paw
 			assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
 			
 			if (tiles[c][r].pawn && tiles[c][r].pawn != dpawn) {
-				SDL_Rect srect = { torus_frame * 50, 0, 50, 50 };
-				switch (tiles[c][r].pawn->colour) {
-				case BLUE:
-					assert(SDL_BlitSurface(blue_torii, &srect, screen, &rect) == 0);
-					break;
-				case RED:
-					assert(SDL_BlitSurface(red_torii, &srect, screen, &rect) == 0);
-					break;
-				case GREEN:
-					assert(SDL_BlitSurface(green_torii, &srect, screen, &rect) == 0);
-					break;
-				case YELLOW:
-					assert(SDL_BlitSurface(yellow_torii, &srect, screen, &rect) == 0);
-					break;
-				}
+				SDL_Rect srect = { torus_frame * 50, tiles[c][r].pawn->colour*50, 50, 50 };
+				assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 			}
 		}
 	}
@@ -100,23 +84,10 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen, OctRadius::Paw
 		int mouse_x, mouse_y;
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		
-		SDL_Rect srect = { torus_frame * 50, 0, 50, 50 };
+		SDL_Rect srect = { torus_frame * 50, dpawn->colour*50, 50, 50 };
 		SDL_Rect rect = { mouse_x-30, mouse_y-30, 0, 0 };
 		
-		switch(dpawn->colour) {
-			case BLUE:
-				assert(SDL_BlitSurface(blue_torii, &srect, screen, &rect) == 0);
-				break;
-			case RED:
-				assert(SDL_BlitSurface(red_torii, &srect, screen, &rect) == 0);
-				break;
-			case GREEN:
-				assert(SDL_BlitSurface(green_torii, &srect, screen, &rect) == 0);
-				break;
-			case YELLOW:
-				assert(SDL_BlitSurface(yellow_torii, &srect, screen, &rect) == 0);
-				break;
-		}
+		assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 	}
 	
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
