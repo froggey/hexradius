@@ -47,6 +47,10 @@ namespace OctRadius {
 			void Move(Tile *tile);
 			Tile *OnTile(void) { return m_tile; }
 			
+			TileList ColumnList(void);
+			TileList RowList(void);
+			TileList RadialList(void);
+			
 		private:
 			TileList &m_tiles;
 			Tile *m_tile;
@@ -120,6 +124,51 @@ void OctRadius::Pawn::Move(Tile *tile) {
 		AddPower(tile->power);
 		tile->power = NULL;
 	}
+}
+
+OctRadius::TileList OctRadius::Pawn::ColumnList(void) {
+	TileList tiles;
+	TileList::iterator i = m_tiles.begin();
+	
+	while(i != m_tiles.end()) {
+		if((*i)->col == m_tile->col) {
+			tiles.push_back(*i);
+		}
+		
+		i++;
+	}
+	
+	return tiles;
+}
+
+OctRadius::TileList OctRadius::Pawn::RowList(void) {
+	TileList tiles;
+	TileList::iterator i = m_tiles.begin();
+	
+	while(i != m_tiles.end()) {
+		if((*i)->row == m_tile->row) {
+			tiles.push_back(*i);
+		}
+		
+		i++;
+	}
+	
+	return tiles;
+}
+
+OctRadius::TileList OctRadius::Pawn::RadialList(void) {
+	TileList tiles;
+	TileList::iterator i = m_tiles.begin();
+	
+	while(i != m_tiles.end()) {
+		if((*i)->row >= m_tile->row-1 && (*i)->row <= m_tile->row+1 && (*i)->col >= m_tile->col-1 && (*i)->col <= m_tile->col+1) {
+			tiles.push_back(*i);
+		}
+		
+		i++;
+	}
+	
+	return tiles;
 }
 
 const uint TILE_SIZE = 50;
