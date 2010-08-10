@@ -98,28 +98,34 @@ int main(int argc, char **argv) {
 			if(event.type == SDL_MOUSEBUTTONDOWN) {
 				std::cout << "Mouse #" << (int)event.button.button << " pressed at " << event.button.x << "," << event.button.y << std::endl;
 				
+				OctRadius::Tile *tile = NULL;
+				
 				for(int c = 0; c < width; c++) {
 					for(int r = 0; r < height; r++) {
 						int tile_x = tiles[c][r].screen_x;
 						int tile_y = tiles[c][r].screen_y;
 						
 						if(tile_x <= event.button.x && tile_x+TILE_SIZE > event.button.x && tile_y <= event.button.y && tile_y+TILE_SIZE > event.button.y) {
-							std::cout << "Matched tile: " << tiles[c][r].col << "," << tiles[c][r].row << std::endl;
-							
-							if(event.button.button == SDL_BUTTON_WHEELUP) {
-								std::cout << "Raising tile" << std::endl;
-								
-								tiles[c][r].height++;
-								OctRadius::DrawBoard(tiles, screen);
-							}
-							
-							if(event.button.button == SDL_BUTTON_WHEELDOWN) {
-								std::cout << "Lowering tile" << std::endl;
-								
-								tiles[c][r].height--;
-								OctRadius::DrawBoard(tiles, screen);
-							}
+							tile = &tiles[c][r];
 						}
+					}
+				}
+				
+				if(tile) {
+					std::cout << "Matched tile: " << tile->col << "," << tile->row << std::endl;
+					
+					if(event.button.button == SDL_BUTTON_WHEELUP && tile->height < 2) {
+						std::cout << "Raising tile" << std::endl;
+						
+						tile->height++;
+						OctRadius::DrawBoard(tiles, screen);
+					}
+					
+					if(event.button.button == SDL_BUTTON_WHEELDOWN && tile->height > -2) {
+						std::cout << "Lowering tile" << std::endl;
+						
+						tile->height--;
+						OctRadius::DrawBoard(tiles, screen);
 					}
 				}
 			}
