@@ -10,6 +10,7 @@
 #include <SDL/SDL_ttf.h>
 
 #include "loadimage.hpp"
+#include "fontstuff.hpp"
 
 namespace OctRadius {
 	enum Colour { BLUE, RED, GREEN, YELLOW };
@@ -180,8 +181,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 	}
 	
 	if(uistate.mpawn) {
-		TTF_Font *font = TTF_OpenFont("fonts/DejaVuSansMono.ttf", 14);
-		assert(font);
+		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 		
 		int fh = TTF_FontLineSkip(font), fw = 0;
 		
@@ -205,23 +205,15 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &
 			char ns[4];
 			sprintf(ns, "%d", i->second);
 			
-			SDL_Surface *text = TTF_RenderText_Blended(font, ns, colour);
-			assert(text);
-			assert(SDL_BlitSurface(text, NULL, screen, &rect) == 0);
-			SDL_FreeSurface(text);
+			FontStuff::BlitText(screen, rect, font, colour, ns);
 			
 			rect.x += 30;
 			
-			text = TTF_RenderText_Blended(font, i->first->name, colour);
-			assert(text);
-			assert(SDL_BlitSurface(text, NULL, screen, &rect) == 0);
-			SDL_FreeSurface(text);
+			FontStuff::BlitText(screen, rect, font, colour, i->first->name);
 			
 			rect.x -= 30;
 			rect.y += fh;
 		}
-		
-		TTF_CloseFont(font);
 	}
 	
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
@@ -462,6 +454,7 @@ int main(int argc, char **argv) {
 	}
 	
 	OctRadius::FreeImages();
+	FontStuff::FreeFonts();
 	
 	SDL_Quit();
 	
