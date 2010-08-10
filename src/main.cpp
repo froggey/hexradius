@@ -128,7 +128,7 @@ const uint TORUS_FRAMES = 11;
 
 const OctRadius::Power POWERS[] = {
 	{"Do something", NULL, 100},
-	{"Do something else", NULL, 50}
+	{"Do something else", NULL, 9001}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
