@@ -8,6 +8,14 @@
 #include <map>
 
 namespace OctRadius {
+	enum Color { BLUE, RED, GREEN, YELLOW };
+	
+	struct Pawn {
+		Color color;
+		
+		Pawn(Color c) : color(c) {}
+	};
+	
 	class Tile {
 		public:
 			int col, row;
@@ -15,7 +23,9 @@ namespace OctRadius {
 			
 			int screen_x, screen_y;
 			
-			Tile(int c, int r) : col(c), row(r), height(0) {}
+			Pawn* pawn;
+			
+			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL) {}
 	};
 }
 
@@ -30,13 +40,24 @@ namespace OctRadius {
 
 const uint TILE_SIZE = 50;
 const int BOARD_OFFSET = 20;
+const uint TORUS_FRAMES = 11;
 
 void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
 	int cols = tiles.size();
 	int rows = tiles[0].size();
+
+	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
+	if (torus_frame >= TORUS_FRAMES)
+		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	assert(square != NULL);
+	
+	SDL_Surface *blue_torii = OctRadius::LoadImage("graphics/pawns/blue.png");
+	SDL_Surface *red_torii = OctRadius::LoadImage("graphics/pawns/red.png");
+	SDL_Surface *green_torii = OctRadius::LoadImage("graphics/pawns/green.png");
+	SDL_Surface *yellow_torii = OctRadius::LoadImage("graphics/pawns/yellow.png");
+	assert(blue_torii != NULL && red_torii != NULL && green_torii != NULL && yellow_torii != NULL);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -54,10 +75,28 @@ void OctRadius::DrawBoard(tile_table &tiles, SDL_Surface *screen) {
 			tiles[c][r].screen_y = rect.y;
 			
 			assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
+			
+			if (tiles[c][r].pawn) {
+				SDL_Rect srect = { torus_frame * 50, 0, 50, 50 };
+				switch (tiles[c][r].pawn->color) {
+				case BLUE:
+					assert(SDL_BlitSurface(blue_torii, &srect, screen, &rect) == 0);
+					break;
+				case RED:
+					assert(SDL_BlitSurface(red_torii, &srect, screen, &rect) == 0);
+					break;
+				case GREEN:
+					assert(SDL_BlitSurface(green_torii, &srect, screen, &rect) == 0);
+					break;
+				case YELLOW:
+					assert(SDL_BlitSurface(yellow_torii, &srect, screen, &rect) == 0);
+					break;
+				}
+			}
 		}
 	}
 	
-	SDL_UpdateRect(screen, 0,0,0,0);
+	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
 static std::map<std::string,SDL_Surface*> image_cache;
@@ -120,13 +159,14 @@ int main(int argc, char **argv) {
 	
 	SDL_Event event;
 	
+	int last_redraw = SDL_GetTicks();
+	
 	while(1) {
 		if(SDL_PollEvent(&event)) {
 			if(event.type == SDL_QUIT) {
 				break;
 			}
-			
-			if(event.type == SDL_MOUSEBUTTONDOWN) {
+			else if(event.type == SDL_MOUSEBUTTONDOWN) {
 				std::cout << "Mouse #" << (int)event.button.button << " pressed at " << event.button.x << "," << event.button.y << std::endl;
 				
 				OctRadius::Tile *tile = NULL;
@@ -150,16 +190,26 @@ int main(int argc, char **argv) {
 						
 						tile->height++;
 						OctRadius::DrawBoard(tiles, screen);
+						last_redraw = SDL_GetTicks();
 					}
-					
-					if(event.button.button == SDL_BUTTON_WHEELDOWN && tile->height > -2) {
+					else if(event.button.button == SDL_BUTTON_WHEELDOWN && tile->height > -2) {
 						std::cout << "Lowering tile" << std::endl;
 						
 						tile->height--;
 						OctRadius::DrawBoard(tiles, screen);
+						last_redraw = SDL_GetTicks();
+					}
+					else if (event.button.button == SDL_BUTTON_LEFT && tile->pawn == NULL) {
+						tile->pawn = new OctRadius::Pawn((OctRadius::Color)(rand() % 4));
 					}
 				}
 			}
+		}
+		
+		// force a redraw if it's been too long (for animations)
+		if (SDL_GetTicks() >= last_redraw + 50) {
+			OctRadius::DrawBoard(tiles, screen);
+			last_redraw = SDL_GetTicks();
 		}
 	}
 	
