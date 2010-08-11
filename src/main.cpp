@@ -381,6 +381,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
+	srand(time(NULL));
+	
 	OctRadius::TileList tiles;
 	int cols, rows;
 	
