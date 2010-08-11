@@ -120,7 +120,7 @@ const OctRadius::Power POWERS[] = {
 	{"Raise Tile", &Powers::raise_tile, 100},
 	{"Lower Tile", &Powers::lower_tile, 100},
 	{"Moar Range", &Powers::moar_range, 20},
-	{"Climb Tile", &Powers::climb_tile, 10000}
+	{"Climb Tile", &Powers::climb_tile, 100}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
