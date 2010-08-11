@@ -125,12 +125,9 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
-	assert(square != NULL);
-	
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
 	SDL_Surface* moar_range = OctRadius::LoadImage("graphics/upgrades/range.png");
-	assert(pawn_graphics && pickup && moar_range);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -402,8 +399,6 @@ int main(int argc, char **argv) {
 	
 	SDL_WM_SetCaption("OctRadius", "OctRadius");
 	
-	//OctRadius::DrawBoard(tiles, screen);
-	
 	SDL_Event event;
 	
 	uint last_redraw = 0;
@@ -414,20 +409,15 @@ int main(int argc, char **argv) {
 		if(SDL_PollEvent(&event)) {
 			if(event.type == SDL_QUIT) {
 				break;
-			}
-			else if(event.type == SDL_MOUSEBUTTONDOWN) {
+			}else if(event.type == SDL_MOUSEBUTTONDOWN) {
 				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
 				
 				if(event.button.button == SDL_BUTTON_LEFT) {
 					xd = event.button.x;
 					yd = event.button.y;
-				}
-				
-				if(tile) {
-					if(event.button.button == SDL_BUTTON_LEFT) {
-						if(tile->pawn) {
-							uistate.dpawn = tile->pawn;
-						}
+					
+					if(tile && tile->pawn) {
+						uistate.dpawn = tile->pawn;
 					}
 				}
 			}else if(event.type == SDL_MOUSEBUTTONUP) {
@@ -465,8 +455,7 @@ int main(int argc, char **argv) {
 					uistate.dpawn = NULL;
 				}
 			}else if(event.type == SDL_MOUSEMOTION && uistate.dpawn) {
-				OctRadius::DrawBoard(tiles, screen, uistate);
-				last_redraw = SDL_GetTicks();
+				last_redraw = 0;
 			}
 		}
 		

@@ -2,6 +2,7 @@
 #include <SDL/SDL_image.h>
 #include <string>
 #include <map>
+#include <stdexcept>
 
 #include "loadimage.hpp"
 
@@ -15,7 +16,7 @@ SDL_Surface *OctRadius::LoadImage(std::string filename) {
 	
 	SDL_Surface *s = IMG_Load(filename.c_str());
 	if(!s) {
-		return NULL;
+		throw std::runtime_error("Unable to load image '" + filename + "': " + SDL_GetError());
 	}
 	
 	image_cache.insert(std::make_pair(filename, s));
