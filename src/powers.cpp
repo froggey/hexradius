@@ -2,7 +2,7 @@
 #include "octradius.hpp"
 
 namespace Powers {
-	int destroy_enemies(OctRadius::TileList &area, OctRadius::Pawn *pawn) {
+	static int destroy_enemies(OctRadius::TileList &area, OctRadius::Pawn *pawn) {
 		OctRadius::TileList::iterator i = area.begin();
 		int ret = 0;
 		
