@@ -117,7 +117,7 @@ const OctRadius::Power POWERS[] = {
 	{"Raise Tile", &Powers::raise_tile, 100},
 	{"Lower Tile", &Powers::lower_tile, 100},
 	{"Moar Range", &Powers::moar_range, 20},
-	{"Climb Tile", &Powers::climb_tile, 100}
+	{"Climb Tile", &Powers::climb_tile, 10000}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
@@ -132,7 +132,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		climb_offset = 4 - (climb_offset - 4);
 	}
 	*/
-	int climb_offset = 2+(2*sin(SDL_GetTicks()/300));
+	double climb_offset = 2.0+(2.5*sin(SDL_GetTicks() / 300.0));
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
