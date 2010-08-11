@@ -92,7 +92,7 @@ OctRadius::TileList OctRadius::Pawn::RadialList(void) {
 	TileList tiles;
 	TileList::iterator i = m_tiles.begin();
 	
-	SDL_Rect rect = {(*i)->col-1-range, (*i)->row-1-range, 3+2*range, 3+2*range};
+	SDL_Rect rect = {m_tile->col-1-range, m_tile->row-1-range, 3+2*range, 3+2*range};
 	
 	while(i != m_tiles.end()) {
 		if(within_rect(rect, (*i)->col, (*i)->row)) {
@@ -111,6 +111,8 @@ const uint TORUS_FRAMES = 11;
 
 const OctRadius::Power POWERS[] = {
 	{"Destroy Column", &Powers::destroy_column, 100},
+	{"Destroy Row", &Powers::destroy_row, 100},
+	{"Destroy Radial", &Powers::destroy_radial, 100},
 	{"Moar Range", &Powers::moar_range, 20}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
@@ -448,6 +450,8 @@ int main(int argc, char **argv) {
 							
 							i++;
 						}
+						
+						uistate.dpawn = NULL;
 					}
 				}
 				
