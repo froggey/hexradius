@@ -12,6 +12,9 @@
 #include <map>
 #include <SDL/SDL_ttf.h>
 
+const int PWR_ARMOURED = 1<<0;
+const int PWR_CLIMB = 1<<1;
+
 namespace OctRadius {
 	enum Colour { BLUE, RED, GREEN, YELLOW };
 	
@@ -34,9 +37,9 @@ namespace OctRadius {
 		public:
 			Colour colour;
 			PowerList powers;
-			int range;
+			int range, flags;
 			
-			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile), range(0) {}
+			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile), range(0), flags(0) {}
 			
 			void AddPower(const Power* power) {
 				PowerList::iterator i = powers.find(power);

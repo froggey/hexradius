@@ -7,4 +7,5 @@ namespace Powers {
 	int raise_tile(OctRadius::Pawn *pawn);
 	int lower_tile(OctRadius::Pawn *pawn);
 	int moar_range(OctRadius::Pawn *pawn);
+	int climb_tile(OctRadius::Pawn *pawn);
 }

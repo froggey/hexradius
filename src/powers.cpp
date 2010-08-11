@@ -60,4 +60,13 @@ namespace Powers {
 		}
 		else return 0;
 	}
+	
+	int climb_tile(OctRadius::Pawn *pawn) {
+		if(pawn->flags & PWR_CLIMB) {
+			return 0;
+		}else{
+			pawn->flags |= PWR_CLIMB;
+			return 1;
+		}
+	}
 }

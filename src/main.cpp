@@ -8,6 +8,7 @@
 #include <string.h>
 #include <map>
 #include <SDL/SDL_ttf.h>
+#include <math.h>
 
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
@@ -115,7 +116,8 @@ const OctRadius::Power POWERS[] = {
 	{"Destroy Radial", &Powers::destroy_radial, 100},
 	{"Raise Tile", &Powers::raise_tile, 100},
 	{"Lower Tile", &Powers::lower_tile, 100},
-	{"Moar Range", &Powers::moar_range, 20}
+	{"Moar Range", &Powers::moar_range, 20},
+	{"Climb Tile", &Powers::climb_tile, 100}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
@@ -123,6 +125,14 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
+	
+	/*
+	int climb_offset = (SDL_GetTicks() % 1200) / 300;
+	if(climb_offset > 4) {
+		climb_offset = 4 - (climb_offset - 4);
+	}
+	*/
+	int climb_offset = 2+(2*sin(SDL_GetTicks()/300));
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
@@ -152,8 +162,19 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		}
 		
 		if ((*ti)->pawn && (*ti)->pawn != uistate.dpawn) {
+			if((*ti)->pawn->flags & PWR_CLIMB) {
+				rect.x -= climb_offset;
+				rect.y -= climb_offset;
+			}
+			
 			SDL_Rect srect = { (*ti)->pawn->powers.size() ? (torus_frame * 50) : 0, (*ti)->pawn->colour * 50, 50, 50 };
 			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+			
+			if((*ti)->pawn->flags & PWR_CLIMB) {
+				rect.x += climb_offset;
+				rect.y += climb_offset;
+			}
+			
 			srect.x = (*ti)->pawn->range * 50;
 			srect.y = 0;
 			assert(SDL_BlitSurface(moar_range, &srect, screen, &rect) == 0);
