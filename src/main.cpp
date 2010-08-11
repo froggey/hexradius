@@ -27,7 +27,7 @@ void OctRadius::Pawn::Move(Tile *tile) {
 		return;
 	}
 	
-	if(tile->height-1 > m_tile->height) {
+	if(tile->height-1 > m_tile->height && !(flags & PWR_CLIMB)) {
 		std::cerr << "Square is too high" << std::endl;
 		return;
 	}
@@ -35,6 +35,9 @@ void OctRadius::Pawn::Move(Tile *tile) {
 	if(tile->pawn) {
 		if(tile->pawn->colour == colour) {
 			std::cerr << "Square is blocked by friendly pawn" << std::endl;
+			return;
+		}else if(tile->pawn->flags & PWR_ARMOURED) {
+			std::cerr << "Square is blocked by armoured enemy" << std::endl;
 			return;
 		}else{
 			std::cerr << "Deleting enemy pawn" << std::endl;
