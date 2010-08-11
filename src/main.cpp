@@ -110,7 +110,7 @@ OctRadius::TileList OctRadius::Pawn::RadialList(void) {
 }
 
 const uint TILE_SIZE = 50;
-const uint BOARD_OFFSET = 20;
+const int BOARD_OFFSET = 20;
 const uint TORUS_FRAMES = 11;
 
 const OctRadius::Power POWERS[] = {
@@ -120,7 +120,7 @@ const OctRadius::Power POWERS[] = {
 	{"Raise Tile", &Powers::raise_tile, 100},
 	{"Lower Tile", &Powers::lower_tile, 100},
 	{"Moar Range", &Powers::moar_range, 20},
-	{"Climb Tile", &Powers::climb_tile, 100}
+	{"Climb Tile", &Powers::climb_tile, 100000}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
@@ -135,12 +135,13 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		climb_offset = 4 - (climb_offset - 4);
 	}
 	*/
-	double climb_offset = 2.0+(2.5*sin(SDL_GetTicks() / 300.0));
+	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
-	SDL_Surface* moar_range = OctRadius::LoadImage("graphics/upgrades/range.png");
+	SDL_Surface* range_overlay = OctRadius::LoadImage("graphics/upgrades/range.png");
+	SDL_Surface* shadow = OctRadius::LoadImage("graphics/shadow.png");
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -165,6 +166,8 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		}
 		
 		if ((*ti)->pawn && (*ti)->pawn != uistate.dpawn) {
+			assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
+			
 			if((*ti)->pawn->flags & PWR_CLIMB) {
 				rect.x -= climb_offset;
 				rect.y -= climb_offset;
@@ -180,7 +183,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 			
 			srect.x = (*ti)->pawn->range * 50;
 			srect.y = 0;
-			assert(SDL_BlitSurface(moar_range, &srect, screen, &rect) == 0);
+			assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
 		}
 	}
 	
