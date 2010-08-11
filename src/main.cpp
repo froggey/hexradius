@@ -113,6 +113,8 @@ const OctRadius::Power POWERS[] = {
 	{"Destroy Column", &Powers::destroy_column, 100},
 	{"Destroy Row", &Powers::destroy_row, 100},
 	{"Destroy Radial", &Powers::destroy_radial, 100},
+	{"Raise Tile", &Powers::raise_tile, 100},
+	{"Lower Tile", &Powers::lower_tile, 100},
 	{"Moar Range", &Powers::moar_range, 20}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
@@ -422,17 +424,7 @@ int main(int argc, char **argv) {
 				}
 				
 				if(tile) {
-					if(event.button.button == SDL_BUTTON_WHEELUP && tile->height < 2) {
-						tile->height++;
-						OctRadius::DrawBoard(tiles, screen, uistate);
-						last_redraw = SDL_GetTicks();
-					}
-					else if(event.button.button == SDL_BUTTON_WHEELDOWN && tile->height > -2) {
-						tile->height--;
-						OctRadius::DrawBoard(tiles, screen, uistate);
-						last_redraw = SDL_GetTicks();
-					}
-					else if (event.button.button == SDL_BUTTON_LEFT) {
+					if(event.button.button == SDL_BUTTON_LEFT) {
 						if(tile->pawn) {
 							uistate.dpawn = tile->pawn;
 						}

@@ -35,6 +35,24 @@ namespace Powers {
 		return destroy_enemies(tiles, pawn);
 	}
 	
+	int raise_tile(OctRadius::Pawn *pawn) {
+		if(pawn->OnTile()->height < 2) {
+			pawn->OnTile()->height++;
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	
+	int lower_tile(OctRadius::Pawn *pawn) {
+		if(pawn->OnTile()->height > -2) {
+			pawn->OnTile()->height--;
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	
 	int moar_range(OctRadius::Pawn *pawn) {
 		if (pawn->range < 3) {
 			pawn->range++;
