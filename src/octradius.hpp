@@ -12,7 +12,7 @@
 #include <map>
 #include <SDL/SDL_ttf.h>
 
-const int PWR_ARMOURED = 1<<0;
+const int PWR_ARMOUR = 1<<0;
 const int PWR_CLIMB = 1<<1;
 
 namespace OctRadius {

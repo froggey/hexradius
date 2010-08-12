@@ -13,6 +13,7 @@ namespace Powers {
 	int climb_tile(OctRadius::Pawn *pawn);
 	int wall_column(OctRadius::Pawn *pawn);
 	int wall_row(OctRadius::Pawn *pawn);
+	int armour(OctRadius::Pawn *pawn);
 }
 
 #endif /* !OR_POWERS_HPP */

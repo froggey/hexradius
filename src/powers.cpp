@@ -91,4 +91,13 @@ namespace Powers {
 	int wall_row(OctRadius::Pawn *pawn) {
 		return wall_tiles(pawn->RowList());
 	}
+	
+	int armour(OctRadius::Pawn *pawn) {
+		if(pawn->flags & PWR_ARMOUR) {
+			return 0;
+		}
+		
+		pawn->flags |= PWR_ARMOUR;
+		return 1;
+	}
 }

@@ -36,7 +36,7 @@ void OctRadius::Pawn::Move(Tile *tile) {
 		if(tile->pawn->colour == colour) {
 			std::cerr << "Square is blocked by friendly pawn" << std::endl;
 			return;
-		}else if(tile->pawn->flags & PWR_ARMOURED) {
+		}else if(tile->pawn->flags & PWR_ARMOUR) {
 			std::cerr << "Square is blocked by armoured enemy" << std::endl;
 			return;
 		}else{
@@ -122,7 +122,8 @@ const OctRadius::Power POWERS[] = {
 	{"Moar Range", &Powers::moar_range, 20},
 	{"Climb Tile", &Powers::climb_tile, 100},
 	{"Wall Row", &Powers::wall_row, 100},
-	{"Wall column", &Powers::wall_column, 100}
+	{"Wall column", &Powers::wall_column, 100},
+	{"Armour", &Powers::armour, 100}
 };
 const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
@@ -142,8 +143,9 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
-	SDL_Surface* range_overlay = OctRadius::LoadImage("graphics/upgrades/range.png");
-	SDL_Surface* shadow = OctRadius::LoadImage("graphics/shadow.png");
+	SDL_Surface *range_overlay = OctRadius::LoadImage("graphics/upgrades/range.png");
+	SDL_Surface *shadow = OctRadius::LoadImage("graphics/shadow.png");
+	SDL_Surface *armour = OctRadius::LoadImage("graphics/upgrades/armour.png");
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -177,6 +179,10 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 			
 			SDL_Rect srect = { (*ti)->pawn->powers.size() ? (torus_frame * 50) : 0, (*ti)->pawn->colour * 50, 50, 50 };
 			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+			
+			if((*ti)->pawn->flags & PWR_ARMOUR) {
+				assert(SDL_BlitSurface(armour, NULL, screen, &rect) == 0);
+			}
 			
 			if((*ti)->pawn->flags & PWR_CLIMB) {
 				rect.x += climb_offset;
