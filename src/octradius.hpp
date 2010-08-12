@@ -14,6 +14,7 @@
 
 const int PWR_ARMOUR = 1<<0;
 const int PWR_CLIMB = 1<<1;
+const int PWR_GOOD = (PWR_ARMOUR | PWR_CLIMB);
 
 namespace OctRadius {
 	enum Colour { BLUE, RED, GREEN, YELLOW };

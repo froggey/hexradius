@@ -100,4 +100,30 @@ namespace Powers {
 		pawn->flags |= PWR_ARMOUR;
 		return 1;
 	}
+	
+	static int purify(OctRadius::TileList tiles, OctRadius::Pawn *pawn) {
+		OctRadius::TileList::iterator i = tiles.begin();
+		int ret = 0;
+		
+		for(; i != tiles.end(); i++) {
+			if((*i)->pawn && (*i)->pawn->colour != pawn->colour && (*i)->pawn->flags & PWR_GOOD) {
+				(*i)->pawn->flags &= ~PWR_GOOD;
+				ret = 1;
+			}
+		}
+		
+		return ret;
+	}
+	
+	int purify_row(OctRadius::Pawn *pawn) {
+		return purify(pawn->RowList(), pawn);
+	}
+	
+	int purify_column(OctRadius::Pawn *pawn) {
+		return purify(pawn->ColumnList(), pawn);
+	}
+	
+	int purify_radial(OctRadius::Pawn *pawn) {
+		return purify(pawn->RadialList(), pawn);
+	}
 }
