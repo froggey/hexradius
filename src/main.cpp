@@ -111,7 +111,7 @@ OctRadius::TileList OctRadius::Pawn::RadialList(void) {
 
 const uint TILE_SIZE = 50;
 const int BOARD_OFFSET = 20;
-const uint TORUS_FRAMES = 11;
+const int TORUS_FRAMES = 11;
 
 const OctRadius::Power POWERS[] = {
 	{"Destroy Column", &Powers::destroy_column, 100},
@@ -358,6 +358,8 @@ const OctRadius::Power* OctRadius::ChooseRandomPower() {
 			return &POWERS[i];
 		n -= POWERS[i].spawn_rate;
 	}
+	
+	abort();
 }
 
 void OctRadius::SpawnPowers(TileList &tiles, int num) {
