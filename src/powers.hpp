@@ -1,3 +1,6 @@
+#ifndef OR_POWERS_HPP
+#define OR_POWERS_HPP
+
 #include "octradius.hpp"
 
 namespace Powers {
@@ -8,4 +11,8 @@ namespace Powers {
 	int lower_tile(OctRadius::Pawn *pawn);
 	int moar_range(OctRadius::Pawn *pawn);
 	int climb_tile(OctRadius::Pawn *pawn);
+	int wall_column(OctRadius::Pawn *pawn);
+	int wall_row(OctRadius::Pawn *pawn);
 }
+
+#endif /* !OR_POWERS_HPP */

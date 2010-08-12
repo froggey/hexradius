@@ -69,4 +69,26 @@ namespace Powers {
 			return 1;
 		}
 	}
+	
+	static int wall_tiles(OctRadius::TileList tiles) {
+		OctRadius::TileList::iterator i = tiles.begin();
+		int ret = 0;
+		
+		for(; i != tiles.end(); i++) {
+			if((*i)->height != 2) {
+				ret = 1;
+				(*i)->height = 2;
+			}
+		}
+		
+		return ret;
+	}
+	
+	int wall_column(OctRadius::Pawn *pawn) {
+		return wall_tiles(pawn->ColumnList());
+	}
+	
+	int wall_row(OctRadius::Pawn *pawn) {
+		return wall_tiles(pawn->RowList());
+	}
 }
