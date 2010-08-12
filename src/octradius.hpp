@@ -40,7 +40,7 @@ namespace OctRadius {
 			PowerList powers;
 			int range, flags;
 			
-			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), m_tiles(tt), m_tile(tile), range(0), flags(0) {}
+			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), range(0), flags(0), m_tiles(tt), m_tile(tile) {}
 			
 			void AddPower(const Power* power) {
 				PowerList::iterator i = powers.find(power);
