@@ -21,6 +21,9 @@ class Server {
 		
 		uint32_t msgsize;
 		std::string msgbuf;
+		
+		std::string playername;
+		OctRadius::Colour colour;
 	};
 	
 	public:
@@ -38,6 +41,9 @@ class Server {
 		void ReadSize(Server::Client::ptr client);
 		void ReadMessage(Server::Client::ptr client, const boost::system::error_code& error);
 		void HandleMessage(Server::Client::ptr client, const boost::system::error_code& error);
+		
+		void WriteProto(Server::Client::ptr client, protocol::message &msg);
+		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error);
 };
 
 #endif /* !OR_NETWORK_HPP */

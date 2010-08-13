@@ -3,6 +3,7 @@
 #include <boost/bind.hpp>
 #include <stdexcept>
 #include <iostream>
+#include <boost/shared_ptr.hpp>
 
 #include "network.hpp"
 #include "octradius.pb.h"
@@ -81,7 +82,61 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		return;
 	}
 	
-	/* Do stuff */
+	if(msg.msg() == protocol::INIT) {
+		int c, match = 1;
+		
+		for(c = 0; c < 4 && match; c++) {
+			std::set<Server::Client::ptr>::iterator i = clients.begin();
+			match = 0;
+			
+			for(; i != clients.end(); i++) {
+				if((*i)->playername.size() && (*i)->colour == (OctRadius::Colour)c) {
+					match = 1;
+					break;
+				}
+			}
+		}
+		
+		if(c == 4) {
+			std::cerr << "No colours available" << std::endl;
+			clients.erase(client);
+			return;
+		}
+		
+		if(msg.player_name().empty()) {
+			std::cerr << "No player name supplied" << std::endl;
+			clients.erase(client);
+			return;
+		}
+		
+		client->playername = msg.player_name();
+		client->colour = (OctRadius::Colour)c;
+		
+		protocol::message begin;
+		begin.set_msg(protocol::BEGIN);
+		begin.set_colour((protocol::colour)c);
+		
+		WriteProto(client, begin);
+		return;
+	}
+	
+	ReadSize(client);
+}
+
+void Server::WriteProto(Server::Client::ptr client, protocol::message &msg) {
+	boost::shared_ptr<std::string> buf(new std::string);
+	
+	msg.SerializeToString(buf.get());
+	
+	async_write(client->socket, boost::asio::buffer(buf->data(), buf->size()), boost::bind(&Server::WriteFinish, this, client, boost::asio::placeholders::error));
+}
+
+void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error) {
+	if(error) {
+		std::cerr << "Write error: " << error.message() << std::endl;
+		clients.erase(client);
+		return;
+	}
 	
 	ReadSize(client);
 }
