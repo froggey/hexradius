@@ -1,0 +1,69 @@
+package protocol;
+
+enum msgtype {
+	INIT = 1;	// Sent by client after connect, supply player_name
+	BEGIN = 2;	// Sent by server once game begins, supply tiles and starting pawns
+	TURN = 3;	// Set current turn to message.colour
+	OK = 4;		// OK for player to move, client should wait for this
+			// or BADMOVE after sending a move to the server before
+			// allowing the player to try another one
+	BADMOVE = 5;	// Last move rejected, try again
+	
+	MOVE = 10;	// Move a single pawn
+	USE = 11;	// Use a power
+	SCRAMBLE = 12;	// Scramble pawns, message.pawns contains
+			// updated positions of all affected pawns.
+}
+
+enum colour {
+	BLUE = 0;
+	RED = 1;
+	GREEN = 2;
+	YELLOW = 3;
+}
+
+message power {
+	required uint32 num = 1;
+	required uint32 count = 2;
+}
+
+message tile {
+	required uint32 col = 1;
+	required uint32 row = 2;
+	optional sint32 height = 3;
+	optional bool power = 4;
+}
+
+message pawn {
+	// Identifies pawn by current/old location
+	//
+	required uint32 col = 1;
+	required uint32 row = 2;
+	
+	// Used to set/update pawn information
+	//
+	optional colour colour = 11;
+	optional uint32 range = 12;
+	optional int32 flags = 13;
+	optional bool has_powers = 14;
+	repeated power powers = 15;
+	
+	// Used to move/update pawn
+	//
+	optional uint32 new_row = 21;
+	optional uint32 new_col = 22;
+	
+	// Used by PAWN_USE
+	//
+	optional uint32 use_power = 31;
+}
+
+message message {
+	required msgtype msg = 1;
+	
+	optional string player_name = 2;
+	optional colour colour = 3;
+	
+	repeated tile tiles = 4;
+	repeated pawn pawns = 5;
+}
