@@ -36,8 +36,6 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 	StartAccept();
 }
 
-#define MAX_MSGSIZE 2048 /* This will annoy mike */
-
 void Server::ReadSize(Server::Client::ptr client) {
 	async_read(client->socket, boost::asio::buffer(&client->msgsize, sizeof(uint32_t)), boost::bind(&Server::ReadMessage, this, client, boost::asio::placeholders::error));
 }

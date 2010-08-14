@@ -14,6 +14,8 @@
 
 #include "octradius.pb.h"
 
+#define MAX_MSGSIZE 2048 /* This will annoy mike */
+
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, NOINIT };
 
 class Pawn;
