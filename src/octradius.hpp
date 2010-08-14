@@ -64,7 +64,6 @@ class Pawn {
 };
 
 namespace OctRadius {
-	void LoadScenario(std::string filename, Tile::List &tiles, int &cols, int &rows);
 	void SpawnPowers(Tile::List &tiles, int num);
 }
 

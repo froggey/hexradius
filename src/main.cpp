@@ -201,7 +201,15 @@ static char *next_value(char *str) {
 	return r;
 }
 
-void OctRadius::LoadScenario(std::string filename, Tile::List &tiles, int &cols, int &rows) {
+struct Scenario {
+	int cols;
+	int rows;
+	Tile::List tiles;
+	
+	Scenario() : cols(0), rows(0) {}
+};
+
+void LoadScenario(std::string filename, Scenario &sc) {
 	std::fstream file(filename.c_str(), std::fstream::in);
 	assert(file.is_open());
 	
@@ -215,19 +223,19 @@ void OctRadius::LoadScenario(std::string filename, Tile::List &tiles, int &cols,
 		std::string name = buf;
 		
 		if(name == "GRID") {
-			cols = atoi(bp);
-			rows = atoi(next_value(bp));
+			sc.cols = atoi(bp);
+			sc.rows = atoi(next_value(bp));
 			
-			assert(cols > 0 && rows > 0);
+			assert(sc.cols > 0 && sc.rows > 0);
 			
-			for(int c = 0; c < cols; c++) {
-				for(int r = 0; r < rows; r++) {
-					tiles.push_back(new Tile(c, r, 0));
+			for(int c = 0; c < sc.cols; c++) {
+				for(int r = 0; r < sc.rows; r++) {
+					sc.tiles.push_back(new Tile(c, r, 0));
 				}
 			}
 		}
 		if(name == "SPAWN") {
-			assert(cols > 0 && rows > 0);
+			assert(sc.cols > 0 && sc.rows > 0);
 			
 			/* SPAWN x y c */
 			
@@ -235,21 +243,21 @@ void OctRadius::LoadScenario(std::string filename, Tile::List &tiles, int &cols,
 			int y = atoi((bp = next_value(bp)));
 			int c = atoi((bp = next_value(bp)));
 			
-			Tile *tile = FindTile(tiles, x, y);
+			Tile *tile = FindTile(sc.tiles, x, y);
 			assert(tile);
 			
-			tile->pawn = new Pawn((PlayerColour)c, tiles, tile);
+			tile->pawn = new Pawn((PlayerColour)c, sc.tiles, tile);
 		}
 		if(name == "HOLE") {
 			int x = atoi(bp);
 			int y = atoi(next_value(bp));
 			
-			Tile::List::iterator i = tiles.begin();
+			Tile::List::iterator i = sc.tiles.begin();
 			
-			while(i != tiles.end()) {
+			while(i != sc.tiles.end()) {
 				if((*i)->col == x && (*i)->row == y) {
 					delete *i;
-					tiles.erase(i);
+					sc.tiles.erase(i);
 					
 					break;
 				}
@@ -304,14 +312,16 @@ int main(int argc, char **argv) {
 	
 	srand(time(NULL));
 	
-	Tile::List tiles;
-	int cols, rows;
+	Scenario scn;
 	
 	if(argc == 1) {
-		OctRadius::LoadScenario("scenario/default.txt", tiles, cols, rows);
+		LoadScenario("scenario/default.txt", scn);
 	}else{
-		OctRadius::LoadScenario(argv[1], tiles, cols, rows);
+		LoadScenario(argv[1], scn);
 	}
+	
+	int cols = scn.cols, rows = scn.rows;
+	Tile::List tiles = scn.tiles;
 	
 	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 	assert(TTF_Init() == 0);
