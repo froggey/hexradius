@@ -164,18 +164,33 @@ void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error
 void Server::StartGame(void) {
 	protocol::message begin;
 	Tile::List::iterator i = tiles.begin();
+	std::set<Server::Client::ptr>::iterator c;
 	
 	for(; i != tiles.end(); i++) {
 		begin.add_tiles();
 		(*i)->CopyToProto(begin.mutable_tiles(begin.tiles_size()-1));
 		
 		if((*i)->pawn) {
-			begin.add_pawns();
-			(*i)->pawn->CopyToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
+			int cm = 0;
+			
+			for(c = clients.begin(); c != clients.end(); c++) {
+				if((*i)->pawn->colour == (*c)->colour) {
+					cm = 1;
+					break;
+				}
+			}
+			
+			if(cm) {
+				begin.add_pawns();
+				(*i)->pawn->CopyToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
+			}else{
+				delete (*i)->pawn;
+				(*i)->pawn = NULL;
+			}
 		}
 	}
 	
-	std::set<Server::Client::ptr>::iterator c = clients.begin();
+	c = clients.begin();
 	
 	for(; c != clients.end(); c++) {
 		begin.set_colour((protocol::colour)(*c)->colour);
