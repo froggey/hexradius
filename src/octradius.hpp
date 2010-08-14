@@ -14,123 +14,61 @@
 
 #include "octradius.pb.h"
 
-const int PWR_ARMOUR = 1<<0;
-const int PWR_CLIMB = 1<<1;
-const int PWR_GOOD = (PWR_ARMOUR | PWR_CLIMB);
+enum PlayerColour { BLUE, RED, GREEN, YELLOW };
 
-namespace OctRadius {
-	enum Colour { BLUE, RED, GREEN, YELLOW };
-	
-	class Pawn;
-	
-	struct Power {
-		const char *name;
-		int (*func)(OctRadius::Pawn*);
-		int spawn_rate;
-	};
-	
-	typedef std::map<const OctRadius::Power*,int> PowerList;
-	
-	class Tile;
-	
-	typedef std::vector<OctRadius::Tile*> TileList;
-	typedef std::vector<OctRadius::TileList> TileTable;
-	
-	class Pawn {
-		public:
-			Colour colour;
-			PowerList powers;
-			int range, flags;
-			
-			Pawn(Colour c, TileList &tt, Tile *tile) : colour(c), range(0), flags(0), m_tiles(tt), m_tile(tile) {}
-			
-			void AddPower(const Power* power) {
-				PowerList::iterator i = powers.find(power);
-				if(i != powers.end()) {
-					i->second++;
-				}else{
-					powers.insert(std::make_pair(power, 1));
-				}
-			}
-			
-			void UsePower(const Power *power) {
-				PowerList::iterator i = powers.find(power);
-				if(i == powers.end()) {
-					return;
-				}
-				
-				if(!i->first->func(this)) {
-					return;
-				}
-				
-				if(i->second == 1) {
-					powers.erase(i);
-				}else{
-					i->second--;
-				}
-			}
-			
-			void Move(Tile *tile);
-			Tile *OnTile(void) { return m_tile; }
-			
-			TileList ColumnList(void);
-			TileList RowList(void);
-			TileList RadialList(void);
-			
-			void ToProto(protocol::pawn *p, bool copy_powers);
-			
-		private:
-			TileList &m_tiles;
-			Tile *m_tile;
-	};
-	
-	class Tile {
-		public:
-			int col, row;
-			int height;
-			
-			int screen_x, screen_y;
-			
-			Pawn* pawn;
-			const Power *power;
-			
-			Tile(int c, int r) : col(c), row(r), height(0), pawn(NULL), power(NULL) {}
-			
-			~Tile() {
-				delete pawn;
-			}
-			
-			void ToProto(protocol::tile *p) {
-				p->set_col(col);
-				p->set_row(row);
-				p->set_height(height);
-			}
-	};
-}
+class Pawn;
 
-struct pmenu_entry {
-	SDL_Rect rect;
-	const OctRadius::Power *power;
+struct Tile {
+	typedef std::vector<Tile*> List;
+	
+	int col, row;
+	int height;
+	int power;
+	Pawn *pawn;
+	
+	int screen_x, screen_y;
+	
+	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), pawn(NULL) {}
+	~Tile();
+	
+	bool SetHeight(int h);
+	
+	void CopyToProto(protocol::tile *t);
 };
 
-struct uistate {
-	OctRadius::Pawn *dpawn;
-	OctRadius::Pawn *mpawn;
-	
-	std::vector<struct pmenu_entry> pmenu;
-	SDL_Rect pmenu_area;
-	
-	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {}
+class Pawn {
+	private:
+		Tile *cur_tile;
+		Tile::List &all_tiles;
+		
+	public:
+		typedef std::map<int,int> PowerList;
+		
+		PlayerColour colour;
+		PowerList powers;
+		int range, flags;
+		
+		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0) {}
+		
+		Tile *GetTile(void) { return cur_tile; }
+		void CopyToProto(protocol::pawn *p, bool copy_powers);
+		
+		bool Move(Tile *new_tile);
+		
+		void AddPower(int power);
+		bool UsePower(int power);
+		
+		Tile::List ColTiles(void);
+		Tile::List RowTiles(void);
+		Tile::List RadialTiles(void);
 };
 
 namespace OctRadius {
-	void DrawBoard(TileList &tiles, SDL_Surface *screen, struct uistate &uistate);
-	OctRadius::Tile *TileAtXY(TileList &tiles, int x, int y);
-	void LoadScenario(std::string filename, TileList &tiles, int &cols, int &rows);
-	void SpawnPowers(TileList &tiles, int num);
-	TileList ChooseRandomTiles(TileList tiles, int num, bool uniq);
-	Tile *FindTile(TileList &list, int c, int r);
-	const Power* ChooseRandomPower();
+	void LoadScenario(std::string filename, Tile::List &tiles, int &cols, int &rows);
+	void SpawnPowers(Tile::List &tiles, int num);
 }
+
+Tile *FindTile(Tile::List &list, int c, int r);
+Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
 
 #endif

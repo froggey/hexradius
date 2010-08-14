@@ -13,49 +13,13 @@
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
 #include "powers.hpp"
+#include "octradius.hpp"
 
 int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-void OctRadius::Pawn::Move(Tile *tile) {
-	if(
-		!(tile->col == m_tile->col && (tile->row == m_tile->row+1 || tile->row == m_tile->row-1)) &&
-		!(tile->row == m_tile->row && (tile->col == m_tile->col+1 || tile->col == m_tile->col-1))
-	) {
-		std::cerr << "Square out of range" << std::endl;
-		return;
-	}
-	
-	if(tile->height-1 > m_tile->height && !(flags & PWR_CLIMB)) {
-		std::cerr << "Square is too high" << std::endl;
-		return;
-	}
-	
-	if(tile->pawn) {
-		if(tile->pawn->colour == colour) {
-			std::cerr << "Square is blocked by friendly pawn" << std::endl;
-			return;
-		}else if(tile->pawn->flags & PWR_ARMOUR) {
-			std::cerr << "Square is blocked by armoured enemy" << std::endl;
-			return;
-		}else{
-			std::cerr << "Deleting enemy pawn" << std::endl;
-			delete tile->pawn;
-		}
-	}
-	
-	m_tile->pawn = NULL;
-	m_tile = tile;
-	
-	tile->pawn = this;
-	
-	if(tile->power) {
-		AddPower(tile->power);
-		tile->power = NULL;
-	}
-}
-
+#if 0
 void OctRadius::Pawn::ToProto(protocol::pawn *p, bool copy_powers) {
 	p->set_col(m_tile->col);
 	p->set_row(m_tile->row);
@@ -65,92 +29,32 @@ void OctRadius::Pawn::ToProto(protocol::pawn *p, bool copy_powers) {
 	p->set_flags(flags);
 	p->set_has_powers(powers.size() ? true : false);
 }
-
-OctRadius::TileList OctRadius::Pawn::ColumnList(void) {
-	TileList tiles;
-	TileList::iterator i = m_tiles.begin();
-	
-	int min = m_tile->col-range;
-	int max = m_tile->col+range;
-	
-	while(i != m_tiles.end()) {
-		if((*i)->col >= min && (*i)->col <= max) {
-			tiles.push_back(*i);
-		}
-		
-		i++;
-	}
-	
-	return tiles;
-}
-
-OctRadius::TileList OctRadius::Pawn::RowList(void) {
-	TileList tiles;
-	TileList::iterator i = m_tiles.begin();
-	
-	int min = m_tile->row-range;
-	int max = m_tile->row+range;
-	
-	while(i != m_tiles.end()) {
-		if((*i)->row >= min && (*i)->row <= max) {
-			tiles.push_back(*i);
-		}
-		
-		i++;
-	}
-	
-	return tiles;
-}
-
-OctRadius::TileList OctRadius::Pawn::RadialList(void) {
-	TileList tiles;
-	TileList::iterator i = m_tiles.begin();
-	
-	SDL_Rect rect = {m_tile->col-1-range, m_tile->row-1-range, 3+2*range, 3+2*range};
-	
-	while(i != m_tiles.end()) {
-		if(within_rect(rect, (*i)->col, (*i)->row)) {
-			tiles.push_back(*i);
-		}
-		
-		i++;
-	}
-	
-	return tiles;
-}
+#endif
 
 const uint TILE_SIZE = 50;
 const int BOARD_OFFSET = 20;
 const int TORUS_FRAMES = 11;
 
-const OctRadius::Power POWERS[] = {
-	{"Destroy Column", &Powers::destroy_column, 100},
-	{"Destroy Row", &Powers::destroy_row, 100},
-	{"Destroy Radial", &Powers::destroy_radial, 100},
-	{"Raise Tile", &Powers::raise_tile, 100},
-	{"Lower Tile", &Powers::lower_tile, 100},
-	{"Moar Range", &Powers::moar_range, 20},
-	{"Climb Tile", &Powers::climb_tile, 100},
-	{"Wall Row", &Powers::wall_row, 100},
-	{"Wall column", &Powers::wall_column, 100},
-	{"Armour", &Powers::armour, 100},
-	{"Purify Row", &Powers::purify_row, 100},
-	{"Purify Column", &Powers::purify_column, 100},
-	{"Purify Radial", &Powers::purify_radial, 100}
+struct pmenu_entry {
+	SDL_Rect rect;
+	int power;
 };
-const int N_POWERS = sizeof(POWERS) / sizeof(OctRadius::Power);
 
-void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate) {
+struct uistate {
+	Pawn *dpawn;
+	Pawn *mpawn;
+	
+	std::vector<struct pmenu_entry> pmenu;
+	SDL_Rect pmenu_area;
+	
+	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {}
+};
+
+void DrawBoard(Tile::List &tiles, SDL_Surface *screen, uistate &uistate) {
 	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
 	
-	/*
-	int climb_offset = (SDL_GetTicks() % 1200) / 300;
-	if(climb_offset > 4) {
-		climb_offset = 4 - (climb_offset - 4);
-	}
-	*/
 	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
@@ -162,7 +66,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
-	TileList::iterator ti = tiles.begin();
+	Tile::List::iterator ti = tiles.begin();
 	
 	for(; ti != tiles.end(); ti++) {
 		SDL_Rect rect;
@@ -178,7 +82,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		
 		assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
 		
-		if((*ti)->power) {
+		if((*ti)->power >= 0) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
 		}
 		
@@ -227,18 +131,18 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 		
 		int fh = TTF_FontLineSkip(font), fw = 0;
 		
-		PowerList::iterator i = uistate.mpawn->powers.begin();
+		Pawn::PowerList::iterator i = uistate.mpawn->powers.begin();
 		
 		for(; i != uistate.mpawn->powers.end(); i++) {
 			int w;
-			TTF_SizeText(font, i->first->name, &w, NULL);
+			TTF_SizeText(font, Powers::powers[i->first].name, &w, NULL);
 			
 			if(w > fw) {
 				fw = w;
 			}
 		}
 		
-		SDL_Rect rect = { uistate.mpawn->OnTile()->screen_x+TILE_SIZE, uistate.mpawn->OnTile()->screen_y, fw+30, uistate.mpawn->powers.size() * fh };
+		SDL_Rect rect = { uistate.mpawn->GetTile()->screen_x+TILE_SIZE, uistate.mpawn->GetTile()->screen_y, fw+30, uistate.mpawn->powers.size() * fh };
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 		
 		uistate.pmenu_area = rect;
@@ -256,7 +160,7 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 			
 			rect.x += 30;
 			
-			FontStuff::BlitText(screen, rect, font, colour, i->first->name);
+			FontStuff::BlitText(screen, rect, font, colour, Powers::powers[i->first].name);
 			
 			rect.x -= 30;
 			rect.y += fh;
@@ -269,8 +173,8 @@ void OctRadius::DrawBoard(TileList &tiles, SDL_Surface *screen, uistate &uistate
 /* Return the "topmost" tile rendered at the given X,Y co-ordinates or NULL if
  * there is no tile at that location.
 */
-OctRadius::Tile *OctRadius::TileAtXY(TileList &tiles, int x, int y) {
-	TileList::iterator ti = tiles.end();
+Tile *TileAtXY(Tile::List &tiles, int x, int y) {
+	Tile::List::iterator ti = tiles.end();
 	
 	do {
 		ti--;
@@ -297,7 +201,7 @@ static char *next_value(char *str) {
 	return r;
 }
 
-void OctRadius::LoadScenario(std::string filename, TileList &tiles, int &cols, int &rows) {
+void OctRadius::LoadScenario(std::string filename, Tile::List &tiles, int &cols, int &rows) {
 	std::fstream file(filename.c_str(), std::fstream::in);
 	assert(file.is_open());
 	
@@ -318,7 +222,7 @@ void OctRadius::LoadScenario(std::string filename, TileList &tiles, int &cols, i
 			
 			for(int c = 0; c < cols; c++) {
 				for(int r = 0; r < rows; r++) {
-					tiles.push_back(new OctRadius::Tile(c, r));
+					tiles.push_back(new Tile(c, r, 0));
 				}
 			}
 		}
@@ -334,13 +238,13 @@ void OctRadius::LoadScenario(std::string filename, TileList &tiles, int &cols, i
 			Tile *tile = FindTile(tiles, x, y);
 			assert(tile);
 			
-			tile->pawn = new Pawn((OctRadius::Colour)c, tiles, tile);
+			tile->pawn = new Pawn((PlayerColour)c, tiles, tile);
 		}
 		if(name == "HOLE") {
 			int x = atoi(bp);
 			int y = atoi(next_value(bp));
 			
-			TileList::iterator i = tiles.begin();
+			Tile::List::iterator i = tiles.begin();
 			
 			while(i != tiles.end()) {
 				if((*i)->col == x && (*i)->row == y) {
@@ -356,72 +260,40 @@ void OctRadius::LoadScenario(std::string filename, TileList &tiles, int &cols, i
 	}
 }
 
-const OctRadius::Power* OctRadius::ChooseRandomPower() {
+int ChooseRandomPower(void) {
 	int total = 0;
-	for (int i = 0; i < N_POWERS; i++) {
-		total += POWERS[i].spawn_rate;
+	for (int i = 0; i < Powers::num_powers; i++) {
+		total += Powers::powers[i].spawn_rate;
 	}
 	
 	int n = rand() % total;
-	for (int i = 0; i < N_POWERS; i++) {
-		if (n < POWERS[i].spawn_rate)
-			return &POWERS[i];
-		n -= POWERS[i].spawn_rate;
+	for (int i = 0; i < Powers::num_powers; i++) {
+		if(n < Powers::powers[i].spawn_rate) {
+			return i;
+		}
+		
+		n -= Powers::powers[i].spawn_rate;
 	}
 	
 	abort();
 }
 
-void OctRadius::SpawnPowers(TileList &tiles, int num) {
-	TileList::iterator ti = tiles.begin();
-	TileList ctiles;
+void OctRadius::SpawnPowers(Tile::List &tiles, int num) {
+	Tile::List::iterator ti = tiles.begin();
+	Tile::List ctiles;
 	
 	for(; ti != tiles.end(); ti++) {
-		if(!(*ti)->pawn && !(*ti)->power) {
+		if(!(*ti)->pawn && (*ti)->power < 0) {
 			ctiles.push_back(*ti);
 		}
 	}
 	
-	TileList stiles = ChooseRandomTiles(ctiles, num, 1);
-	TileList::iterator i = stiles.begin();
+	Tile::List stiles = RandomTiles(ctiles, num, 1);
+	Tile::List::iterator i = stiles.begin();
 	
 	for(; i != stiles.end(); i++) {
 		(*i)->power = ChooseRandomPower();
-		std::cout << "Spawned " << (*i)->power->name << " at (" << (*i)->col << "," << (*i)->row << ")" << std::endl;
 	}
-}
-
-OctRadius::TileList OctRadius::ChooseRandomTiles(TileList tiles, int num, bool uniq) {
-	TileList ret;
-	
-	while(tiles.size() && num) {
-		TileList::iterator i = tiles.begin();
-		i += rand() % tiles.size();
-		
-		ret.push_back(*i);
-		
-		if(uniq) {
-			tiles.erase(i);
-		}
-		
-		num--;
-	}
-	
-	return ret;
-}
-
-OctRadius::Tile *OctRadius::FindTile(TileList &list, int c, int r) {
-	TileList::iterator i = list.begin();
-	
-	while(i != list.end()) {
-		if((*i)->col == c && (*i)->row == r) {
-			return *i;
-		}
-		
-		i++;
-	}
-	
-	return NULL;
 }
 
 int main(int argc, char **argv) {
@@ -432,7 +304,7 @@ int main(int argc, char **argv) {
 	
 	srand(time(NULL));
 	
-	OctRadius::TileList tiles;
+	Tile::List tiles;
 	int cols, rows;
 	
 	if(argc == 1) {
@@ -460,7 +332,7 @@ int main(int argc, char **argv) {
 			if(event.type == SDL_QUIT) {
 				break;
 			}else if(event.type == SDL_MOUSEBUTTONDOWN) {
-				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
+				Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 				
 				if(event.button.button == SDL_BUTTON_LEFT) {
 					xd = event.button.x;
@@ -471,7 +343,7 @@ int main(int argc, char **argv) {
 					}
 				}
 			}else if(event.type == SDL_MOUSEBUTTONUP) {
-				OctRadius::Tile *tile = OctRadius::TileAtXY(tiles, event.button.x, event.button.y);
+				Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 				
 				if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
 					if(within_rect(uistate.pmenu_area, event.button.x, event.button.y)) {
@@ -496,7 +368,7 @@ int main(int argc, char **argv) {
 						if(tile->pawn->powers.size()) {
 							uistate.mpawn = tile->pawn;
 						}
-					}else if(tile && tile != uistate.dpawn->OnTile()) {
+					}else if(tile && tile != uistate.dpawn->GetTile()) {
 						uistate.dpawn->Move(tile);
 						
 						OctRadius::SpawnPowers(tiles, 1);
@@ -511,7 +383,7 @@ int main(int argc, char **argv) {
 		
 		// force a redraw if it's been too long (for animations)
 		if (SDL_GetTicks() >= last_redraw + 50) {
-			OctRadius::DrawBoard(tiles, screen, uistate);
+			DrawBoard(tiles, screen, uistate);
 			last_redraw = SDL_GetTicks();
 		}
 	}

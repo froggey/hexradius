@@ -23,11 +23,11 @@ class Server {
 		std::string msgbuf;
 		
 		std::string playername;
-		OctRadius::Colour colour;
+		PlayerColour colour;
 	};
 	
 	public:
-		Server(uint16_t port, OctRadius::TileList &t, uint players);
+		Server(uint16_t port, Tile::List &t, uint players);
 		void DoStuff(void);
 		
 	private:
@@ -35,7 +35,7 @@ class Server {
 		boost::asio::ip::tcp::acceptor acceptor;
 		
 		std::set<Server::Client::ptr> clients;
-		OctRadius::TileList tiles;
+		Tile::List tiles;
 		
 		uint req_players;
 		

@@ -8,7 +8,7 @@
 #include "network.hpp"
 #include "octradius.pb.h"
 
-Server::Server(uint16_t port, OctRadius::TileList &t, uint players) : acceptor(io_service), tiles(t), req_players(players) {
+Server::Server(uint16_t port, Tile::List &t, uint players) : acceptor(io_service), tiles(t), req_players(players) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	acceptor.open(endpoint.protocol());
@@ -90,7 +90,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			match = 0;
 			
 			for(; i != clients.end(); i++) {
-				if((*i)->playername.size() && (*i)->colour == (OctRadius::Colour)c) {
+				if((*i)->playername.size() && (*i)->colour == (PlayerColour)c) {
 					match = 1;
 					break;
 				}
@@ -110,7 +110,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		}
 		
 		client->playername = msg.player_name();
-		client->colour = (OctRadius::Colour)c;
+		client->colour = (PlayerColour)c;
 		
 		if(clients.size() == req_players) {
 			StartGame();
@@ -140,15 +140,15 @@ void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error
 
 void Server::StartGame(void) {
 	protocol::message begin;
-	OctRadius::TileList::iterator i = tiles.begin();
+	Tile::List::iterator i = tiles.begin();
 	
 	for(; i != tiles.end(); i++) {
 		begin.add_tiles();
-		(*i)->ToProto(begin.mutable_tiles(begin.tiles_size()-1));
+		(*i)->CopyToProto(begin.mutable_tiles(begin.tiles_size()-1));
 		
 		if((*i)->pawn) {
 			begin.add_pawns();
-			(*i)->pawn->ToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
+			(*i)->pawn->CopyToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
 		}
 	}
 	
