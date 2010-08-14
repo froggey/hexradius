@@ -15,7 +15,7 @@ class Server {
 	struct Client {
 		typedef boost::shared_ptr<Server::Client> ptr;
 		
-		Client(boost::asio::io_service &io_service) : socket(io_service) {}
+		Client(boost::asio::io_service &io_service) : socket(io_service), colour(NOINIT) {}
 		
 		boost::asio::ip::tcp::socket socket;
 		
@@ -39,6 +39,8 @@ class Server {
 		
 		uint req_players;
 		
+		std::set<Server::Client::ptr>::iterator turn;
+		
 		void StartAccept(void);
 		void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
 		
@@ -48,8 +50,12 @@ class Server {
 		
 		void WriteProto(Server::Client::ptr client, protocol::message &msg);
 		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error);
+		void WriteAll(protocol::message &msg);
 		
 		void StartGame(void);
+		void BadMove(Server::Client::ptr client);
+		
+		void NextTurn(void);
 };
 
 #endif /* !OR_NETWORK_HPP */

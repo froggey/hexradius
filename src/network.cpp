@@ -8,7 +8,7 @@
 #include "network.hpp"
 #include "octradius.pb.h"
 
-Server::Server(uint16_t port, Tile::List &t, uint players) : acceptor(io_service), tiles(t), req_players(players) {
+Server::Server(uint16_t port, Tile::List &t, uint players) : acceptor(io_service), tiles(t), req_players(players), turn(clients.end()) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	acceptor.open(endpoint.protocol());
@@ -90,7 +90,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			match = 0;
 			
 			for(; i != clients.end(); i++) {
-				if((*i)->playername.size() && (*i)->colour == (PlayerColour)c) {
+				if((*i)->colour != NOINIT && (*i)->colour == (PlayerColour)c) {
 					match = 1;
 					break;
 				}
@@ -117,6 +117,29 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		}
 	}
 	
+	if(msg.msg() == protocol::MOVE) {
+		if(msg.pawns_size() != 1) {
+			goto END;
+		}
+		
+		const protocol::pawn &pawn = msg.pawns(0);
+		
+		Tile *tile = FindTile(tiles, pawn.col(), pawn.row());
+		Tile *newtile = FindTile(tiles, pawn.new_col(), pawn.new_row());
+		
+		if(!tile || !newtile || tile->pawn->colour != client->colour || *turn != client) {
+			goto END;
+		}
+		
+		if(tile->pawn->Move(newtile)) {
+			WriteAll(msg);
+			NextTurn();
+		}else{
+			BadMove(client);
+		}
+	}
+	
+	END:
 	ReadSize(client);
 }
 
@@ -158,8 +181,42 @@ void Server::StartGame(void) {
 		begin.set_colour((protocol::colour)(*c)->colour);
 		WriteProto(*c, begin);
 	}
+	
+	NextTurn();
 }
 
 void Server::DoStuff(void) {
 	io_service.poll();
+}
+
+void Server::BadMove(Server::Client::ptr client) {
+	protocol::message msg;
+	msg.set_msg(protocol::BADMOVE);
+	WriteProto(client, msg);
+}
+
+void Server::WriteAll(protocol::message &msg) {
+	std::set<Server::Client::ptr>::iterator i = clients.begin();
+	
+	for(; i != clients.end(); i++) {
+		WriteProto(*i, msg);
+	}
+}
+
+void Server::NextTurn(void) {
+	if(turn == clients.end()) {
+		turn = clients.begin();
+	}else{
+		do {
+			if(++turn == clients.end()) {
+				turn = clients.begin();
+			}
+		} while((*turn)->colour == NOINIT);
+	}
+	
+	protocol::message tmsg;
+	tmsg.set_msg(protocol::TURN);
+	tmsg.set_colour((protocol::colour)(*turn)->colour);
+	
+	WriteAll(tmsg);
 }

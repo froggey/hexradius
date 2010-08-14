@@ -14,7 +14,7 @@
 
 #include "octradius.pb.h"
 
-enum PlayerColour { BLUE, RED, GREEN, YELLOW };
+enum PlayerColour { BLUE, RED, GREEN, YELLOW, NOINIT };
 
 class Pawn;
 
