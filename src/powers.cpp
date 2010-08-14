@@ -54,21 +54,11 @@ namespace Powers {
 	}
 	
 	int raise_tile(Pawn *pawn) {
-		if(pawn->GetTile()->height < 2) {
-			pawn->GetTile()->height++;
-			return 1;
-		}else{
-			return 0;
-		}
+		return pawn->GetTile()->SetHeight(pawn->GetTile()->height+1);
 	}
 	
 	int lower_tile(Pawn *pawn) {
-		if(pawn->GetTile()->height > -2) {
-			pawn->GetTile()->height--;
-			return 1;
-		}else{
-			return 0;
-		}
+		return pawn->GetTile()->SetHeight(pawn->GetTile()->height-1);
 	}
 	
 	int moar_range(Pawn *pawn) {
@@ -93,10 +83,7 @@ namespace Powers {
 		int ret = 0;
 		
 		for(; i != tiles.end(); i++) {
-			if((*i)->height != 2) {
-				ret = 1;
-				(*i)->height = 2;
-			}
+			ret |= (*i)->SetHeight(2);
 		}
 		
 		return ret;
@@ -124,8 +111,9 @@ namespace Powers {
 		int ret = 0;
 		
 		for(; i != tiles.end(); i++) {
-			if((*i)->pawn && (*i)->pawn->colour != pawn->colour && (*i)->pawn->flags & PWR_GOOD) {
+			if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 				(*i)->pawn->flags &= ~PWR_GOOD;
+				(*i)->pawn->range = 0;
 				ret = 1;
 			}
 		}

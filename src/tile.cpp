@@ -1,7 +1,7 @@
 #include "octradius.hpp"
 
 bool Tile::SetHeight(int h) {
-	if(h != height && h < 2 && h > -2) {
+	if(h != height && h <= 2 && h >= -2) {
 		height = h;
 		return true;
 	}else{
