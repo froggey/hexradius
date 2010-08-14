@@ -14,6 +14,8 @@
 #include "fontstuff.hpp"
 #include "powers.hpp"
 #include "octradius.hpp"
+#include "network.hpp"
+#include "client.hpp"
 
 int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
@@ -201,14 +203,6 @@ static char *next_value(char *str) {
 	return r;
 }
 
-struct Scenario {
-	int cols;
-	int rows;
-	Tile::List tiles;
-	
-	Scenario() : cols(0), rows(0) {}
-};
-
 void LoadScenario(std::string filename, Scenario &sc) {
 	std::fstream file(filename.c_str(), std::fstream::in);
 	assert(file.is_open());
@@ -322,6 +316,14 @@ int main(int argc, char **argv) {
 	
 	int cols = scn.cols, rows = scn.rows;
 	Tile::List tiles = scn.tiles;
+	
+	Server server(9001, scn, 1);
+	Client client("127.0.0.1", 9001, "test");
+	
+	while(1) {
+		server.DoStuff();
+		client.DoStuff();
+	}
 	
 	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 	assert(TTF_Init() == 0);

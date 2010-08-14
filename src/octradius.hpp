@@ -65,6 +65,14 @@ class Pawn {
 		Tile::List RadialTiles(void);
 };
 
+struct Scenario {
+	int cols;
+	int rows;
+	Tile::List tiles;
+	
+	Scenario() : cols(0), rows(0) {}
+};
+
 namespace OctRadius {
 	void SpawnPowers(Tile::List &tiles, int num);
 }

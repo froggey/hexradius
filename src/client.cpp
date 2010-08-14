@@ -9,7 +9,7 @@
 #include "octradius.pb.h"
 #include "client.hpp"
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT) {
 	boost::asio::ip::tcp::endpoint ep;
 	boost::asio::ip::address ip;
 	
@@ -26,10 +26,16 @@ Client::Client(std::string host, uint16_t port, std::string name) : socket(io_se
 }
 
 void Client::WriteProto(const protocol::message &msg) {
-	wbuf_ptr wb(new std::string);
+	std::string pb;
+	msg.SerializeToString(&pb);
 	
-	msg.SerializeToString(wb.get());
-	async_write(socket, boost::asio::buffer(wb->data(), wb->size()), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error, wb));
+	uint32_t psize = htonl(pb.size());
+	wbuf_ptr wb(new char[psize+sizeof(psize)]);
+	
+	memcpy(wb.get(), &psize, sizeof(psize));
+	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
+	
+	async_write(socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error, wb));
 }
 
 void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
@@ -59,11 +65,8 @@ void Client::ReadMessage(const boost::system::error_code& error) {
 		throw std::runtime_error("Recieved oversized message from server");
 	}
 	
-	msgbuf.reserve(msgsize);
-	
-	/* This is probably undefined... */
-	
-	async_read(socket, boost::asio::buffer((char*)msgbuf.data(), msgsize), boost::bind(&Client::ReadFinish, this, boost::asio::placeholders::error));
+	msgbuf.resize(msgsize);
+	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Client::ReadFinish, this, boost::asio::placeholders::error));
 }
 
 void Client::ReadFinish(const boost::system::error_code& error) {
@@ -71,9 +74,32 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		throw std::runtime_error("Read error: " + error.message());
 	}
 	
+	std::string msgstring(msgbuf.begin(), msgbuf.end());
+	
 	protocol::message msg;
-	if(!msg.ParseFromString(msgbuf)) {
-		throw std::runtime_error("Invalid protobuf recieved?");
+	if(!msg.ParseFromString(msgstring)) {
+		throw std::runtime_error("Invalid protobuf recieved from server");
+	}
+	
+	if(msg.msg() == protocol::BEGIN) {
+		grid_cols = msg.grid_cols();
+		grid_rows = msg.grid_rows();
+		
+		for(int i = 0; i < msg.tiles_size(); i++) {
+			tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
+		}
+		
+		for(int i = 0; i < msg.pawns_size(); i++) {
+			Tile *tile = FindTile(tiles, msg.pawns(i).col(), msg.pawns(i).row());
+			if(!tile) {
+				continue;
+			}
+			
+			tile->pawn = new Pawn((PlayerColour)msg.pawns(i).colour(), tiles, tile);
+		}
+	}
+	if(msg.msg() == protocol::TURN) {
+		turn = (PlayerColour)msg.colour();
 	}
 	
 	ReadSize();

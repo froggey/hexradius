@@ -20,14 +20,14 @@ class Server {
 		boost::asio::ip::tcp::socket socket;
 		
 		uint32_t msgsize;
-		std::string msgbuf;
+		std::vector<char> msgbuf;
 		
 		std::string playername;
 		PlayerColour colour;
 	};
 	
 	public:
-		Server(uint16_t port, Tile::List &t, uint players);
+		Server(uint16_t port, Scenario &s, uint players);
 		void DoStuff(void);
 		
 	private:
@@ -37,6 +37,7 @@ class Server {
 		std::set<Server::Client::ptr> clients;
 		Tile::List tiles;
 		
+		Scenario scenario;
 		uint req_players;
 		
 		std::set<Server::Client::ptr>::iterator turn;
@@ -48,8 +49,10 @@ class Server {
 		void ReadMessage(Server::Client::ptr client, const boost::system::error_code& error);
 		void HandleMessage(Server::Client::ptr client, const boost::system::error_code& error);
 		
+		typedef boost::shared_ptr<char> wbuf_ptr;
+		
 		void WriteProto(Server::Client::ptr client, protocol::message &msg);
-		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error);
+		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error, wbuf_ptr wb);
 		void WriteAll(protocol::message &msg);
 		
 		void StartGame(void);

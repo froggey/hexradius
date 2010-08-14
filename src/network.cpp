@@ -8,7 +8,7 @@
 #include "network.hpp"
 #include "octradius.pb.h"
 
-Server::Server(uint16_t port, Tile::List &t, uint players) : acceptor(io_service), tiles(t), req_players(players), turn(clients.end()) {
+Server::Server(uint16_t port, Scenario &s, uint players) : acceptor(io_service), scenario(s), req_players(players), turn(clients.end()) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	acceptor.open(endpoint.protocol());
@@ -57,11 +57,8 @@ void Server::ReadMessage(Server::Client::ptr client, const boost::system::error_
 		return;
 	}
 	
-	client->msgbuf.reserve(client->msgsize);
-	
-	/* This is probably undefined... */
-	
-	async_read(client->socket, boost::asio::buffer((char*)client->msgbuf.data(), client->msgsize), boost::bind(&Server::HandleMessage, this, client, boost::asio::placeholders::error));
+	client->msgbuf.resize(client->msgsize);
+	async_read(client->socket, boost::asio::buffer(&(client->msgbuf[0]), client->msgsize), boost::bind(&Server::HandleMessage, this, client, boost::asio::placeholders::error));
 }
 
 void Server::HandleMessage(Server::Client::ptr client, const boost::system::error_code& error) {
@@ -72,9 +69,11 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		return;
 	}
 	
+	std::string msgstring(client->msgbuf.begin(), client->msgbuf.end());
+	
 	protocol::message msg;
-	if(!msg.ParseFromString(client->msgbuf)) {
-		std::cerr << "Invalid protobuf recieved?" << std::endl;
+	if(!msg.ParseFromString(msgstring)) {
+		std::cerr << "Invalid protobuf recieved from client (" << client->msgsize << " bytes)" << std::endl;
 		clients.erase(client);
 		
 		return;
@@ -142,14 +141,19 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 }
 
 void Server::WriteProto(Server::Client::ptr client, protocol::message &msg) {
-	boost::shared_ptr<std::string> buf(new std::string);
+	std::string pb;
+	msg.SerializeToString(&pb);
 	
-	msg.SerializeToString(buf.get());
+	uint32_t psize = htonl(pb.size());
+	wbuf_ptr wb(new char[psize+sizeof(psize)]);
 	
-	async_write(client->socket, boost::asio::buffer(buf->data(), buf->size()), boost::bind(&Server::WriteFinish, this, client, boost::asio::placeholders::error));
+	memcpy(wb.get(), &psize, sizeof(psize));
+	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
+	
+	async_write(client->socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(&Server::WriteFinish, this, client, boost::asio::placeholders::error, wb));
 }
 
-void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error) {
+void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error, wbuf_ptr wb) {
 	if(error) {
 		std::cerr << "Write error: " << error.message() << std::endl;
 		clients.erase(client);
@@ -163,6 +167,10 @@ void Server::StartGame(void) {
 	protocol::message begin;
 	Tile::List::iterator i = tiles.begin();
 	std::set<Server::Client::ptr>::iterator c;
+	
+	begin.set_msg(protocol::BEGIN);
+	begin.set_grid_cols(scenario.cols);
+	begin.set_grid_rows(scenario.rows);
 	
 	for(; i != tiles.end(); i++) {
 		begin.add_tiles();
