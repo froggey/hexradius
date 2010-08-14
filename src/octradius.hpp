@@ -12,6 +12,8 @@
 #include <map>
 #include <SDL/SDL_ttf.h>
 
+#include "octradius.pb.h"
+
 const int PWR_ARMOUR = 1<<0;
 const int PWR_CLIMB = 1<<1;
 const int PWR_GOOD = (PWR_ARMOUR | PWR_CLIMB);
@@ -75,6 +77,8 @@ namespace OctRadius {
 			TileList RowList(void);
 			TileList RadialList(void);
 			
+			void ToProto(protocol::pawn *p, bool copy_powers);
+			
 		private:
 			TileList &m_tiles;
 			Tile *m_tile;
@@ -94,6 +98,12 @@ namespace OctRadius {
 			
 			~Tile() {
 				delete pawn;
+			}
+			
+			void ToProto(protocol::tile *p) {
+				p->set_col(col);
+				p->set_row(row);
+				p->set_height(height);
 			}
 	};
 }

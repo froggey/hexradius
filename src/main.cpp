@@ -56,6 +56,16 @@ void OctRadius::Pawn::Move(Tile *tile) {
 	}
 }
 
+void OctRadius::Pawn::ToProto(protocol::pawn *p, bool copy_powers) {
+	p->set_col(m_tile->col);
+	p->set_row(m_tile->row);
+	
+	p->set_colour((protocol::colour)colour);
+	p->set_range(range);
+	p->set_flags(flags);
+	p->set_has_powers(powers.size() ? true : false);
+}
+
 OctRadius::TileList OctRadius::Pawn::ColumnList(void) {
 	TileList tiles;
 	TileList::iterator i = m_tiles.begin();

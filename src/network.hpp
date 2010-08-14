@@ -28,6 +28,7 @@ class Server {
 	
 	public:
 		Server(uint16_t port, OctRadius::TileList &t, uint players);
+		void DoStuff(void);
 		
 	private:
 		boost::asio::io_service io_service;

@@ -143,23 +143,12 @@ void Server::StartGame(void) {
 	OctRadius::TileList::iterator i = tiles.begin();
 	
 	for(; i != tiles.end(); i++) {
-		int index = begin.tiles_size();
 		begin.add_tiles();
-		
-		begin.mutable_tiles(index)->set_col((*i)->col);
-		begin.mutable_tiles(index)->set_row((*i)->row);
-		begin.mutable_tiles(index)->set_height((*i)->height);
+		(*i)->ToProto(begin.mutable_tiles(begin.tiles_size()-1));
 		
 		if((*i)->pawn) {
-			index = begin.pawns_size();
 			begin.add_pawns();
-			
-			begin.mutable_pawns(index)->set_col((*i)->col);
-			begin.mutable_pawns(index)->set_row((*i)->row);
-			
-			begin.mutable_pawns(index)->set_colour((protocol::colour)(*i)->pawn->colour);
-			begin.mutable_pawns(index)->set_range((*i)->pawn->range);
-			begin.mutable_pawns(index)->set_flags((*i)->pawn->flags);
+			(*i)->pawn->ToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
 		}
 	}
 	
@@ -169,4 +158,8 @@ void Server::StartGame(void) {
 		begin.set_colour((protocol::colour)(*c)->colour);
 		WriteProto(*c, begin);
 	}
+}
+
+void Server::DoStuff(void) {
+	io_service.poll();
 }
