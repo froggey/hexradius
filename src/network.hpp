@@ -27,13 +27,16 @@ class Server {
 	};
 	
 	public:
-		Server(uint16_t port);
+		Server(uint16_t port, OctRadius::TileList &t, uint players);
 		
 	private:
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::acceptor acceptor;
 		
 		std::set<Server::Client::ptr> clients;
+		OctRadius::TileList tiles;
+		
+		uint req_players;
 		
 		void StartAccept(void);
 		void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
@@ -44,6 +47,8 @@ class Server {
 		
 		void WriteProto(Server::Client::ptr client, protocol::message &msg);
 		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error);
+		
+		void StartGame(void);
 };
 
 #endif /* !OR_NETWORK_HPP */
