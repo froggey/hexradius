@@ -74,7 +74,8 @@ bool Client::DoStuff(void) {
 	if(SDL_PollEvent(&event)) {
 		if(event.type == SDL_QUIT) {
 			return false;
-		}else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
+		}
+		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -85,7 +86,8 @@ bool Client::DoStuff(void) {
 					dpawn = tile->pawn;
 				}
 			}
-		}else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
+		}
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -217,7 +219,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 }
 
 void Client::DrawScreen(void) {
-	int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
+	uint torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
 	
