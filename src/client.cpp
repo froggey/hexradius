@@ -57,7 +57,9 @@ bool Client::DoStuff(void) {
 	io_service.poll();
 	
 	if(!screen && grid_cols && grid_rows) {
-		screen = SDL_SetVideoMode((grid_cols*TILE_SIZE) + (2*BOARD_OFFSET), (grid_rows*TILE_SIZE) + (2*BOARD_OFFSET), 0, SDL_SWSURFACE);
+		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
+		
+		screen = SDL_SetVideoMode((grid_cols*TILE_SIZE) + (2*BOARD_OFFSET), (grid_rows*TILE_SIZE) + (2*BOARD_OFFSET) + TTF_FontLineSkip(font), 0, SDL_SWSURFACE);
 		assert(screen != NULL);
 		
 		SDL_WM_SetCaption("OctRadius", "OctRadius");
@@ -206,6 +208,14 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			tile->pawn = new Pawn((PlayerColour)msg.pawns(i).colour(), tiles, tile);
 		}
 		
+		for(int i = 0; i < msg.players_size(); i++) {
+			Player p;
+			p.name = msg.players(i).name();
+			p.colour = (PlayerColour)msg.players(i).colour();
+			
+			players.push_back(p);
+		}
+		
 		mycolour = (PlayerColour)msg.colour();
 	}
 	if(msg.msg() == protocol::TURN) {
@@ -279,14 +289,39 @@ void Client::DrawScreen(void) {
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
 	
+	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
+	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
+	int bskip = TTF_FontLineSkip(bfont);
+	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
+	
+	{
+		SDL_Rect rect = {0,0,0,0};
+		int w;
+		
+		FontStuff::BlitText(screen, rect, font, (SDL_Colour){255,255,255}, "Players: ");
+		TTF_SizeText(font, "Players: ", &w, NULL);
+		rect.x += w;
+		
+		std::vector<Player>::iterator p = players.begin();
+		
+		const SDL_Colour colours[] = {{0,0,255},{255,0,0},{0,255,0},{255,255,0}};
+		
+		for(; p != players.end(); p++) {
+			TTF_Font *f = (*p).colour == turn ? bfont : font;
+			
+			FontStuff::BlitText(screen, rect, f, colours[(*p).colour], (*p).name + " ");
+			TTF_SizeText(f, std::string((*p).name + " ").c_str(), &w, NULL);
+			rect.x += w;
+		}
+	}
 	
 	Tile::List::iterator ti = tiles.begin();
 	
 	for(; ti != tiles.end(); ti++) {
 		SDL_Rect rect;
 		rect.x = BOARD_OFFSET + TILE_SIZE * (*ti)->col;
-		rect.y = BOARD_OFFSET + TILE_SIZE * (*ti)->row;
+		rect.y = bskip + BOARD_OFFSET + TILE_SIZE * (*ti)->row;
 		rect.w = rect.h = 0;
 		
 		rect.x += (-1 * (*ti)->height) * 10;
@@ -319,8 +354,6 @@ void Client::DrawScreen(void) {
 	pmenu_area.h = 0;
 	
 	if(mpawn) {
-		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
-		
 		int fh = TTF_FontLineSkip(font), fw = 0;
 		
 		Pawn::PowerList::iterator i = mpawn->powers.begin();

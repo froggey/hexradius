@@ -58,6 +58,11 @@ message pawn {
 	optional uint32 use_power = 31;
 }
 
+message player {
+	required string name = 1;
+	required colour colour = 2;
+}
+
 message message {
 	required msgtype msg = 1;
 	
@@ -68,4 +73,5 @@ message message {
 	repeated pawn pawns = 5;
 	optional uint32 grid_cols = 6;
 	optional uint32 grid_rows = 7;
+	repeated player players = 8;
 }

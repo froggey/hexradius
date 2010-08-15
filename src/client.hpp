@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <boost/shared_array.hpp>
+#include <set>
 
 #include "octradius.hpp"
 #include "octradius.pb.h"
@@ -19,6 +20,11 @@ class Client {
 	private:
 		typedef boost::shared_array<char> wbuf_ptr;
 		
+		struct Player {
+			std::string name;
+			PlayerColour colour;
+		};
+		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::socket socket;
 		
@@ -28,6 +34,7 @@ class Client {
 		int grid_cols, grid_rows;
 		Tile::List tiles;
 		PlayerColour turn, mycolour;
+		std::vector<Player> players;
 		
 		SDL_Surface *screen;
 		uint last_redraw;

@@ -235,9 +235,17 @@ void Server::StartGame(void) {
 		}
 	}
 	
-	c = clients.begin();
+	for(c = clients.begin(); c != clients.end(); c++) {
+		int i = begin.players_size();
+		
+		begin.add_players();
+		begin.mutable_players(i)->set_name((*c)->playername);
+		begin.mutable_players(i)->set_colour((protocol::colour)(*c)->colour);
+		
+		std::cout << "Added colour " << (*c)->colour << std::endl;
+	}
 	
-	for(; c != clients.end(); c++) {
+	for(c = clients.begin(); c != clients.end(); c++) {
 		begin.set_colour((protocol::colour)(*c)->colour);
 		WriteProto(*c, begin);
 	}
