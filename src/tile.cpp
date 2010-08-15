@@ -72,3 +72,13 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 	
 	return NULL;
 }
+
+void FreeTiles(Tile::List &tiles) {
+	Tile::List::iterator i = tiles.begin();
+	
+	for(; i != tiles.end(); i++) {
+		delete *i;
+	}
+	
+	tiles.clear();
+}

@@ -69,20 +69,25 @@ class Pawn {
 		Tile::List RadialTiles(void);
 };
 
+Tile *FindTile(Tile::List &list, int c, int r);
+Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
+Tile *TileAtXY(Tile::List &tiles, int x, int y);
+void FreeTiles(Tile::List &tiles);
+
 struct Scenario {
 	int cols;
 	int rows;
 	Tile::List tiles;
 	
 	Scenario() : cols(0), rows(0) {}
+	
+	~Scenario() {
+		FreeTiles(tiles);
+	}
 };
 
 namespace OctRadius {
 	void SpawnPowers(Tile::List &tiles, int num);
 }
-
-Tile *FindTile(Tile::List &list, int c, int r);
-Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
-Tile *TileAtXY(Tile::List &tiles, int x, int y);
 
 #endif
