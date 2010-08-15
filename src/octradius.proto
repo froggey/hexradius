@@ -13,6 +13,7 @@ enum msgtype {
 	USE = 11;	// Use a power
 	SCRAMBLE = 12;	// Scramble pawns, message.pawns contains
 			// updated positions of all affected pawns.
+	UPDATE = 13;	// Update pawn(s) attributes (flags, powers, etc)
 }
 
 enum colour {
