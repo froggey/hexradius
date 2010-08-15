@@ -52,6 +52,7 @@ class Client {
 		void ReadFinish(const boost::system::error_code& error);
 		
 		void DrawScreen(void);
+		void DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset);
 };
 
 #endif /* !OR_CLIENT_HPP */

@@ -265,11 +265,7 @@ void Client::DrawScreen(void) {
 	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
 	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
-	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
-	SDL_Surface *range_overlay = OctRadius::LoadImage("graphics/upgrades/range.png");
-	SDL_Surface *shadow = OctRadius::LoadImage("graphics/shadow.png");
-	SDL_Surface *armour = OctRadius::LoadImage("graphics/upgrades/armour.png");
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -293,29 +289,8 @@ void Client::DrawScreen(void) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
 		}
 		
-		if ((*ti)->pawn && (*ti)->pawn != dpawn) {
-			assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
-			
-			if((*ti)->pawn->flags & PWR_CLIMB) {
-				rect.x -= climb_offset;
-				rect.y -= climb_offset;
-			}
-			
-			SDL_Rect srect = { (*ti)->pawn->powers.size() ? (torus_frame * 50) : 0, (*ti)->pawn->colour * 50, 50, 50 };
-			assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
-			
-			if((*ti)->pawn->flags & PWR_ARMOUR) {
-				assert(SDL_BlitSurface(armour, NULL, screen, &rect) == 0);
-			}
-			
-			if((*ti)->pawn->flags & PWR_CLIMB) {
-				rect.x += climb_offset;
-				rect.y += climb_offset;
-			}
-			
-			srect.x = (*ti)->pawn->range * 50;
-			srect.y = 0;
-			assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
+		if((*ti)->pawn && (*ti)->pawn != dpawn) {
+			DrawPawn((*ti)->pawn, rect, torus_frame, climb_offset);
 		}
 	}
 	
@@ -323,10 +298,8 @@ void Client::DrawScreen(void) {
 		int mouse_x, mouse_y;
 		SDL_GetMouseState(&mouse_x, &mouse_y);
 		
-		SDL_Rect srect = { dpawn->powers.size() ? (torus_frame * 50) : 0, dpawn->colour*50, 50, 50 };
-		SDL_Rect rect = { mouse_x-30, mouse_y-30, 0, 0 };
-		
-		assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0};
+		DrawPawn(dpawn, rect, torus_frame, climb_offset);
 	}
 	
 	pmenu.clear();
@@ -375,4 +348,34 @@ void Client::DrawScreen(void) {
 	}
 	
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
+}
+
+void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset) {
+	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
+	SDL_Surface *range_overlay = OctRadius::LoadImage("graphics/upgrades/range.png");
+	SDL_Surface *shadow = OctRadius::LoadImage("graphics/shadow.png");
+	SDL_Surface *armour = OctRadius::LoadImage("graphics/upgrades/armour.png");
+	
+	assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
+	
+	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
+		rect.x -= climb_offset;
+		rect.y -= climb_offset;
+	}
+	
+	SDL_Rect srect = { pawn->powers.size() ? (torus_frame * 50) : 0, pawn->colour * 50, 50, 50 };
+	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+	
+	if(pawn->flags & PWR_ARMOUR) {
+		assert(SDL_BlitSurface(armour, NULL, screen, &rect) == 0);
+	}
+	
+	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
+		rect.x += climb_offset;
+		rect.y += climb_offset;
+	}
+	
+	srect.x = pawn->range * 50;
+	srect.y = 0;
+	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
 }
