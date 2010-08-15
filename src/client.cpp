@@ -17,11 +17,11 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 }
 
 Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {
-	boost::asio::ip::tcp::endpoint ep;
-	boost::asio::ip::address ip;
+	boost::asio::ip::tcp::resolver resolver(io_service);
+	boost::asio::ip::tcp::resolver::query query(host, "");
+	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
 	
-	ip.from_string(host);
-	ep.address(ip);
+	boost::asio::ip::tcp::endpoint ep = *it;
 	ep.port(port);
 	socket.connect(ep);
 	
