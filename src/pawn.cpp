@@ -34,6 +34,7 @@ bool Pawn::Move(Tile *tile) {
 			AddPower(tile->power);
 		}
 		
+		flags |= HAS_POWER;
 		tile->has_power = false;
 	}
 	
@@ -64,6 +65,10 @@ bool Pawn::UsePower(int power) {
 		p->second--;
 	}else{
 		powers.erase(p);
+		
+		if(powers.empty()) {
+			flags &= ~HAS_POWER;
+		}
 	}
 	
 	return true;
@@ -125,7 +130,6 @@ void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 	p->set_colour((protocol::colour)colour);
 	p->set_range(range);
 	p->set_flags(flags);
-	p->set_has_powers(powers.size() ? true : false);
 	
 	if(copy_powers) {
 		p->clear_powers();

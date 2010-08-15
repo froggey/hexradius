@@ -161,6 +161,17 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			BadMove(client);
 		}else{
 			WriteAll(msg);
+			
+			if(tile->pawn && tile->pawn->powers.empty()) {
+				protocol::message update;
+				update.set_msg(protocol::UPDATE);
+				
+				update.add_pawns();
+				tile->pawn->CopyToProto(update.mutable_pawns(0), false);
+				
+				WriteAll(update);
+			}
+			
 			SendOK(client);
 		}
 	}

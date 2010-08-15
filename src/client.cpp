@@ -237,6 +237,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 				continue;
 			}
 			
+			tile->pawn->flags = msg.pawns(i).flags();
 			tile->pawn->powers.clear();
 			
 			for(int p = 0; p < msg.pawns(i).powers_size(); p++) {
@@ -376,7 +377,7 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	
 	if(pawn == hpawn && pawn->colour == mycolour) {
 		torus_frame = 10;
-	}else if(pawn->powers.empty()) {
+	}else if(!(pawn->flags & HAS_POWER)) {
 		torus_frame = 0;
 	}
 	
