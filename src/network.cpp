@@ -130,7 +130,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		Tile *tile = FindTile(tiles, pawn.col(), pawn.row());
 		Tile *newtile = FindTile(tiles, pawn.new_col(), pawn.new_row());
 		
-		if(!tile || !newtile || tile->pawn->colour != client->colour || *turn != client) {
+		if(!tile || !newtile || !tile->pawn || tile->pawn->colour != client->colour || *turn != client) {
 			goto END;
 		}
 		
@@ -152,6 +152,16 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			NextTurn();
 		}else{
 			BadMove(client);
+		}
+	}
+	
+	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
+		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power())) {
+			BadMove(client);
+		}else{
+			WriteAll(msg);
+			SendOK(client);
 		}
 	}
 	
@@ -290,4 +300,10 @@ void Server::SpawnPowers(void) {
 	pspawn_num = (rand() % 2)+1;
 	
 	WriteAll(msg);
+}
+
+void Server::SendOK(Server::Client::ptr client) {
+	protocol::message msg;
+	msg.set_msg(protocol::OK);
+	WriteProto(client, msg);
 }

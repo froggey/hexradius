@@ -69,8 +69,6 @@ bool Client::DoStuff(void) {
 	
 	SDL_Event event;
 	
-	int xd, yd;
-	
 	if(SDL_PollEvent(&event)) {
 		if(event.type == SDL_QUIT) {
 			return false;
@@ -96,7 +94,15 @@ bool Client::DoStuff(void) {
 					
 					while(i != pmenu.end()) {
 						if(within_rect((*i).rect, event.button.x, event.button.y)) {
-							mpawn->UsePower((*i).power);
+							protocol::message msg;
+							msg.set_msg(protocol::USE);
+							
+							msg.add_pawns();
+							mpawn->CopyToProto(msg.mutable_pawns(0), false);
+							msg.mutable_pawns(0)->set_use_power((*i).power);
+							
+							WriteProto(msg);
+							break;
 						}
 						
 						i++;
@@ -231,6 +237,19 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 				}
 				
 				tile->pawn->powers.insert(std::make_pair(index, num));
+			}
+		}
+	}
+	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
+		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		
+		if(tile && tile->pawn) {
+			int power = msg.pawns(0).use_power();
+			
+			if(tile->pawn->powers.size()) {
+				tile->pawn->UsePower(power);
+			}else if(power >= 0 && power < Powers::num_powers) {
+				Powers::powers[power].func(tile->pawn);
 			}
 		}
 	}

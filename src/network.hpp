@@ -61,6 +61,7 @@ class Server {
 		
 		void StartGame(void);
 		void BadMove(Server::Client::ptr client);
+		void SendOK(Server::Client::ptr client);
 		
 		void NextTurn(void);
 		void SpawnPowers(void);
