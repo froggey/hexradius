@@ -29,9 +29,9 @@ bool Pawn::Move(Tile *tile) {
 	
 	tile->pawn = this;
 	
-	if(tile->power >= 0) {
+	if(tile->has_power) {
 		AddPower(tile->power);
-		tile->power = -1;
+		tile->has_power = false;
 	}
 	
 	return true;

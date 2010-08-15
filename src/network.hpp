@@ -43,6 +43,9 @@ class Server {
 		
 		std::set<Server::Client::ptr>::iterator turn;
 		
+		int pspawn_turns;
+		int pspawn_num;
+		
 		void StartAccept(void);
 		void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
 		
@@ -60,6 +63,7 @@ class Server {
 		void BadMove(Server::Client::ptr client);
 		
 		void NextTurn(void);
+		void SpawnPowers(void);
 };
 
 #endif /* !OR_NETWORK_HPP */

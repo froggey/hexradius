@@ -17,6 +17,8 @@ namespace Powers {
 	extern const Power powers[];
 	extern const int num_powers;
 	
+	int RandomPower(void);
+	
 	int destroy_column(Pawn *pawn);
 	int destroy_row(Pawn *pawn);
 	int destroy_radial(Pawn *pawn);

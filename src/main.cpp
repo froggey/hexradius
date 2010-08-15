@@ -102,42 +102,6 @@ void LoadScenario(std::string filename, Scenario &sc) {
 	}
 }
 
-int ChooseRandomPower(void) {
-	int total = 0;
-	for (int i = 0; i < Powers::num_powers; i++) {
-		total += Powers::powers[i].spawn_rate;
-	}
-	
-	int n = rand() % total;
-	for (int i = 0; i < Powers::num_powers; i++) {
-		if(n < Powers::powers[i].spawn_rate) {
-			return i;
-		}
-		
-		n -= Powers::powers[i].spawn_rate;
-	}
-	
-	abort();
-}
-
-void OctRadius::SpawnPowers(Tile::List &tiles, int num) {
-	Tile::List::iterator ti = tiles.begin();
-	Tile::List ctiles;
-	
-	for(; ti != tiles.end(); ti++) {
-		if(!(*ti)->pawn && (*ti)->power < 0) {
-			ctiles.push_back(*ti);
-		}
-	}
-	
-	Tile::List stiles = RandomTiles(ctiles, num, 1);
-	Tile::List::iterator i = stiles.begin();
-	
-	for(; i != stiles.end(); i++) {
-		(*i)->power = ChooseRandomPower();
-	}
-}
-
 int main(int argc, char **argv) {
 	if(argc > 2) {
 		std::cerr << "Usage: " << argv[0] << " [scenario]" << std::endl;

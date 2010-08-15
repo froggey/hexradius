@@ -7,8 +7,9 @@
 
 #include "network.hpp"
 #include "octradius.pb.h"
+#include "powers.hpp"
 
-Server::Server(uint16_t port, Scenario &s, uint players) : acceptor(io_service), scenario(s), req_players(players), turn(clients.end()) {
+Server::Server(uint16_t port, Scenario &s, uint players) : acceptor(io_service), scenario(s), req_players(players), turn(clients.end()), pspawn_turns(1), pspawn_num(1) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	CopyTiles(tiles, scenario.tiles);
@@ -235,9 +236,42 @@ void Server::NextTurn(void) {
 		} while((*turn)->colour == NOINIT);
 	}
 	
+	if(--pspawn_turns == 0) {
+		SpawnPowers();
+	}
+	
 	protocol::message tmsg;
 	tmsg.set_msg(protocol::TURN);
 	tmsg.set_colour((protocol::colour)(*turn)->colour);
 	
 	WriteAll(tmsg);
+}
+
+void Server::SpawnPowers(void) {
+	Tile::List ctiles;
+	Tile::List::iterator t = tiles.begin();
+	
+	for(; t != tiles.end(); t++) {
+		if(!(*t)->pawn && !(*t)->has_power) {
+			ctiles.push_back(*t);
+		}
+	}
+	
+	Tile::List stiles = RandomTiles(ctiles, pspawn_num, true);
+	
+	protocol::message msg;
+	msg.set_msg(protocol::UPDATE);
+	
+	for(t = stiles.begin(); t != stiles.end(); t++) {
+		(*t)->power = Powers::RandomPower();
+		(*t)->has_power = true;
+		
+		msg.add_tiles();
+		(*t)->CopyToProto(msg.mutable_tiles(msg.tiles_size()-1));
+	}
+	
+	pspawn_turns = (rand() % 4)+1;
+	pspawn_num = (rand() % 2)+1;
+	
+	WriteAll(msg);
 }

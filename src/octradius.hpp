@@ -30,11 +30,12 @@ struct Tile {
 	int col, row;
 	int height;
 	int power;
+	bool has_power;
 	Pawn *pawn;
 	
 	int screen_x, screen_y;
 	
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), pawn(NULL) {}
+	Tile(int c, int r, int h) : col(c), row(r), height(h), has_power(false), pawn(NULL) {}
 	~Tile();
 	
 	bool SetHeight(int h);
@@ -102,9 +103,5 @@ struct Scenario {
 		CopyTiles(tiles, s.tiles);
 	}
 };
-
-namespace OctRadius {
-	void SpawnPowers(Tile::List &tiles, int num);
-}
 
 #endif

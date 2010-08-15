@@ -201,6 +201,17 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
 		}
 	}
+	if(msg.msg() == protocol::UPDATE) {
+		for(int i = 0; i < msg.tiles_size(); i++) {
+			Tile *tile = FindTile(tiles, msg.tiles(i).col(), msg.tiles(i).row());
+			if(!tile) {
+				continue;
+			}
+			
+			tile->height = msg.tiles(i).height();
+			tile->has_power = msg.tiles(i).power();
+		}
+	}
 	
 	ReadSize();
 }
@@ -237,7 +248,7 @@ void Client::DrawScreen(void) {
 		
 		assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
 		
-		if((*ti)->power >= 0) {
+		if((*ti)->has_power) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
 		}
 		

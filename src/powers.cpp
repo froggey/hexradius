@@ -19,6 +19,24 @@ const Powers::Power Powers::powers[] = {
 
 const int Powers::num_powers = sizeof(powers) / sizeof(Power);
 
+int Powers::RandomPower(void) {
+	int total = 0;
+	for (int i = 0; i < Powers::num_powers; i++) {
+		total += Powers::powers[i].spawn_rate;
+	}
+	
+	int n = rand() % total;
+	for (int i = 0; i < Powers::num_powers; i++) {
+		if(n < Powers::powers[i].spawn_rate) {
+			return i;
+		}
+		
+		n -= Powers::powers[i].spawn_rate;
+	}
+	
+	abort();
+}
+
 namespace Powers {
 	static int destroy_enemies(Tile::List &area, Pawn *pawn) {
 		Tile::List::iterator i = area.begin();
