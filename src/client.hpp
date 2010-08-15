@@ -35,6 +35,7 @@ class Client {
 		
 		Pawn *dpawn;
 		Pawn *mpawn;
+		Pawn *hpawn;
 		
 		struct pmenu_entry {
 			SDL_Rect rect;

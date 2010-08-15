@@ -16,7 +16,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -133,8 +133,19 @@ bool Client::DoStuff(void) {
 				
 				dpawn = NULL;
 			}
-		}else if(event.type == SDL_MOUSEMOTION && dpawn) {
-			last_redraw = 0;
+		}else if(event.type == SDL_MOUSEMOTION) {
+			Tile *tile = TileAtXY(tiles, event.motion.x, event.motion.y);
+			
+			if(dpawn) {
+				last_redraw = 0;
+			}else if(!mpawn && tile && tile->pawn) {
+				if(hpawn != tile->pawn) {
+					hpawn = tile->pawn;
+					last_redraw = 0;
+				}
+			}else{
+				hpawn = NULL;
+			}
 		}
 	}
 	
@@ -363,7 +374,13 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 		rect.y -= climb_offset;
 	}
 	
-	SDL_Rect srect = { pawn->powers.size() ? (torus_frame * 50) : 0, pawn->colour * 50, 50, 50 };
+	if(pawn == hpawn && pawn->colour == mycolour) {
+		torus_frame = 10;
+	}else if(pawn->powers.empty()) {
+		torus_frame = 0;
+	}
+	
+	SDL_Rect srect = { torus_frame * 50, pawn->colour * 50, 50, 50 };
 	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 	
 	if(pawn->flags & PWR_ARMOUR) {
