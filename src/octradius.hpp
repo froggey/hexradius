@@ -14,7 +14,7 @@
 
 #include "octradius.pb.h"
 
-#define MAX_MSGSIZE 2048 /* This will annoy mike */
+const uint MAX_MSGSIZE = 2048; // YAAAAAAAAAAAAAAAAY I CAN USE LINE COMMENTS PROPERLY TOO!
 
 const uint TILE_SIZE = 50;
 const int BOARD_OFFSET = 20;
