@@ -85,13 +85,15 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 	if(msg.msg() == protocol::INIT) {
 		int c, match = 1;
 		
-		for(c = 0; c < 4 && match; c++) {
+		for(c = 0; c < 4 && match;) {
 			std::set<Server::Client::ptr>::iterator i = clients.begin();
 			match = 0;
 			
 			for(; i != clients.end(); i++) {
 				if((*i)->colour != NOINIT && (*i)->colour == (PlayerColour)c) {
 					match = 1;
+					c++;
+					
 					break;
 				}
 			}
