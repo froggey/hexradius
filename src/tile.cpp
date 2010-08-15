@@ -52,3 +52,23 @@ Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 	
 	return ret;
 }
+
+/* Return the "topmost" tile rendered at the given X,Y co-ordinates or NULL if
+ * there is no tile at that location.
+*/
+Tile *TileAtXY(Tile::List &tiles, int x, int y) {
+	Tile::List::iterator ti = tiles.end();
+	
+	do {
+		ti--;
+		
+		int tx = (*ti)->screen_x;
+		int ty = (*ti)->screen_y;
+		
+		if(tx <= x && tx+(int)TILE_SIZE > x && ty <= y && ty+(int)TILE_SIZE > y) {
+			return *ti;
+		}
+	} while(ti != tiles.begin());
+	
+	return NULL;
+}

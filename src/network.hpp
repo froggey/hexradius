@@ -7,6 +7,7 @@
 #include <set>
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 
 #include "octradius.pb.h"
 #include "octradius.hpp"
@@ -49,7 +50,7 @@ class Server {
 		void ReadMessage(Server::Client::ptr client, const boost::system::error_code& error);
 		void HandleMessage(Server::Client::ptr client, const boost::system::error_code& error);
 		
-		typedef boost::shared_ptr<char> wbuf_ptr;
+		typedef boost::shared_array<char> wbuf_ptr;
 		
 		void WriteProto(Server::Client::ptr client, protocol::message &msg);
 		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error, wbuf_ptr wb);

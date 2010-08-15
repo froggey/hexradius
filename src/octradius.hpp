@@ -16,6 +16,10 @@
 
 #define MAX_MSGSIZE 2048 /* This will annoy mike */
 
+const uint TILE_SIZE = 50;
+const int BOARD_OFFSET = 20;
+const int TORUS_FRAMES = 11;
+
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, NOINIT };
 
 class Pawn;
@@ -79,5 +83,6 @@ namespace OctRadius {
 
 Tile *FindTile(Tile::List &list, int c, int r);
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
+Tile *TileAtXY(Tile::List &tiles, int x, int y);
 
 #endif

@@ -11,6 +11,8 @@
 Server::Server(uint16_t port, Scenario &s, uint players) : acceptor(io_service), scenario(s), req_players(players), turn(clients.end()) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
+	tiles = scenario.tiles;
+	
 	acceptor.open(endpoint.protocol());
 	acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
 	acceptor.bind(endpoint);
@@ -145,7 +147,7 @@ void Server::WriteProto(Server::Client::ptr client, protocol::message &msg) {
 	msg.SerializeToString(&pb);
 	
 	uint32_t psize = htonl(pb.size());
-	wbuf_ptr wb(new char[psize+sizeof(psize)]);
+	wbuf_ptr wb(new char[pb.size()+sizeof(psize)]);
 	
 	memcpy(wb.get(), &psize, sizeof(psize));
 	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
@@ -159,8 +161,6 @@ void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error
 		clients.erase(client);
 		return;
 	}
-	
-	ReadSize(client);
 }
 
 void Server::StartGame(void) {
