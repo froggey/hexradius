@@ -80,7 +80,7 @@ bool Client::DoStuff(void) {
 				xd = event.button.x;
 				yd = event.button.y;
 				
-				if(tile && tile->pawn) {
+				if(tile && tile->pawn && tile->pawn->colour == mycolour) {
 					dpawn = tile->pawn;
 				}
 			}
