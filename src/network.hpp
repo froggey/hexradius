@@ -31,6 +31,10 @@ class Server {
 		Server(uint16_t port, Scenario &s, uint players);
 		void DoStuff(void);
 		
+		~Server() {
+			FreeTiles(tiles);
+		}
+		
 	private:
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::acceptor acceptor;

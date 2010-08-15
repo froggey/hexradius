@@ -213,10 +213,10 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		std::cout << "Turn for colour " << turn << std::endl;
 	}
 	if(msg.msg() == protocol::MOVE && msg.pawns_size() == 1) {
-		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
-		Tile *ntile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
+		Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		Tile *tile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
 		
-		if(!(tile && tile->pawn && ntile && tile->pawn->Move(ntile))) {
+		if(!(pawn && tile && pawn->Move(tile))) {
 			std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
 		}
 	}
@@ -232,13 +232,13 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		}
 		
 		for(int i = 0; i < msg.pawns_size(); i++) {
-			Tile *tile = FindTile(tiles, msg.pawns(i).col(), msg.pawns(i).row());
-			if(!tile || !tile->pawn) {
+			Pawn *pawn = FindPawn(tiles, msg.pawns(i).col(), msg.pawns(i).row());
+			if(!pawn) {
 				continue;
 			}
 			
-			tile->pawn->flags = msg.pawns(i).flags();
-			tile->pawn->powers.clear();
+			pawn->flags = msg.pawns(i).flags();
+			pawn->powers.clear();
 			
 			for(int p = 0; p < msg.pawns(i).powers_size(); p++) {
 				int index = msg.pawns(i).powers(p).index();
@@ -248,20 +248,20 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 					continue;
 				}
 				
-				tile->pawn->powers.insert(std::make_pair(index, num));
+				pawn->powers.insert(std::make_pair(index, num));
 			}
 		}
 	}
 	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
-		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 		
-		if(tile && tile->pawn) {
+		if(pawn) {
 			int power = msg.pawns(0).use_power();
 			
-			if(tile->pawn->powers.size()) {
-				tile->pawn->UsePower(power);
+			if(pawn->powers.size()) {
+				pawn->UsePower(power);
 			}else if(power >= 0 && power < Powers::num_powers) {
-				Powers::powers[power].func(tile->pawn);
+				Powers::powers[power].func(pawn);
 			}
 		}
 	}

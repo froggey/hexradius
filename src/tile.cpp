@@ -34,6 +34,11 @@ Tile *FindTile(Tile::List &list, int c, int r) {
 	return NULL;
 }
 
+Pawn *FindPawn(Tile::List &list, int c, int r) {
+	Tile *tile = FindTile(list, c, r);
+	return (tile && tile->pawn ? tile->pawn : NULL);
+}
+
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 	Tile::List ret;
 	
@@ -71,6 +76,12 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 	} while(ti != tiles.begin());
 	
 	return NULL;
+}
+
+/* As above, but for the respective pawn */
+Pawn *PawnAtXY(Tile::List &tiles, int x, int y) {
+	Tile *tile = TileAtXY(tiles, x, y);
+	return (tile && tile->pawn ? tile->pawn : NULL);
 }
 
 void FreeTiles(Tile::List &tiles) {

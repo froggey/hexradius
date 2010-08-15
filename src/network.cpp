@@ -125,18 +125,18 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			goto END;
 		}
 		
-		const protocol::pawn &pawn = msg.pawns(0);
+		const protocol::pawn &p_pawn = msg.pawns(0);
 		
-		Tile *tile = FindTile(tiles, pawn.col(), pawn.row());
-		Tile *newtile = FindTile(tiles, pawn.new_col(), pawn.new_row());
+		Pawn *pawn = FindPawn(tiles, p_pawn.col(), p_pawn.row());
+		Tile *tile = FindTile(tiles, p_pawn.new_col(), p_pawn.new_row());
 		
-		if(!tile || !newtile || !tile->pawn || tile->pawn->colour != client->colour || *turn != client) {
+		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
 			goto END;
 		}
 		
-		bool hp = newtile->has_power;
+		bool hp = tile->has_power;
 		
-		if(tile->pawn->Move(newtile)) {
+		if(pawn->Move(tile)) {
 			WriteAll(msg);
 			
 			if(hp) {
@@ -144,7 +144,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 				msg.set_msg(protocol::UPDATE);
 				
 				msg.add_pawns();
-				newtile->pawn->CopyToProto(msg.mutable_pawns(0), true);
+				pawn->CopyToProto(msg.mutable_pawns(0), true);
 				
 				WriteProto(client, msg);
 			}
@@ -157,6 +157,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 	
 	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
 		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		
 		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power())) {
 			BadMove(client);
 		}else{
