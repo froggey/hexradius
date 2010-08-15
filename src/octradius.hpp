@@ -73,6 +73,7 @@ Tile *FindTile(Tile::List &list, int c, int r);
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
 Tile *TileAtXY(Tile::List &tiles, int x, int y);
 void FreeTiles(Tile::List &tiles);
+void CopyTiles(Tile::List &dest, const Tile::List &src);
 
 struct Scenario {
 	int cols;
@@ -83,6 +84,22 @@ struct Scenario {
 	
 	~Scenario() {
 		FreeTiles(tiles);
+	}
+	
+	Scenario &operator=(const Scenario &s) {
+		if(this != &s) {
+			cols = s.cols;
+			rows = s.rows;
+			CopyTiles(tiles, s.tiles);
+		}
+		
+		return *this;
+	}
+	
+	Scenario(const Scenario &s) {
+		cols = s.cols;
+		rows = s.rows;
+		CopyTiles(tiles, s.tiles);
 	}
 };
 

@@ -82,3 +82,24 @@ void FreeTiles(Tile::List &tiles) {
 	
 	tiles.clear();
 }
+
+void CopyTiles(Tile::List &dest, const Tile::List &src) {
+	FreeTiles(dest);
+	
+	Tile::List::const_iterator i = src.begin();
+	
+	for(; i != src.end(); i++) {
+		Tile *t = new Tile(**i);
+		
+		if(t->pawn) {
+			Pawn *p = new Pawn(t->pawn->colour, dest, t);
+			p->powers = t->pawn->powers;
+			p->range = t->pawn->range;
+			p->flags = t->pawn->flags;
+			
+			t->pawn = p;
+		}
+		
+		dest.push_back(t);
+	}
+}

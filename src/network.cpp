@@ -11,7 +11,7 @@
 Server::Server(uint16_t port, Scenario &s, uint players) : acceptor(io_service), scenario(s), req_players(players), turn(clients.end()) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
-	tiles = scenario.tiles;
+	CopyTiles(tiles, scenario.tiles);
 	
 	acceptor.open(endpoint.protocol());
 	acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
