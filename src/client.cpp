@@ -213,6 +213,26 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			tile->height = msg.tiles(i).height();
 			tile->has_power = msg.tiles(i).power();
 		}
+		
+		for(int i = 0; i < msg.pawns_size(); i++) {
+			Tile *tile = FindTile(tiles, msg.pawns(i).col(), msg.pawns(i).row());
+			if(!tile || !tile->pawn) {
+				continue;
+			}
+			
+			tile->pawn->powers.clear();
+			
+			for(int p = 0; p < msg.pawns(i).powers_size(); p++) {
+				int index = msg.pawns(i).powers(p).index();
+				int num = msg.pawns(i).powers(p).num();
+				
+				if(index < 0 || index >= Powers::num_powers || num <= 0) {
+					continue;
+				}
+				
+				tile->pawn->powers.insert(std::make_pair(index, num));
+			}
+		}
 	}
 	
 	ReadSize();

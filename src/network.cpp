@@ -133,8 +133,21 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			goto END;
 		}
 		
+		bool hp = newtile->has_power;
+		
 		if(tile->pawn->Move(newtile)) {
 			WriteAll(msg);
+			
+			if(hp) {
+				protocol::message msg;
+				msg.set_msg(protocol::UPDATE);
+				
+				msg.add_pawns();
+				newtile->pawn->CopyToProto(msg.mutable_pawns(0), true);
+				
+				WriteProto(client, msg);
+			}
+			
 			NextTurn();
 		}else{
 			BadMove(client);

@@ -30,7 +30,10 @@ bool Pawn::Move(Tile *tile) {
 	tile->pawn = this;
 	
 	if(tile->has_power) {
-		AddPower(tile->power);
+		if(tile->power >= 0) {
+			AddPower(tile->power);
+		}
+		
 		tile->has_power = false;
 	}
 	
