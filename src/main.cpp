@@ -103,30 +103,59 @@ void LoadScenario(std::string filename, Scenario &sc) {
 }
 
 int main(int argc, char **argv) {
-	if(argc > 2) {
-		std::cerr << "Usage: " << argv[0] << " [scenario]" << std::endl;
-		return 1;
-	}
-	
 	srand(time(NULL));
 	
 	Scenario scn;
+	const char* scenario_name = "scenario/default.txt";
+	const char* host;
+	int port;
+	bool is_server = false;
+	bool is_client = false;
 	
-	if(argc == 1) {
-		LoadScenario("scenario/default.txt", scn);
-	}else{
-		LoadScenario(argv[1], scn);
+	for(int i = 1; i < argc; i++) {
+		if(strcmp(argv[i], "-s") == 0) {
+			host = "127.0.0.1";
+			port = atoi(argv[++i]);
+			scenario_name = argv[++i];
+			is_server = true;
+		}
+		else if(strcmp(argv[i], "-c") == 0) {
+			host = argv[++i];
+			port = atoi(argv[++i]);
+			is_client = true;
+		}
+		else {
+			std::cerr << "Unrecognized option " << argv[i] << ", learn to type kthx" << std::endl;
+			return 1;
+		}
 	}
 	
-	Server server(9001, scn, 1);
-	Client client("127.0.0.1", 9001, "test");
-	
-	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
-	assert(TTF_Init() == 0);
-	
-	do {
-		server.DoStuff();
-	} while(client.DoStuff());
+	if (is_server) {
+		LoadScenario(scenario_name, scn);
+		Server server(port, scn, 2);
+		
+		Client client(host, port, "test");
+
+		assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+		assert(TTF_Init() == 0);
+		
+		do {
+			server.DoStuff();
+		} while(client.DoStuff());
+	}
+	else if (is_client) {
+		Client client(host, port, "test");
+
+		assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+		assert(TTF_Init() == 0);
+		
+		while (client.DoStuff()) {}
+	}
+	else {
+		std::cerr << "Usage: " << argv[0] << " -s port scenario_name" << std::endl;
+		std::cerr << "       " << argv[0] << " -c host port" << std::endl;
+		return 1;
+	}
 	
 	OctRadius::FreeImages();
 	FontStuff::FreeFonts();
