@@ -48,3 +48,12 @@ void FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SD
 	
 	SDL_FreeSurface(rt);
 }
+
+int FontStuff::TextWidth(TTF_Font *font, const std::string &text) {
+	int width;
+	if(TTF_SizeText(font, text.c_str(), &width, NULL) == -1) {
+		throw std::runtime_error("TTF_SizeText() failed on \"" + text + "\"");
+	}
+	
+	return width;
+}

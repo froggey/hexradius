@@ -297,11 +297,9 @@ void Client::DrawScreen(void) {
 	
 	{
 		SDL_Rect rect = {0,0,0,0};
-		int w;
 		
 		FontStuff::BlitText(screen, rect, font, (SDL_Colour){255,255,255}, "Players: ");
-		TTF_SizeText(font, "Players: ", &w, NULL);
-		rect.x += w;
+		rect.x += FontStuff::TextWidth(font, "Players: ");
 		
 		std::vector<Player>::iterator p = players.begin();
 		
@@ -311,8 +309,7 @@ void Client::DrawScreen(void) {
 			TTF_Font *f = (*p).colour == turn ? bfont : font;
 			
 			FontStuff::BlitText(screen, rect, f, colours[(*p).colour], (*p).name + " ");
-			TTF_SizeText(f, std::string((*p).name + " ").c_str(), &w, NULL);
-			rect.x += w;
+			rect.x += FontStuff::TextWidth(f, (*p).name + " ");
 		}
 	}
 	
@@ -359,8 +356,7 @@ void Client::DrawScreen(void) {
 		Pawn::PowerList::iterator i = mpawn->powers.begin();
 		
 		for(; i != mpawn->powers.end(); i++) {
-			int w;
-			TTF_SizeText(font, Powers::powers[i->first].name, &w, NULL);
+			int w = FontStuff::TextWidth(font, Powers::powers[i->first].name);
 			
 			if(w > fw) {
 				fw = w;
