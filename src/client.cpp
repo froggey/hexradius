@@ -324,8 +324,8 @@ void Client::DrawScreen(void) {
 		rect.y = bskip + BOARD_OFFSET + TILE_SIZE * (*ti)->row;
 		rect.w = rect.h = 0;
 		
-		rect.x += (-1 * (*ti)->height) * 10;
-		rect.y += (-1 * (*ti)->height) * 10;
+		rect.x += (-1 * (*ti)->height) * 5;
+		rect.y += (-1 * (*ti)->height) * 5;
 		
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;
