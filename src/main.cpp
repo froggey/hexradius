@@ -141,6 +141,7 @@ int main(int argc, char **argv) {
 		
 		do {
 			server.DoStuff();
+			SDL_Delay(5);
 		} while(client.DoStuff());
 	}
 	else if (is_client) {
@@ -149,7 +150,13 @@ int main(int argc, char **argv) {
 		assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 		assert(TTF_Init() == 0);
 		
-		while (client.DoStuff()) {}
+		while (client.DoStuff()) {
+			uint8_t st = SDL_GetAppState();
+			if (st == SDL_APPACTIVE || !st)
+				SDL_Delay(200);
+			else
+				SDL_Delay(5);
+		}
 	}
 	else {
 		std::cerr << "Usage: " << argv[0] << " -s port scenario_name" << std::endl;
