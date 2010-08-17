@@ -4,8 +4,8 @@
 
 bool Pawn::Move(Tile *tile) {
 	if(
-		!(tile->col == cur_tile->col && (tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1)) &&
-		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1))
+		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
+		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) && (tile->col == cur_tile->col + (cur_tile->row % 2) || tile->col+1 == cur_tile->col + (cur_tile->row % 2)))
 	) {
 		return false;
 	}
