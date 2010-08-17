@@ -39,6 +39,7 @@ class Client {
 		SDL_Surface *screen;
 		uint last_redraw;
 		int xd, yd;
+		SDL_Rect board;
 		
 		Pawn *dpawn;
 		Pawn *mpawn;

@@ -16,9 +16,14 @@
 
 const uint MAX_MSGSIZE = 8192; // YAAAAAAAAAAAAAAAAY I CAN USE LINE COMMENTS PROPERLY TOO!
 
-const uint TILE_SIZE = 50;
 const int BOARD_OFFSET = 10;
 const uint TORUS_FRAMES = 11;
+
+const uint TILE_WIDTH = 50;
+const uint TILE_HEIGHT = 51;
+const uint TILE_WOFF = 50;
+const uint TILE_HOFF = 38;
+const uint TILE_ROFF = 25;
 
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, NOINIT };
 

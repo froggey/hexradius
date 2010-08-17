@@ -16,7 +16,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), board((SDL_Rect){0,0,0,0}), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -57,9 +57,27 @@ bool Client::DoStuff(void) {
 	io_service.poll();
 	
 	if(!screen && grid_cols && grid_rows) {
-		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
+		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
+		int bskip = TTF_FontLineSkip(bfont);
 		
-		screen = SDL_SetVideoMode((grid_cols*TILE_SIZE) + (2*BOARD_OFFSET), (grid_rows*TILE_SIZE) + (2*BOARD_OFFSET) + TTF_FontLineSkip(font), 0, SDL_SWSURFACE);
+		Tile::List::iterator tile = tiles.begin();
+		
+		board.x = 0;
+		board.y = bskip;
+		
+		for(; tile != tiles.end(); tile++) {
+			int w = 2*BOARD_OFFSET + (*tile)->col * TILE_WOFF + TILE_WIDTH + (((*tile)->row % 2) * TILE_ROFF);
+			int h = 2*BOARD_OFFSET + (*tile)->row * TILE_HOFF + TILE_HEIGHT;
+			
+			if(board.w < w) {
+				board.w = w;
+			}
+			if(board.h < h) {
+				board.h = h;
+			}
+		}
+		
+		screen = SDL_SetVideoMode(board.w, board.h+bskip, 0, SDL_SWSURFACE);
 		assert(screen != NULL);
 		
 		SDL_WM_SetCaption("OctRadius", "OctRadius");
@@ -286,12 +304,11 @@ void Client::DrawScreen(void) {
 	
 	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
-	SDL_Surface *square = OctRadius::LoadImage("graphics/tile.png");
+	SDL_Surface *tile = OctRadius::LoadImage("graphics/hextile.png");
 	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
 	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
-	int bskip = TTF_FontLineSkip(bfont);
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
@@ -317,17 +334,17 @@ void Client::DrawScreen(void) {
 	
 	for(; ti != tiles.end(); ti++) {
 		SDL_Rect rect;
-		rect.x = BOARD_OFFSET + TILE_SIZE * (*ti)->col;
-		rect.y = bskip + BOARD_OFFSET + TILE_SIZE * (*ti)->row;
+		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
+		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
 		rect.w = rect.h = 0;
 		
-		rect.x += (-1 * (*ti)->height) * 5;
+		rect.x += ((-1 * (*ti)->height) * 5);
 		rect.y += (-1 * (*ti)->height) * 5;
 		
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;
 		
-		assert(SDL_BlitSurface(square, NULL, screen, &rect) == 0);
+		assert(SDL_BlitSurface(tile, NULL, screen, &rect) == 0);
 		
 		if((*ti)->has_power) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
@@ -363,7 +380,7 @@ void Client::DrawScreen(void) {
 			}
 		}
 		
-		SDL_Rect rect = { mpawn->GetTile()->screen_x+TILE_SIZE, mpawn->GetTile()->screen_y, fw+30, mpawn->powers.size() * fh };
+		SDL_Rect rect = { mpawn->GetTile()->screen_x+TILE_WIDTH, mpawn->GetTile()->screen_y, fw+30, mpawn->powers.size() * fh };
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 		
 		pmenu_area = rect;

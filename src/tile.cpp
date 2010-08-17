@@ -70,7 +70,7 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 		int tx = (*ti)->screen_x;
 		int ty = (*ti)->screen_y;
 		
-		if(tx <= x && tx+(int)TILE_SIZE > x && ty <= y && ty+(int)TILE_SIZE > y) {
+		if(tx <= x && tx+(int)TILE_WIDTH > x && ty <= y && ty+(int)TILE_HEIGHT > y) {
 			return *ti;
 		}
 	} while(ti != tiles.begin());
