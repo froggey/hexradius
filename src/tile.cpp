@@ -80,7 +80,7 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 			
 			SDL_GetRGBA(pixel, tile->format, &blah, &blah, &blah, &alpha);
 			
-			if(!alpha) {
+			if(alpha) {
 				SDL_UnlockSurface(tile);
 				return *ti;
 			}
