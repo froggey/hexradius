@@ -1,3 +1,5 @@
+#include <set>
+
 #include "octradius.hpp"
 #include "powers.hpp"
 #include "octradius.pb.h"
@@ -90,23 +92,46 @@ Tile::List Pawn::RowTiles(void) {
 	return tiles;
 }
 
-Tile::List Pawn::RadialTiles(void) {
-	Tile::List tiles;
-	Tile::List::iterator i = all_tiles.begin();
+typedef std::set<Tile*> tile_set;
+
+static void radial_loop(Tile::List &all, tile_set &tiles, Tile *base) {
+	int c_min = base->col - 1 + (base->row % 2) * 1;
+	int c_max = base->col + (base->row % 2) * 1;
+	int c_extra = base->col + (base->row % 2 ? -1 : 1);
+	int r_min = base->row-1;
+	int r_max = base->row+1;
 	
-	int c_min = cur_tile->col-range - 1 + (cur_tile->row % 2) * 1;
-	int c_max = cur_tile->col+range + (cur_tile->row % 2) * 1;
-	int c_extra = cur_tile->col + (range + 1 * (cur_tile->row % 2 ? -1 : 1));
-	int r_min = cur_tile->row-range-1;
-	int r_max = cur_tile->row+range+1;
-	
-	for(; i != all_tiles.end(); i++) {
-		if(((*i)->col >= c_min && (*i)->col <= c_max && (*i)->row >= r_min && (*i)->row <= r_max) || ((*i)->row == cur_tile->row && (*i)->col == c_extra)) {
-			tiles.push_back(*i);
+	for(Tile::List::iterator i = all.begin(); i != all.end(); i++) {
+		if(((*i)->col >= c_min && (*i)->col <= c_max && (*i)->row >= r_min && (*i)->row <= r_max) || ((*i)->row == base->row && (*i)->col == c_extra)) {
+			tiles.insert(*i);
 		}
 	}
+}
+
+Tile::List Pawn::RadialTiles(void) {
+	tile_set tiles;
+	radial_loop(all_tiles, tiles, cur_tile);
 	
-	return tiles;
+	tile_set outer = tiles;
+	
+	for(int i = 0; i < range; i++) {
+		tile_set new_outer;
+		
+		for(tile_set::iterator t = outer.begin(); t != outer.end(); t++) {
+			radial_loop(all_tiles, new_outer, *t);
+		}
+		
+		tiles.insert(new_outer.begin(), new_outer.end());
+		outer = new_outer;
+	}
+	
+	Tile::List ret;
+	
+	for(tile_set::iterator t = tiles.begin(); t != tiles.end(); t++) {
+		ret.push_back(*t);
+	}
+	
+	return ret;
 }
 
 void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {

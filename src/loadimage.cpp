@@ -45,7 +45,6 @@ SDL_Surface *ImgStuff::LoadImage(std::string filename, const TintValues &tint) {
 	SDL_Surface *s = LoadImageNC(filename);
 	
 	if(tint.HazTint()) {
-		std::cout << "haztint2\n";
 		TintSurface(s, tint);
 	}
 	
