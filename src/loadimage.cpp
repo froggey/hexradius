@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include <assert.h>
 
 #include "loadimage.hpp"
 
@@ -39,6 +40,9 @@ void OctRadius::FreeImages(void) {
 	image_cache.clear();
 }
 
+/* Fetch a single pixel from a surface
+ * Courtesy of the SDL wiki
+*/
 Uint32 OctRadius::GetPixel(SDL_Surface *surface, int x, int y) {
 	int bpp = surface->format->BytesPerPixel;
 	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
@@ -65,6 +69,9 @@ Uint32 OctRadius::GetPixel(SDL_Surface *surface, int x, int y) {
 	}
 }
 
+/* Set a pixel in an SDL surface
+ * Courtesy of the SDL wiki
+*/
 void OctRadius::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
 	int bpp = surface->format->BytesPerPixel;
 	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
@@ -97,4 +104,37 @@ void OctRadius::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
 		default:
 			break;
 	}
+}
+
+#define FOOBAR(v) \
+	if((int)v + tint.v > 255) { \
+		v = 255; \
+	}else if((int)v + tint.v < 0) { \
+		v = 0; \
+	}else{ \
+		v += tint.v; \
+	}
+
+void ImgStuff::TintSurface(SDL_Surface *surface, TintValues &tint) {
+	assert(SDL_LockSurface(surface) == 0);
+	
+	for(int x = 0; x < surface->w; x++) {
+		for(int y = 0; y < surface->h; y++) {
+			Uint32 pixel = OctRadius::GetPixel(surface, x, y);
+			
+			Uint8 r, g, b, a;
+			SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
+			
+			FOOBAR(r);
+			FOOBAR(g);
+			FOOBAR(b);
+			FOOBAR(a);
+			
+			pixel = SDL_MapRGBA(surface->format, r, g, b, a);
+			
+			OctRadius::SetPixel(surface, x, y, pixel);
+		}
+	}
+	
+	SDL_UnlockSurface(surface);
 }

@@ -351,24 +351,9 @@ void Client::DrawScreen(void) {
 		SDL_Surface *tinted = NULL, *timg = tile;
 		if(htile == *ti) {
 			timg = tinted = OctRadius::LoadImage("graphics/hextile.png", false);
-			assert(SDL_LockSurface(tinted) == 0);
 			
-			for(int x = 0; x < tinted->w; x++) {
-				for(int y = 0; y < tinted->h; y++) {
-					Uint32 pixel = OctRadius::GetPixel(tinted, x, y);
-					
-					Uint8 r, g, b, a;
-					SDL_GetRGBA(pixel, tinted->format, &r, &g, &b, &a);
-					
-					g += 100;
-					
-					pixel = SDL_MapRGBA(tinted->format, r, g, b, a);
-					
-					OctRadius::SetPixel(tinted, x, y, pixel);
-				}
-			}
-			
-			SDL_UnlockSurface(tinted);
+			ImgStuff::TintValues tvals(0, 100, 0);
+			ImgStuff::TintSurface(tinted, tvals);
 		}
 		
 		assert(SDL_BlitSurface(timg, NULL, screen, &rect) == 0);
