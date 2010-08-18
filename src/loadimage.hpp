@@ -6,6 +6,7 @@
 namespace OctRadius {
 	SDL_Surface *LoadImage(std::string filename);
 	void FreeImages(void);
+	Uint32 GetPixel(SDL_Surface *surface, int x, int y);
 }
 
 #endif /* !OR_LOADIMAGE_HPP */

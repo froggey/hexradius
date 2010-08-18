@@ -76,7 +76,7 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 		
 		if(tx <= x && tx+(int)TILE_WIDTH > x && ty <= y && ty+(int)TILE_HEIGHT > y) {
 			Uint8 alpha, blah;
-			Uint32 pixel = ((Uint32*)tile->pixels)[(x-(*ti)->screen_x)*(y-(*ti)->screen_y)];
+			Uint32 pixel = OctRadius::GetPixel(tile, x-(*ti)->screen_x, y-(*ti)->screen_y);
 			
 			SDL_GetRGBA(pixel, tile->format, &blah, &blah, &blah, &alpha);
 			
