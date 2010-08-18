@@ -48,9 +48,16 @@ SDL_Surface *ImgStuff::LoadImage(std::string filename, const TintValues &tint) {
 		TintSurface(s, tint);
 	}
 	
-	image_cache.insert(std::make_pair(key, s));
+	SDL_Surface *conv = SDL_DisplayFormatAlpha(s);
+	if(!conv) {
+		throw std::runtime_error(std::string("Unable to convert surface to display format: ") + SDL_GetError());
+	}
 	
-	return s;
+	SDL_FreeSurface(s);
+	
+	image_cache.insert(std::make_pair(key, conv));
+	
+	return conv;
 }
 
 /* Load an image without using the cache */
@@ -60,7 +67,14 @@ SDL_Surface *ImgStuff::LoadImageNC(std::string filename) {
 		throw std::runtime_error("Unable to load image '" + filename + "': " + SDL_GetError());
 	}
 	
-	return s;
+	SDL_Surface *conv = SDL_DisplayFormatAlpha(s);
+	if(!conv) {
+		throw std::runtime_error(std::string("Unable to convert surface to display format: ") + SDL_GetError());
+	}
+	
+	SDL_FreeSurface(s);
+	
+	return conv;
 }
 
 void ImgStuff::FreeImages(void) {
