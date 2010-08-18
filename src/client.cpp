@@ -332,6 +332,10 @@ void Client::DrawScreen(void) {
 	
 	Tile::List::iterator ti = tiles.begin();
 	
+	int mouse_x, mouse_y;
+	SDL_GetMouseState(&mouse_x, &mouse_y);
+	Tile *htile = TileAtXY(tiles, mouse_x, mouse_y);
+	
 	for(; ti != tiles.end(); ti++) {
 		SDL_Rect rect;
 		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
@@ -344,7 +348,32 @@ void Client::DrawScreen(void) {
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;
 		
-		assert(SDL_BlitSurface(tile, NULL, screen, &rect) == 0);
+		SDL_Surface *tinted = NULL, *timg = tile;
+		if(htile == *ti) {
+			timg = tinted = OctRadius::LoadImage("graphics/hextile.png", false);
+			assert(SDL_LockSurface(tinted) == 0);
+			
+			for(int x = 0; x < tinted->w; x++) {
+				for(int y = 0; y < tinted->h; y++) {
+					Uint32 pixel = OctRadius::GetPixel(tinted, x, y);
+					
+					Uint8 r, g, b, a;
+					SDL_GetRGBA(pixel, tinted->format, &r, &g, &b, &a);
+					
+					g += 100;
+					
+					pixel = SDL_MapRGBA(tinted->format, r, g, b, a);
+					
+					OctRadius::SetPixel(tinted, x, y, pixel);
+				}
+			}
+			
+			SDL_UnlockSurface(tinted);
+		}
+		
+		assert(SDL_BlitSurface(timg, NULL, screen, &rect) == 0);
+		
+		SDL_FreeSurface(tinted);
 		
 		if((*ti)->has_power) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
