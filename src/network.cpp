@@ -115,7 +115,15 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		client->playername = msg.player_name();
 		client->colour = (PlayerColour)c;
 		
-		if(clients.size() == req_players) {
+		uint n_clients = 0;
+		
+		for(std::set<Server::Client::ptr>::iterator ci = clients.begin(); ci != clients.end(); ci++) {
+			if((*ci)->colour != NOINIT) {
+				n_clients++;
+			}
+		}
+		
+		if(n_clients == req_players) {
 			StartGame();
 		}
 	}
