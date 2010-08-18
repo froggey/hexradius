@@ -305,6 +305,7 @@ void Client::DrawScreen(void) {
 	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
 	SDL_Surface *tile = ImgStuff::LoadImage("graphics/hextile.png");
+	SDL_Surface *tint_tile = ImgStuff::LoadImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
 	SDL_Surface *pickup = ImgStuff::LoadImage("graphics/pickup.png");
 	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
@@ -348,17 +349,7 @@ void Client::DrawScreen(void) {
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;
 		
-		SDL_Surface *tinted = NULL, *timg = tile;
-		if(htile == *ti) {
-			timg = tinted = ImgStuff::LoadImage("graphics/hextile.png", false);
-			
-			ImgStuff::TintValues tvals(0, 100, 0);
-			ImgStuff::TintSurface(tinted, tvals);
-		}
-		
-		assert(SDL_BlitSurface(timg, NULL, screen, &rect) == 0);
-		
-		SDL_FreeSurface(tinted);
+		assert(SDL_BlitSurface(htile == *ti ? tint_tile : tile, NULL, screen, &rect) == 0);
 		
 		if((*ti)->has_power) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
@@ -370,9 +361,6 @@ void Client::DrawScreen(void) {
 	}
 	
 	if(dpawn) {
-		int mouse_x, mouse_y;
-		SDL_GetMouseState(&mouse_x, &mouse_y);
-		
 		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0};
 		DrawPawn(dpawn, rect, torus_frame, climb_offset);
 	}

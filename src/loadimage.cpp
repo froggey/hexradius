@@ -4,33 +4,68 @@
 #include <map>
 #include <stdexcept>
 #include <assert.h>
+#include <iostream>
 
 #include "loadimage.hpp"
 
-static std::map<std::string,SDL_Surface*> image_cache;
-
-SDL_Surface *ImgStuff::LoadImage(std::string filename, bool usecache) {
-	if(usecache) {
-		std::map<std::string,SDL_Surface*>::iterator i = image_cache.find(filename);
-		if(i != image_cache.end()) {
-			return i->second;
+struct image_cache_key {
+	std::string filename;
+	ImgStuff::TintValues tint;
+	
+	image_cache_key(std::string f, const ImgStuff::TintValues &t) : filename(f), tint(t) {}
+	
+	bool operator<(const image_cache_key &k) const {
+		if(filename != k.filename) {
+			return filename < k.filename;
 		}
+		if(tint.r != k.tint.r) {
+			return tint.r < k.tint.r;
+		}
+		if(tint.g != k.tint.g) {
+			return tint.g < k.tint.g;
+		}
+		if(tint.b != k.tint.b) {
+			return tint.b < k.tint.b;
+		}
+		
+		return tint.a < k.tint.a;
+	}
+};
+
+static std::map<image_cache_key,SDL_Surface*> image_cache;
+
+SDL_Surface *ImgStuff::LoadImage(std::string filename, const TintValues &tint) {
+	image_cache_key key(filename, tint);
+	
+	std::map<image_cache_key,SDL_Surface*>::iterator i = image_cache.find(key);
+	if(i != image_cache.end()) {
+		return i->second;
 	}
 	
+	SDL_Surface *s = LoadImageNC(filename);
+	
+	if(tint.HazTint()) {
+		std::cout << "haztint2\n";
+		TintSurface(s, tint);
+	}
+	
+	image_cache.insert(std::make_pair(key, s));
+	
+	return s;
+}
+
+/* Load an image without using the cache */
+SDL_Surface *ImgStuff::LoadImageNC(std::string filename) {
 	SDL_Surface *s = IMG_Load(filename.c_str());
 	if(!s) {
 		throw std::runtime_error("Unable to load image '" + filename + "': " + SDL_GetError());
-	}
-	
-	if(usecache) {
-		image_cache.insert(std::make_pair(filename, s));
 	}
 	
 	return s;
 }
 
 void ImgStuff::FreeImages(void) {
-	std::map<std::string,SDL_Surface*>::iterator i = image_cache.begin();
+	std::map<image_cache_key,SDL_Surface*>::iterator i = image_cache.begin();
 	
 	while(i != image_cache.end()) {
 		SDL_FreeSurface(i->second);
@@ -115,7 +150,7 @@ void ImgStuff::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
 		v += tint.v; \
 	}
 
-void ImgStuff::TintSurface(SDL_Surface *surface, TintValues &tint) {
+void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
 	assert(SDL_LockSurface(surface) == 0);
 	
 	for(int x = 0; x < surface->w; x++) {
