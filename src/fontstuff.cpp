@@ -6,12 +6,29 @@
 
 #include "fontstuff.hpp"
 
-typedef std::map<std::string,TTF_Font*> FontCache;
+struct font_cache_key {
+	std::string filename;
+	int size;
+	
+	font_cache_key(std::string f, int s) : filename(f), size(s) {}
+	
+	bool operator<(const font_cache_key &k) const {
+		if(filename != k.filename) {
+			return filename < k.filename;
+		}
+		
+		return size < k.size;
+	}
+};
+
+typedef std::map<font_cache_key,TTF_Font*> FontCache;
 
 FontCache font_cache;
 
 TTF_Font *FontStuff::LoadFont(std::string filename, int size) {
-	FontCache::iterator i = font_cache.find(filename + (char)size);
+	font_cache_key key(filename, size);
+	
+	FontCache::iterator i = font_cache.find(key);
 	if(i != font_cache.end()) {
 		return i->second;
 	}
@@ -21,7 +38,7 @@ TTF_Font *FontStuff::LoadFont(std::string filename, int size) {
 		throw std::runtime_error("Unable to load font '" + filename + "': " + TTF_GetError());
 	}
 	
-	font_cache.insert(std::make_pair(filename + (char)size, font));
+	font_cache.insert(std::make_pair(key, font));
 	
 	return font;
 }
