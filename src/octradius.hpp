@@ -40,7 +40,7 @@ struct Tile {
 	
 	int screen_x, screen_y;
 	
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL) {}
+	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0) {}
 	~Tile();
 	
 	bool SetHeight(int h);
