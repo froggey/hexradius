@@ -74,22 +74,6 @@ bool Pawn::UsePower(int power) {
 	return true;
 }
 
-Tile::List Pawn::ColTiles(void) {
-	Tile::List tiles;
-	Tile::List::iterator i = all_tiles.begin();
-	
-	int min = cur_tile->col-range;
-	int max = cur_tile->col+range;
-	
-	for(; i != all_tiles.end(); i++) {
-		if((*i)->col >= min && (*i)->col <= max) {
-			tiles.push_back(*i);
-		}
-	}
-	
-	return tiles;
-}
-
 Tile::List Pawn::RowTiles(void) {
 	Tile::List tiles;
 	Tile::List::iterator i = all_tiles.begin();

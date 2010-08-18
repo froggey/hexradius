@@ -2,7 +2,6 @@
 #include "octradius.hpp"
 
 const Powers::Power Powers::powers[] = {
-	{"Destroy Column", &Powers::destroy_column, 100},
 	{"Destroy Row", &Powers::destroy_row, 100},
 	{"Destroy Radial", &Powers::destroy_radial, 100},
 	{"Raise Tile", &Powers::raise_tile, 100},
@@ -10,10 +9,8 @@ const Powers::Power Powers::powers[] = {
 	{"Moar Range", &Powers::moar_range, 20},
 	{"Climb Tile", &Powers::climb_tile, 100},
 	{"Wall Row", &Powers::wall_row, 100},
-	{"Wall column", &Powers::wall_column, 100},
 	{"Armour", &Powers::armour, 100},
 	{"Purify Row", &Powers::purify_row, 100},
-	{"Purify Column", &Powers::purify_column, 100},
 	{"Purify Radial", &Powers::purify_radial, 100}
 };
 
@@ -54,11 +51,6 @@ namespace Powers {
 		}
 		
 		return ret;
-	}
-	
-	int destroy_column(Pawn *pawn) {
-		Tile::List tiles = pawn->ColTiles();
-		return destroy_enemies(tiles, pawn);
 	}
 	
 	int destroy_row(Pawn *pawn) {
@@ -107,10 +99,6 @@ namespace Powers {
 		return ret;
 	}
 	
-	int wall_column(Pawn *pawn) {
-		return wall_tiles(pawn->ColTiles());
-	}
-	
 	int wall_row(Pawn *pawn) {
 		return wall_tiles(pawn->RowTiles());
 	}
@@ -141,10 +129,6 @@ namespace Powers {
 	
 	int purify_row(Pawn *pawn) {
 		return purify(pawn->RowTiles(), pawn);
-	}
-	
-	int purify_column(Pawn *pawn) {
-		return purify(pawn->ColTiles(), pawn);
 	}
 	
 	int purify_radial(Pawn *pawn) {

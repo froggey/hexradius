@@ -20,18 +20,15 @@ namespace Powers {
 	
 	int RandomPower(void);
 	
-	int destroy_column(Pawn *pawn);
 	int destroy_row(Pawn *pawn);
 	int destroy_radial(Pawn *pawn);
 	int raise_tile(Pawn *pawn);
 	int lower_tile(Pawn *pawn);
 	int moar_range(Pawn *pawn);
 	int climb_tile(Pawn *pawn);
-	int wall_column(Pawn *pawn);
 	int wall_row(Pawn *pawn);
 	int armour(Pawn *pawn);
 	int purify_row(Pawn *pawn);
-	int purify_column(Pawn *pawn);
 	int purify_radial(Pawn *pawn);
 }
 

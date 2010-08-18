@@ -70,7 +70,6 @@ class Pawn {
 		void AddPower(int power);
 		bool UsePower(int power);
 		
-		Tile::List ColTiles(void);
 		Tile::List RowTiles(void);
 		Tile::List RadialTiles(void);
 };
