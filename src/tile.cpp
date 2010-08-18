@@ -65,7 +65,7 @@ Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 	Tile::List::iterator ti = tiles.end();
 	
-	SDL_Surface *tile = OctRadius::LoadImage("graphics/hextile.png");
+	SDL_Surface *tile = ImgStuff::LoadImage("graphics/hextile.png");
 	assert(SDL_LockSurface(tile) == 0);
 	
 	do {
@@ -76,7 +76,7 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 		
 		if(tx <= x && tx+(int)TILE_WIDTH > x && ty <= y && ty+(int)TILE_HEIGHT > y) {
 			Uint8 alpha, blah;
-			Uint32 pixel = OctRadius::GetPixel(tile, x-(*ti)->screen_x, y-(*ti)->screen_y);
+			Uint32 pixel = ImgStuff::GetPixel(tile, x-(*ti)->screen_x, y-(*ti)->screen_y);
 			
 			SDL_GetRGBA(pixel, tile->format, &blah, &blah, &blah, &alpha);
 			

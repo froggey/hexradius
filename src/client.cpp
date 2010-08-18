@@ -304,8 +304,8 @@ void Client::DrawScreen(void) {
 	
 	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
-	SDL_Surface *tile = OctRadius::LoadImage("graphics/hextile.png");
-	SDL_Surface *pickup = OctRadius::LoadImage("graphics/pickup.png");
+	SDL_Surface *tile = ImgStuff::LoadImage("graphics/hextile.png");
+	SDL_Surface *pickup = ImgStuff::LoadImage("graphics/pickup.png");
 	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
@@ -350,7 +350,7 @@ void Client::DrawScreen(void) {
 		
 		SDL_Surface *tinted = NULL, *timg = tile;
 		if(htile == *ti) {
-			timg = tinted = OctRadius::LoadImage("graphics/hextile.png", false);
+			timg = tinted = ImgStuff::LoadImage("graphics/hextile.png", false);
 			
 			ImgStuff::TintValues tvals(0, 100, 0);
 			ImgStuff::TintSurface(tinted, tvals);
@@ -423,10 +423,10 @@ void Client::DrawScreen(void) {
 }
 
 void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset) {
-	SDL_Surface *pawn_graphics = OctRadius::LoadImage("graphics/pawns.png");
-	SDL_Surface *range_overlay = OctRadius::LoadImage("graphics/upgrades/range.png");
-	SDL_Surface *shadow = OctRadius::LoadImage("graphics/shadow.png");
-	SDL_Surface *armour = OctRadius::LoadImage("graphics/upgrades/armour.png");
+	SDL_Surface *pawn_graphics = ImgStuff::LoadImage("graphics/pawns.png");
+	SDL_Surface *range_overlay = ImgStuff::LoadImage("graphics/upgrades/range.png");
+	SDL_Surface *shadow = ImgStuff::LoadImage("graphics/shadow.png");
+	SDL_Surface *armour = ImgStuff::LoadImage("graphics/upgrades/armour.png");
 	
 	assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
 	

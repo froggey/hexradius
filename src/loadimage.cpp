@@ -9,7 +9,7 @@
 
 static std::map<std::string,SDL_Surface*> image_cache;
 
-SDL_Surface *OctRadius::LoadImage(std::string filename, bool usecache) {
+SDL_Surface *ImgStuff::LoadImage(std::string filename, bool usecache) {
 	if(usecache) {
 		std::map<std::string,SDL_Surface*>::iterator i = image_cache.find(filename);
 		if(i != image_cache.end()) {
@@ -29,7 +29,7 @@ SDL_Surface *OctRadius::LoadImage(std::string filename, bool usecache) {
 	return s;
 }
 
-void OctRadius::FreeImages(void) {
+void ImgStuff::FreeImages(void) {
 	std::map<std::string,SDL_Surface*>::iterator i = image_cache.begin();
 	
 	while(i != image_cache.end()) {
@@ -43,7 +43,7 @@ void OctRadius::FreeImages(void) {
 /* Fetch a single pixel from a surface
  * Courtesy of the SDL wiki
 */
-Uint32 OctRadius::GetPixel(SDL_Surface *surface, int x, int y) {
+Uint32 ImgStuff::GetPixel(SDL_Surface *surface, int x, int y) {
 	int bpp = surface->format->BytesPerPixel;
 	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 	
@@ -72,7 +72,7 @@ Uint32 OctRadius::GetPixel(SDL_Surface *surface, int x, int y) {
 /* Set a pixel in an SDL surface
  * Courtesy of the SDL wiki
 */
-void OctRadius::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
+void ImgStuff::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
 	int bpp = surface->format->BytesPerPixel;
 	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 	
@@ -120,7 +120,7 @@ void ImgStuff::TintSurface(SDL_Surface *surface, TintValues &tint) {
 	
 	for(int x = 0; x < surface->w; x++) {
 		for(int y = 0; y < surface->h; y++) {
-			Uint32 pixel = OctRadius::GetPixel(surface, x, y);
+			Uint32 pixel = GetPixel(surface, x, y);
 			
 			Uint8 r, g, b, a;
 			SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
@@ -132,7 +132,7 @@ void ImgStuff::TintSurface(SDL_Surface *surface, TintValues &tint) {
 			
 			pixel = SDL_MapRGBA(surface->format, r, g, b, a);
 			
-			OctRadius::SetPixel(surface, x, y, pixel);
+			SetPixel(surface, x, y, pixel);
 		}
 	}
 	

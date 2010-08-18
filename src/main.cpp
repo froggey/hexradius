@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	OctRadius::FreeImages();
+	ImgStuff::FreeImages();
 	FontStuff::FreeFonts();
 	
 	SDL_Quit();
