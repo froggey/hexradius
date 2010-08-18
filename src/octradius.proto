@@ -21,6 +21,7 @@ enum colour {
 	RED = 1;
 	GREEN = 2;
 	YELLOW = 3;
+	NOINIT = 4;
 }
 
 message power {
