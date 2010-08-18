@@ -94,13 +94,14 @@ Tile::List Pawn::RadialTiles(void) {
 	Tile::List tiles;
 	Tile::List::iterator i = all_tiles.begin();
 	
-	int c_min = cur_tile->col-range-1;
-	int c_max = cur_tile->col+range+1;
+	int c_min = cur_tile->col-range - 1 + (cur_tile->row % 2) * 1;
+	int c_max = cur_tile->col+range + (cur_tile->row % 2) * 1;
+	int c_extra = cur_tile->col + (range + 1 * (cur_tile->row % 2 ? -1 : 1));
 	int r_min = cur_tile->row-range-1;
 	int r_max = cur_tile->row+range+1;
 	
 	for(; i != all_tiles.end(); i++) {
-		if((*i)->col >= c_min && (*i)->col <= c_max && (*i)->row >= r_min && (*i)->row <= r_max) {
+		if(((*i)->col >= c_min && (*i)->col <= c_max && (*i)->row >= r_min && (*i)->row <= r_max) || ((*i)->row == cur_tile->row && (*i)->col == c_extra)) {
 			tiles.push_back(*i);
 		}
 	}
