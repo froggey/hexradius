@@ -92,8 +92,7 @@ bool Client::DoStuff(void) {
 	if(SDL_PollEvent(&event)) {
 		if(event.type == SDL_QUIT) {
 			return false;
-		}
-		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
+		}else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -104,8 +103,7 @@ bool Client::DoStuff(void) {
 					dpawn = tile->pawn;
 				}
 			}
-		}
-		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
+		}else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -165,6 +163,18 @@ bool Client::DoStuff(void) {
 				}
 			}else{
 				hpawn = NULL;
+			}
+		}else if(event.type == SDL_KEYDOWN) {
+			if(event.key.keysym.scancode == 49) {
+				int mouse_x, mouse_y;
+				SDL_GetMouseState(&mouse_x, &mouse_y);
+				
+				Tile *tile = TileAtXY(tiles, mouse_x, mouse_y);
+				if(tile) {
+					std::cout << "Mouse is over tile " << tile->col << "," << tile->row << std::endl;
+				}else{
+					std::cout << "The mouse isn't over a tile, you idiot." << std::endl;
+				}
 			}
 		}
 	}
