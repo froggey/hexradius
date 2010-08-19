@@ -2,16 +2,16 @@
 #include "octradius.hpp"
 
 const Powers::Power Powers::powers[] = {
-	{"Destroy Row", &Powers::destroy_row, 100},
-	{"Destroy Radial", &Powers::destroy_radial, 100},
+	{"Destroy Row", &Powers::destroy_row, 50},
+	{"Destroy Radial", &Powers::destroy_radial, 50},
 	{"Raise Tile", &Powers::raise_tile, 100},
 	{"Lower Tile", &Powers::lower_tile, 100},
-	{"Moar Range", &Powers::moar_range, 20},
-	{"Climb Tile", &Powers::climb_tile, 100},
-	{"Wall Row", &Powers::wall_row, 100},
-	{"Armour", &Powers::armour, 100},
-	{"Purify Row", &Powers::purify_row, 100},
-	{"Purify Radial", &Powers::purify_radial, 100}
+	{"Increase Range", &Powers::increase_range, 20},
+	{"Hover", &Powers::hover, 30},
+	{"Wall Row", &Powers::wall_row, 70},
+	{"Shield", &Powers::shield, 30},
+	{"Purify Row", &Powers::purify_row, 50},
+	{"Purify Radial", &Powers::purify_radial, 50}
 };
 
 const int Powers::num_powers = sizeof(powers) / sizeof(Power);
@@ -71,7 +71,7 @@ namespace Powers {
 		return pawn->GetTile()->SetHeight(pawn->GetTile()->height-1);
 	}
 	
-	int moar_range(Pawn *pawn) {
+	int increase_range(Pawn *pawn) {
 		if (pawn->range < 3) {
 			pawn->range++;
 			return 1;
@@ -79,7 +79,7 @@ namespace Powers {
 		else return 0;
 	}
 	
-	int climb_tile(Pawn *pawn) {
+	int hover(Pawn *pawn) {
 		if(pawn->flags & PWR_CLIMB) {
 			return 0;
 		}else{
@@ -103,7 +103,7 @@ namespace Powers {
 		return wall_tiles(pawn->RowTiles());
 	}
 	
-	int armour(Pawn *pawn) {
+	int shield(Pawn *pawn) {
 		if(pawn->flags & PWR_ARMOUR) {
 			return 0;
 		}
