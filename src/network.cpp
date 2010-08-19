@@ -86,7 +86,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		int c;
 		bool match = true;
 		
-		for(c = 0; c < 4 && match;) {
+		for(c = 0; c < NOINIT && match;) {
 			std::set<Server::Client::ptr>::iterator i = clients.begin();
 			match = false;
 			
@@ -100,7 +100,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			}
 		}
 		
-		if(c == 4) {
+		if(c == NOINIT) {
 			std::cerr << "No colours available" << std::endl;
 			clients.erase(client);
 			return;

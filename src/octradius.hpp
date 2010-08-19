@@ -25,7 +25,7 @@ const uint TILE_WOFF = 50;
 const uint TILE_HOFF = 38;
 const uint TILE_ROFF = 25;
 
-enum PlayerColour { BLUE, RED, GREEN, YELLOW, NOINIT };
+enum PlayerColour { BLUE, RED, GREEN, YELLOW,  PURPLE, ORANGE, NOINIT };
 
 class Pawn;
 

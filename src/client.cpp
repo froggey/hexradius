@@ -331,7 +331,7 @@ void Client::DrawScreen(void) {
 		
 		std::vector<Player>::iterator p = players.begin();
 		
-		const SDL_Colour colours[] = {{0,0,255},{255,0,0},{0,255,0},{255,255,0}};
+		const SDL_Colour colours[] = {{0,0,255},{255,0,0},{0,255,0},{255,255,0},{160,32,240},{255,165,0}};
 		
 		for(; p != players.end(); p++) {
 			TTF_Font *f = (*p).colour == turn ? bfont : font;
