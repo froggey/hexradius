@@ -286,7 +286,9 @@ void Server::NextTurn(void) {
 		if(turn == clients.end()) {
 			turn = clients.begin();
 		}else{
-			turn++;
+			if(++turn == clients.end()) {
+				continue;
+			}
 		}
 		
 		if(turn == last) {
