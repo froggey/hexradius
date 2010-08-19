@@ -435,7 +435,8 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	
 	if(pawn == hpawn && pawn->colour == mycolour) {
 		torus_frame = 10;
-	}else if(!(pawn->flags & HAS_POWER)) {
+	}
+	else if(!(pawn->flags & HAS_POWER)) {
 		torus_frame = 0;
 	}
 	
@@ -452,6 +453,6 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	}
 	
 	srect.x = pawn->range * 50;
-	srect.y = 0;
+	srect.y = pawn->colour * 50;
 	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
 }
