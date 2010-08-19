@@ -280,14 +280,39 @@ void Server::WriteAll(protocol::message &msg) {
 }
 
 void Server::NextTurn(void) {
-	if(turn == clients.end()) {
-		turn = clients.begin();
-	}else{
-		do {
-			if(++turn == clients.end()) {
-				turn = clients.begin();
+	std::set<Server::Client::ptr>::iterator last = turn;
+	
+	while(1) {
+		if(turn == clients.end()) {
+			turn = clients.begin();
+		}else{
+			turn++;
+		}
+		
+		if(turn == last) {
+			std::cout << "It's a draw!" << std::endl;
+			exit(0);
+		}
+		
+		if((*turn)->colour != NOINIT) {
+			int match = 0;
+			
+			for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
+				if((*t)->pawn && (*t)->pawn->colour == (*turn)->colour) {
+					match = 1;
+					break;
+				}
 			}
-		} while((*turn)->colour == NOINIT);
+			
+			if(match) {
+				break;
+			}
+		}
+	}
+	
+	if(turn == last) {
+		std::cout << "Team " << (*turn)->colour << " won!" << std::endl;
+		exit(0);
 	}
 	
 	if(--pspawn_turns == 0) {
