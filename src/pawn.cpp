@@ -19,7 +19,7 @@ bool Pawn::Move(Tile *tile) {
 	if(tile->pawn) {
 		if(tile->pawn->colour == colour) {
 			return false;
-		}else if(tile->pawn->flags & PWR_ARMOUR) {
+		}else if(tile->pawn->flags & PWR_SHIELD) {
 			return false;
 		}else{
 			delete tile->pawn;

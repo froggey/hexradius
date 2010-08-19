@@ -104,11 +104,11 @@ namespace Powers {
 	}
 	
 	int shield(Pawn *pawn) {
-		if(pawn->flags & PWR_ARMOUR) {
+		if(pawn->flags & PWR_SHIELD) {
 			return 0;
 		}
 		
-		pawn->flags |= PWR_ARMOUR;
+		pawn->flags |= PWR_SHIELD;
 		return 1;
 	}
 	

@@ -3,10 +3,10 @@
 
 #include "octradius.hpp"
 
-const uint PWR_ARMOUR = 1<<0;
+const uint PWR_SHIELD = 1<<0;
 const uint PWR_CLIMB = 1<<1;
 const uint HAS_POWER = 1<<2;
-const uint PWR_GOOD = (PWR_ARMOUR | PWR_CLIMB);
+const uint PWR_GOOD = (PWR_SHIELD | PWR_CLIMB);
 
 namespace Powers {
 	struct Power {

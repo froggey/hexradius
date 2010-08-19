@@ -424,7 +424,7 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	SDL_Surface *pawn_graphics = ImgStuff::LoadImage("graphics/pawns.png");
 	SDL_Surface *range_overlay = ImgStuff::LoadImage("graphics/upgrades/range.png");
 	SDL_Surface *shadow = ImgStuff::LoadImage("graphics/shadow.png");
-	SDL_Surface *armour = ImgStuff::LoadImage("graphics/upgrades/armour.png");
+	SDL_Surface *shield = ImgStuff::LoadImage("graphics/upgrades/shield.png");
 	
 	assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
 	
@@ -442,8 +442,8 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	SDL_Rect srect = { torus_frame * 50, pawn->colour * 50, 50, 50 };
 	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 	
-	if(pawn->flags & PWR_ARMOUR) {
-		assert(SDL_BlitSurface(armour, NULL, screen, &rect) == 0);
+	if(pawn->flags & PWR_SHIELD) {
+		assert(SDL_BlitSurface(shield, NULL, screen, &rect) == 0);
 	}
 	
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
