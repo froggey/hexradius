@@ -108,5 +108,6 @@ struct Scenario {
 		CopyTiles(tiles, s.tiles);
 	}
 };
+void LoadScenario(std::string filename, Scenario &sc);
 
 #endif

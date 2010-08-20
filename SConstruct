@@ -1,5 +1,5 @@
 env = Environment(
-	CCFLAGS='-Wall -ggdb `pkg-config --cflags sdl`',
+	CCFLAGS='-Wall -Wno-reorder -ggdb `pkg-config --cflags sdl`',
 	LINKFLAGS='`pkg-config --libs sdl` -lSDL_image -lSDL_ttf -lprotobuf -lboost_system'
 )
 env.Command(['src/octradius.pb.cc', 'src/octradius.pb.h'], 'src/octradius.proto',

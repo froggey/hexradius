@@ -16,6 +16,7 @@
 #include "octradius.hpp"
 #include "network.hpp"
 #include "client.hpp"
+#include "menu.hpp"
 
 struct pmenu_entry {
 	SDL_Rect rect;
@@ -135,15 +136,20 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 	}
+
+	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+	assert(TTF_Init() == 0);
+	SDL_EnableUNICODE(1);
+	
+	atexit(SDL_Quit);
+	atexit(FontStuff::FreeFonts);
+	atexit(ImgStuff::FreeImages);
 	
 	if (is_server) {
 		LoadScenario(scenario_name, scn);
 		Server server(port, scn, 2);
 		
 		Client client(host, port, "test");
-
-		assert(SDL_Init(SDL_INIT_VIDEO) == 0);
-		assert(TTF_Init() == 0);
 		
 		do {
 			server.DoStuff();
@@ -153,9 +159,6 @@ int main(int argc, char **argv) {
 	else if (is_client) {
 		Client client(host, port, "test");
 
-		assert(SDL_Init(SDL_INIT_VIDEO) == 0);
-		assert(TTF_Init() == 0);
-		
 		while (client.DoStuff()) {
 			uint8_t st = SDL_GetAppState();
 			if (st == SDL_APPACTIVE || !st)
@@ -165,15 +168,9 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
-		std::cerr << "Usage: " << argv[0] << " -s port scenario_name" << std::endl;
-		std::cerr << "       " << argv[0] << " -c host port" << std::endl;
-		return 1;
+		Menu::init();
+		Menu::main_menu.show();
 	}
-	
-	ImgStuff::FreeImages();
-	FontStuff::FreeFonts();
-	
-	SDL_Quit();
 	
 	return 0;
 }
