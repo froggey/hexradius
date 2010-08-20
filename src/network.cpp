@@ -24,7 +24,7 @@ Server::Server(uint16_t port, Scenario &s, uint players)
 }
 
 void Server::StartAccept(void) {
-	Server::Client::ptr client(new Server::Client(io_service));
+	Server::Client::ptr client(new Server::Client(io_service, *this));
 	
 	acceptor.async_accept(client->socket, boost::bind(&Server::HandleAccept, this, client, boost::asio::placeholders::error));
 }
@@ -39,46 +39,52 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 	}
 	
 	clients.insert(client);
-	ReadSize(client);
+	client->BeginRead();
 	
 	StartAccept();
 }
 
-void Server::ReadSize(Server::Client::ptr client) {
-	async_read(client->socket, boost::asio::buffer(&client->msgsize, sizeof(uint32_t)), boost::bind(&Server::ReadMessage, this, client, boost::asio::placeholders::error));
+void Server::Client::BeginRead() {
+	async_read(socket, boost::asio::buffer(&msgsize, sizeof(uint32_t)), boost::bind(&Server::Client::BeginRead2, this, boost::asio::placeholders::error));
 }
 
-void Server::ReadMessage(Server::Client::ptr client, const boost::system::error_code& error) {
+void Server::Client::BeginRead2(const boost::system::error_code& error) {
 	if(error) {
-		QuitClient(client, "Read error: " + error.message());
+		Quit("Read error: " + error.message());
 		return;
 	}
 	
-	client->msgsize = ntohl(client->msgsize);
+	msgsize = ntohl(msgsize);
 	
-	if(client->msgsize > MAX_MSGSIZE) {
-		QuitClient(client, "Oversized message");
+	if(msgsize > MAX_MSGSIZE) {
+		Quit("Oversized message");
 		return;
 	}
 	
-	client->msgbuf.resize(client->msgsize);
-	async_read(client->socket, boost::asio::buffer(&(client->msgbuf[0]), client->msgsize), boost::bind(&Server::HandleMessage, this, client, boost::asio::placeholders::error));
+	msgbuf.resize(msgsize);
+	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Server::Client::FinishRead, this, boost::asio::placeholders::error));
 }
 
-void Server::HandleMessage(Server::Client::ptr client, const boost::system::error_code& error) {
+void Server::Client::FinishRead(const boost::system::error_code& error) {
 	if(error) {
-		QuitClient(client, "Read error: " + error.message());
+		Quit("Read error: " + error.message());
 		return;
 	}
 	
-	std::string msgstring(client->msgbuf.begin(), client->msgbuf.end());
+	std::string msgstring(msgbuf.begin(), msgbuf.end());
 	
 	protocol::message msg;
 	if(!msg.ParseFromString(msgstring)) {
-		QuitClient(client, "Invalid message recieved");
+		Quit("Invalid message recieved");
 		return;
 	}
 	
+	if(server.HandleMessage(shared_from_this(), msg)) {
+		BeginRead();
+	}
+}
+
+bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &msg) {
 	if(msg.msg() == protocol::INIT) {
 		int c;
 		bool match = true;
@@ -98,13 +104,13 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		}
 		
 		if(c == SPECTATE) {
-			QuitClient(client, "No colours available");
-			return;
+			client->Quit("No colours available");
+			return false;
 		}
 		
 		if(msg.player_name().empty()) {
-			QuitClient(client, "No player name supplied");
-			return;
+			client->Quit("No player name supplied");
+			return false;
 		}
 		
 		client->playername = msg.player_name();
@@ -125,7 +131,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 	
 	if(msg.msg() == protocol::MOVE) {
 		if(msg.pawns_size() != 1) {
-			goto END;
+			return true;
 		}
 		
 		const protocol::pawn &p_pawn = msg.pawns(0);
@@ -134,7 +140,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		Tile *tile = FindTile(tiles, p_pawn.new_col(), p_pawn.new_row());
 		
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
-			goto END;
+			return true;
 		}
 		
 		bool hp = tile->has_power;
@@ -149,12 +155,12 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 				msg.add_pawns();
 				pawn->CopyToProto(msg.mutable_pawns(0), true);
 				
-				WriteProto(client, msg);
+				client->Write(msg);
 			}
 			
 			NextTurn();
 		}else{
-			BadMove(client);
+			client->WriteBasic(protocol::BADMOVE);
 		}
 	}
 	
@@ -162,7 +168,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 		
 		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power())) {
-			BadMove(client);
+			client->WriteBasic(protocol::BADMOVE);
 		}else{
 			WriteAll(msg);
 			
@@ -176,15 +182,14 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 				WriteAll(update);
 			}
 			
-			SendOK(client);
+			client->WriteBasic(protocol::OK);
 		}
 	}
 	
-	END:
-	ReadSize(client);
+	return true;
 }
 
-void Server::WriteProto(Server::Client::ptr client, protocol::message &msg, void (Server::*callback)(Server::Client::ptr, const boost::system::error_code&, wbuf_ptr)) {
+void Server::Client::Write(const protocol::message &msg, write_cb callback) {
 	std::string pb;
 	msg.SerializeToString(&pb);
 	
@@ -194,13 +199,25 @@ void Server::WriteProto(Server::Client::ptr client, protocol::message &msg, void
 	memcpy(wb.get(), &psize, sizeof(psize));
 	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
 	
-	async_write(client->socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(callback, this, client, boost::asio::placeholders::error, wb));
+	async_write(socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(callback, this, boost::asio::placeholders::error, wb));
 }
 
-void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error, wbuf_ptr wb) {
+void Server::Client::WriteBasic(protocol::msgtype type) {
+	protocol::message msg;
+	msg.set_msg(type);
+	
+	Write(msg);
+}
+
+void Server::Client::FinishWrite(const boost::system::error_code& error, wbuf_ptr wb) {
 	if(error) {
+		if(error.value() == boost::asio::error::operation_aborted) {
+			/* This should only ever happen if the client is already being destroyed */
+			return;
+		}
+		
 		std::cerr << "Write error: " << error.message() << std::endl;
-		CloseClient(client);
+		Close();
 		return;
 	}
 }
@@ -250,7 +267,7 @@ void Server::StartGame(void) {
 	
 	for(c = clients.begin(); c != clients.end(); c++) {
 		begin.set_colour((protocol::colour)(*c)->colour);
-		WriteProto(*c, begin);
+		(*c)->Write(begin);
 	}
 	
 	acceptor.cancel();
@@ -263,40 +280,30 @@ void Server::DoStuff(void) {
 	io_service.poll();
 }
 
-void Server::BadMove(Server::Client::ptr client) {
-	protocol::message msg;
-	msg.set_msg(protocol::BADMOVE);
-	WriteProto(client, msg);
-}
-
-void Server::WriteAll(protocol::message &msg) {
+void Server::WriteAll(const protocol::message &msg) {
 	std::set<Server::Client::ptr>::iterator i = clients.begin();
 	
 	for(; i != clients.end(); i++) {
-		WriteProto(*i, msg);
+		(*i)->Write(msg);
 	}
 }
 
-void Server::QuitClient(Server::Client::ptr client, const std::string &msg) {
+void Server::Client::Quit(const std::string &msg) {
 	std::cout << "Forcing client quit: " << msg << std::endl;
 	
 	protocol::message pmsg;
 	pmsg.set_msg(protocol::QUIT);
 	pmsg.set_quit_msg(msg);
 	
-	WriteProto(client, pmsg, &Server::QuitFinish);
+	Write(pmsg, &Server::Client::FinishQuit);
 }
 
-void Server::QuitFinish(Server::Client::ptr client, const boost::system::error_code& error, wbuf_ptr wb) {
-	if(error && error.value() != boost::asio::error::operation_aborted) {
-		std::cerr << "Error writing QUIT message: " << error.message() << std::endl;
-	}
-	
-	CloseClient(client);
+void Server::Client::FinishQuit(const boost::system::error_code& error, wbuf_ptr wb) {
+	Close();
 }
 
-void Server::CloseClient(Server::Client::ptr client) {
-	clients.erase(client);
+void Server::Client::Close() {
+	server.clients.erase(shared_from_this());
 }
 
 void Server::NextTurn(void) {
@@ -375,10 +382,4 @@ void Server::SpawnPowers(void) {
 	pspawn_num = (rand() % 4)+1;
 	
 	WriteAll(msg);
-}
-
-void Server::SendOK(Server::Client::ptr client) {
-	protocol::message msg;
-	msg.set_msg(protocol::OK);
-	WriteProto(client, msg);
 }

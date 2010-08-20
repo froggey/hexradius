@@ -8,23 +8,41 @@
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "octradius.pb.h"
 #include "octradius.hpp"
 
 class Server {
-	struct Client {
+	struct Client : public boost::enable_shared_from_this<Server::Client> {
 		typedef boost::shared_ptr<Server::Client> ptr;
+		typedef boost::shared_array<char> wbuf_ptr;
+		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, wbuf_ptr);
 		
-		Client(boost::asio::io_service &io_service) : socket(io_service), colour(SPECTATE) {}
+		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(SPECTATE) {}
 		
 		boost::asio::ip::tcp::socket socket;
+		Server &server;
 		
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
 		
 		std::string playername;
 		PlayerColour colour;
+		
+		char shit[81920];
+		
+		void BeginRead();
+		void BeginRead2(const boost::system::error_code& error);
+		void FinishRead(const boost::system::error_code& error);
+		
+		void FinishWrite(const boost::system::error_code& error, wbuf_ptr wb);
+		void Write(const protocol::message &msg, write_cb callback = &Server::Client::FinishWrite);
+		void WriteBasic(protocol::msgtype type);
+		
+		void Quit(const std::string &msg);
+		void FinishQuit(const boost::system::error_code& error, wbuf_ptr wb);
+		void Close();
 	};
 	
 	public:
@@ -52,24 +70,13 @@ class Server {
 		
 		void StartAccept(void);
 		void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
-		
-		void ReadSize(Server::Client::ptr client);
-		void ReadMessage(Server::Client::ptr client, const boost::system::error_code& error);
-		void HandleMessage(Server::Client::ptr client, const boost::system::error_code& error);
+		bool HandleMessage(Server::Client::ptr client, const protocol::message &msg);
 		
 		typedef boost::shared_array<char> wbuf_ptr;
 		
-		void WriteFinish(Server::Client::ptr client, const boost::system::error_code& error, wbuf_ptr wb);
-		void WriteProto(Server::Client::ptr client, protocol::message &msg, void (Server::*callback)(Server::Client::ptr, const boost::system::error_code&, wbuf_ptr) = &Server::WriteFinish);
-		void WriteAll(protocol::message &msg);
-		
-		void QuitClient(Server::Client::ptr client, const std::string &msg);
-		void QuitFinish(Server::Client::ptr client, const boost::system::error_code& error, wbuf_ptr wb);
-		void CloseClient(Server::Client::ptr client);
+		void WriteAll(const protocol::message &msg);
 		
 		void StartGame(void);
-		void BadMove(Server::Client::ptr client);
-		void SendOK(Server::Client::ptr client);
 		
 		void NextTurn(void);
 		void SpawnPowers(void);
