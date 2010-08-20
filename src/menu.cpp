@@ -104,7 +104,7 @@ namespace Menu {
 						exit(0);
 					}
 					else if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-						BOOST_REVERSE_FOREACH(UIElement* e, elements) {
+						BOOST_FOREACH(UIElement* e, elements) {
 							if(point_in_rect(event.button.x, event.button.y, &e->rect)) {
 								if(e->on_click) {
 									Action rv = e->on_click(e, event.button.x - e->rect.x, event.button.y - e->rect.y);

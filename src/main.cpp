@@ -63,8 +63,8 @@ void LoadScenario(std::string filename, Scenario &sc) {
 			
 			assert(sc.cols > 0 && sc.rows > 0);
 			
-			for(int c = 0; c < sc.cols; c++) {
-				for(int r = 0; r < sc.rows; r++) {
+			for(int r = 0; r < sc.rows; r++) {
+				for(int c = 0; c < sc.cols; c++) {
 					sc.tiles.push_back(new Tile(c, r, 0));
 				}
 			}
