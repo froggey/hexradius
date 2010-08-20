@@ -15,7 +15,7 @@ namespace Powers {
 		int spawn_rate;
 	};
 	
-	extern const Power powers[];
+	extern Power powers[];
 	extern const int num_powers;
 	
 	int RandomPower(void);

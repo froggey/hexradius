@@ -8,6 +8,7 @@
 #include <map>
 #include <SDL/SDL_ttf.h>
 #include <math.h>
+#include <boost/algorithm/string.hpp>
 
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
@@ -67,7 +68,7 @@ void LoadScenario(std::string filename, Scenario &sc) {
 				}
 			}
 		}
-		if(name == "SPAWN") {
+		else if(name == "SPAWN") {
 			assert(sc.cols > 0 && sc.rows > 0);
 			
 			/* SPAWN x y c */
@@ -81,7 +82,7 @@ void LoadScenario(std::string filename, Scenario &sc) {
 			
 			tile->pawn = new Pawn((PlayerColour)c, sc.tiles, tile);
 		}
-		if(name == "HOLE") {
+		else if(name == "HOLE") {
 			int x = atoi(bp);
 			int y = atoi(next_value(bp));
 			
@@ -97,6 +98,12 @@ void LoadScenario(std::string filename, Scenario &sc) {
 				
 				i++;
 			}
+		}
+		else if(name == "POWER") {
+			int i = atoi(bp);
+			int p = atoi(next_value(bp));
+			assert(i < Powers::num_powers);
+			Powers::powers[i].spawn_rate = p;
 		}
 	}
 }

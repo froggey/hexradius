@@ -1,7 +1,7 @@
 #include "powers.hpp"
 #include "octradius.hpp"
 
-const Powers::Power Powers::powers[] = {
+Powers::Power Powers::powers[] = {
 	{"Destroy Row", &Powers::destroy_row, 50},
 	{"Destroy Radial", &Powers::destroy_radial, 50},
 	{"Raise Tile", &Powers::raise_tile, 100},
