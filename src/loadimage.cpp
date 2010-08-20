@@ -34,7 +34,7 @@ struct image_cache_key {
 
 static std::map<image_cache_key,SDL_Surface*> image_cache;
 
-SDL_Surface *ImgStuff::LoadImage(std::string filename, const TintValues &tint) {
+SDL_Surface *ImgStuff::GetImage(std::string filename, const TintValues &tint) {
 	image_cache_key key(filename, tint);
 	
 	std::map<image_cache_key,SDL_Surface*>::iterator i = image_cache.find(key);
@@ -42,7 +42,7 @@ SDL_Surface *ImgStuff::LoadImage(std::string filename, const TintValues &tint) {
 		return i->second;
 	}
 	
-	SDL_Surface *s = LoadImageNC(filename);
+	SDL_Surface *s = GetImageNC(filename);
 	
 	if(tint.HazTint()) {
 		TintSurface(s, tint);
@@ -61,7 +61,7 @@ SDL_Surface *ImgStuff::LoadImage(std::string filename, const TintValues &tint) {
 }
 
 /* Load an image without using the cache */
-SDL_Surface *ImgStuff::LoadImageNC(std::string filename) {
+SDL_Surface *ImgStuff::GetImageNC(std::string filename) {
 	SDL_Surface *s = IMG_Load(filename.c_str());
 	if(!s) {
 		throw std::runtime_error("Unable to load image '" + filename + "': " + SDL_GetError());

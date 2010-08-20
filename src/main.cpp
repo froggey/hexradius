@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
 #include <SDL/SDL.h>
-#include <unistd.h>
 #include <assert.h>
 #include <vector>
 #include <fstream>

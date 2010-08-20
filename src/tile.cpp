@@ -65,7 +65,7 @@ Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 	Tile::List::iterator ti = tiles.end();
 	
-	SDL_Surface *tile = ImgStuff::LoadImage("graphics/hextile.png");
+	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
 	assert(SDL_LockSurface(tile) == 0);
 	
 	do {

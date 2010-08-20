@@ -314,9 +314,9 @@ void Client::DrawScreen(void) {
 	
 	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
-	SDL_Surface *tile = ImgStuff::LoadImage("graphics/hextile.png");
-	SDL_Surface *tint_tile = ImgStuff::LoadImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
-	SDL_Surface *pickup = ImgStuff::LoadImage("graphics/pickup.png");
+	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
+	SDL_Surface *tint_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
+	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
 	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
@@ -421,10 +421,10 @@ void Client::DrawScreen(void) {
 }
 
 void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset) {
-	SDL_Surface *pawn_graphics = ImgStuff::LoadImage("graphics/pawns.png");
-	SDL_Surface *range_overlay = ImgStuff::LoadImage("graphics/upgrades/range.png");
-	SDL_Surface *shadow = ImgStuff::LoadImage("graphics/shadow.png");
-	SDL_Surface *shield = ImgStuff::LoadImage("graphics/upgrades/shield.png");
+	SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
+	SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
+	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
+	SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png");
 	
 	assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
 	
