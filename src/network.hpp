@@ -20,7 +20,6 @@ class Server {
 		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, wbuf_ptr, ptr);
 		
 		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(SPECTATE), qcalled(false) {}
-		~Client() { qcalled = true; }
 		
 		boost::asio::ip::tcp::socket socket;
 		Server &server;
