@@ -31,6 +31,10 @@ void Server::StartAccept(void) {
 
 void Server::HandleAccept(Server::Client::ptr client, const boost::system::error_code& err) {
 	if(err) {
+		if(err.value() == boost::asio::error::operation_aborted) {
+			return;
+		}
+		
 		throw std::runtime_error("Accept error: " + err.message());
 	}
 	
