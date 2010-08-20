@@ -445,6 +445,10 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	SDL_Rect srect = { torus_frame * 50, pawn->colour * 50, 50, 50 };
 	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 	
+	srect.x = pawn->range * 50;
+	srect.y = pawn->colour * 50;
+	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
+	
 	if(pawn->flags & PWR_SHIELD) {
 		assert(SDL_BlitSurface(shield, NULL, screen, &rect) == 0);
 	}
@@ -453,8 +457,4 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 		rect.x += climb_offset;
 		rect.y += climb_offset;
 	}
-	
-	srect.x = pawn->range * 50;
-	srect.y = pawn->colour * 50;
-	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
 }
