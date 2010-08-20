@@ -16,7 +16,7 @@ class Server {
 	struct Client {
 		typedef boost::shared_ptr<Server::Client> ptr;
 		
-		Client(boost::asio::io_service &io_service) : socket(io_service), colour(NOINIT) {}
+		Client(boost::asio::io_service &io_service) : socket(io_service), colour(SPECTATE) {}
 		
 		boost::asio::ip::tcp::socket socket;
 		

@@ -87,12 +87,12 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		int c;
 		bool match = true;
 		
-		for(c = 0; c < NOINIT && match;) {
+		for(c = 0; c < SPECTATE && match;) {
 			std::set<Server::Client::ptr>::iterator i = clients.begin();
 			match = false;
 			
 			for(; i != clients.end(); i++) {
-				if((*i)->colour != NOINIT && (*i)->colour == (PlayerColour)c) {
+				if((*i)->colour != SPECTATE && (*i)->colour == (PlayerColour)c) {
 					match = true;
 					c++;
 					
@@ -101,7 +101,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 			}
 		}
 		
-		if(c == NOINIT) {
+		if(c == SPECTATE) {
 			std::cerr << "No colours available" << std::endl;
 			clients.erase(client);
 			return;
@@ -119,7 +119,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		uint n_clients = 0;
 		
 		for(std::set<Server::Client::ptr>::iterator ci = clients.begin(); ci != clients.end(); ci++) {
-			if((*ci)->colour != NOINIT) {
+			if((*ci)->colour != SPECTATE) {
 				n_clients++;
 			}
 		}
@@ -259,6 +259,9 @@ void Server::StartGame(void) {
 		WriteProto(*c, begin);
 	}
 	
+	acceptor.cancel();
+	acceptor.close();
+	
 	NextTurn();
 }
 
@@ -297,7 +300,7 @@ void Server::NextTurn(void) {
 			exit(0);
 		}
 		
-		if((*turn)->colour != NOINIT) {
+		if((*turn)->colour != SPECTATE) {
 			int match = 0;
 			
 			for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
