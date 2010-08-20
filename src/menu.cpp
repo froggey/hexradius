@@ -36,7 +36,6 @@ namespace Menu {
 	
 	Button::Button(int x, int y, int w, int h, std::string image, ClickCallback _on_click):
 		UIElement(x, y, w, h) {
-		// FIXME why does this create an opaque surface?
 		surface = ImgStuff::GetImage(image);
 		on_click = _on_click;
 	}
