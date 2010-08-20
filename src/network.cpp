@@ -351,8 +351,8 @@ void Server::SpawnPowers(void) {
 		(*t)->CopyToProto(msg.mutable_tiles(msg.tiles_size()-1));
 	}
 	
-	pspawn_turns = (rand() % 4)+1;
-	pspawn_num = (rand() % 2)+1;
+	pspawn_turns = (rand() % 6)+1;
+	pspawn_num = (rand() % 4)+1;
 	
 	WriteAll(msg);
 }
