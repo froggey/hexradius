@@ -50,18 +50,14 @@ void Server::ReadSize(Server::Client::ptr client) {
 
 void Server::ReadMessage(Server::Client::ptr client, const boost::system::error_code& error) {
 	if(error) {
-		std::cerr << "Read error: " + error.message() << std::endl;
-		clients.erase(client);
-		
+		QuitClient(client, "Read error: " + error.message());
 		return;
 	}
 	
 	client->msgsize = ntohl(client->msgsize);
 	
 	if(client->msgsize > MAX_MSGSIZE) {
-		std::cerr << "Oversized message" << std::endl;
-		clients.erase(client);
-		
+		QuitClient(client, "Oversized message");
 		return;
 	}
 	
@@ -71,9 +67,7 @@ void Server::ReadMessage(Server::Client::ptr client, const boost::system::error_
 
 void Server::HandleMessage(Server::Client::ptr client, const boost::system::error_code& error) {
 	if(error) {
-		std::cerr << "Read error: " + error.message() << std::endl;
-		clients.erase(client);
-		
+		QuitClient(client, "Read error: " + error.message());
 		return;
 	}
 	
@@ -81,9 +75,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 	
 	protocol::message msg;
 	if(!msg.ParseFromString(msgstring)) {
-		std::cerr << "Invalid protobuf recieved from client (" << client->msgsize << " bytes)" << std::endl;
-		clients.erase(client);
-		
+		QuitClient(client, "Invalid message recieved");
 		return;
 	}
 	
@@ -106,14 +98,12 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 		}
 		
 		if(c == SPECTATE) {
-			std::cerr << "No colours available" << std::endl;
-			clients.erase(client);
+			QuitClient(client, "No colours available");
 			return;
 		}
 		
 		if(msg.player_name().empty()) {
-			std::cerr << "No player name supplied" << std::endl;
-			clients.erase(client);
+			QuitClient(client, "No player name supplied");
 			return;
 		}
 		
@@ -194,7 +184,7 @@ void Server::HandleMessage(Server::Client::ptr client, const boost::system::erro
 	ReadSize(client);
 }
 
-void Server::WriteProto(Server::Client::ptr client, protocol::message &msg) {
+void Server::WriteProto(Server::Client::ptr client, protocol::message &msg, void (Server::*callback)(Server::Client::ptr, const boost::system::error_code&, wbuf_ptr)) {
 	std::string pb;
 	msg.SerializeToString(&pb);
 	
@@ -204,13 +194,13 @@ void Server::WriteProto(Server::Client::ptr client, protocol::message &msg) {
 	memcpy(wb.get(), &psize, sizeof(psize));
 	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
 	
-	async_write(client->socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(&Server::WriteFinish, this, client, boost::asio::placeholders::error, wb));
+	async_write(client->socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(callback, this, client, boost::asio::placeholders::error, wb));
 }
 
 void Server::WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error, wbuf_ptr wb) {
 	if(error) {
 		std::cerr << "Write error: " << error.message() << std::endl;
-		clients.erase(client);
+		CloseClient(client);
 		return;
 	}
 }
@@ -285,6 +275,28 @@ void Server::WriteAll(protocol::message &msg) {
 	for(; i != clients.end(); i++) {
 		WriteProto(*i, msg);
 	}
+}
+
+void Server::QuitClient(Server::Client::ptr client, const std::string &msg) {
+	std::cout << "Forcing client quit: " << msg << std::endl;
+	
+	protocol::message pmsg;
+	pmsg.set_msg(protocol::QUIT);
+	pmsg.set_quit_msg(msg);
+	
+	WriteProto(client, pmsg, &Server::QuitFinish);
+}
+
+void Server::QuitFinish(Server::Client::ptr client, const boost::system::error_code& error, wbuf_ptr wb) {
+	if(error && error.value() != boost::asio::error::operation_aborted) {
+		std::cerr << "Error writing QUIT message: " << error.message() << std::endl;
+	}
+	
+	CloseClient(client);
+}
+
+void Server::CloseClient(Server::Client::ptr client) {
+	clients.erase(client);
 }
 
 void Server::NextTurn(void) {

@@ -59,9 +59,13 @@ class Server {
 		
 		typedef boost::shared_array<char> wbuf_ptr;
 		
-		void WriteProto(Server::Client::ptr client, protocol::message &msg);
-		void WriteFinish(Server::Client:: ptr client, const boost::system::error_code& error, wbuf_ptr wb);
+		void WriteFinish(Server::Client::ptr client, const boost::system::error_code& error, wbuf_ptr wb);
+		void WriteProto(Server::Client::ptr client, protocol::message &msg, void (Server::*callback)(Server::Client::ptr, const boost::system::error_code&, wbuf_ptr) = &Server::WriteFinish);
 		void WriteAll(protocol::message &msg);
+		
+		void QuitClient(Server::Client::ptr client, const std::string &msg);
+		void QuitFinish(Server::Client::ptr client, const boost::system::error_code& error, wbuf_ptr wb);
+		void CloseClient(Server::Client::ptr client);
 		
 		void StartGame(void);
 		void BadMove(Server::Client::ptr client);

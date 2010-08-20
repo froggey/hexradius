@@ -8,6 +8,7 @@ enum msgtype {
 			// or BADMOVE after sending a move to the server before
 			// allowing the player to try another one
 	BADMOVE = 5;	// Last move rejected, try again
+	QUIT = 6;	// Closing connection with supplied quit message
 	
 	MOVE = 10;	// Move a single pawn
 	USE = 11;	// Use a power
@@ -76,4 +77,6 @@ message message {
 	optional uint32 grid_cols = 6;
 	optional uint32 grid_rows = 7;
 	repeated player players = 8;
+	
+	optional string quit_msg = 11;
 }
