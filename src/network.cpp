@@ -45,10 +45,14 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 }
 
 void Server::Client::BeginRead() {
-	async_read(socket, boost::asio::buffer(&msgsize, sizeof(uint32_t)), boost::bind(&Server::Client::BeginRead2, this, boost::asio::placeholders::error));
+	async_read(socket, boost::asio::buffer(&msgsize, sizeof(uint32_t)), boost::bind(&Server::Client::BeginRead2, this, boost::asio::placeholders::error, shared_from_this()));
 }
 
-void Server::Client::BeginRead2(const boost::system::error_code& error) {
+void Server::Client::BeginRead2(const boost::system::error_code& error, ptr cptr) {
+	if(qcalled) {
+		return;
+	}
+	
 	if(error) {
 		Quit("Read error: " + error.message());
 		return;
@@ -62,10 +66,14 @@ void Server::Client::BeginRead2(const boost::system::error_code& error) {
 	}
 	
 	msgbuf.resize(msgsize);
-	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Server::Client::FinishRead, this, boost::asio::placeholders::error));
+	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Server::Client::FinishRead, this, boost::asio::placeholders::error, shared_from_this()));
 }
 
-void Server::Client::FinishRead(const boost::system::error_code& error) {
+void Server::Client::FinishRead(const boost::system::error_code& error, ptr cptr) {
+	if(qcalled) {
+		return;
+	}
+	
 	if(error) {
 		Quit("Read error: " + error.message());
 		return;
@@ -199,7 +207,7 @@ void Server::Client::Write(const protocol::message &msg, write_cb callback) {
 	memcpy(wb.get(), &psize, sizeof(psize));
 	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
 	
-	async_write(socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(callback, this, boost::asio::placeholders::error, wb));
+	async_write(socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(callback, this, boost::asio::placeholders::error, wb, shared_from_this()));
 }
 
 void Server::Client::WriteBasic(protocol::msgtype type) {
@@ -209,15 +217,13 @@ void Server::Client::WriteBasic(protocol::msgtype type) {
 	Write(msg);
 }
 
-void Server::Client::FinishWrite(const boost::system::error_code& error, wbuf_ptr wb) {
+void Server::Client::FinishWrite(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr) {
+	if(qcalled) {
+		return;
+	}
+	
 	if(error) {
-		if(error.value() == boost::asio::error::operation_aborted) {
-			/* This should only ever happen if the client is already being destroyed */
-			return;
-		}
-		
-		std::cerr << "Write error: " << error.message() << std::endl;
-		Close();
+		Quit("Write error: " + error.message(), false);
 		return;
 	}
 }
@@ -280,31 +286,48 @@ void Server::DoStuff(void) {
 	io_service.poll();
 }
 
-void Server::WriteAll(const protocol::message &msg) {
+void Server::WriteAll(const protocol::message &msg, Server::Client *exempt) {
 	std::set<Server::Client::ptr>::iterator i = clients.begin();
 	
 	for(; i != clients.end(); i++) {
-		(*i)->Write(msg);
+		if((*i).get() != exempt) {
+			(*i)->Write(msg);
+		}
 	}
 }
 
-void Server::Client::Quit(const std::string &msg) {
-	std::cout << "Forcing client quit: " << msg << std::endl;
+void Server::Client::Quit(const std::string &msg, bool send_to_client) {
+	if(qcalled) {
+		return;
+	}
 	
-	protocol::message pmsg;
-	pmsg.set_msg(protocol::QUIT);
-	pmsg.set_quit_msg(msg);
+	qcalled = true;
 	
-	Write(pmsg, &Server::Client::FinishQuit);
-}
-
-void Server::Client::FinishQuit(const boost::system::error_code& error, wbuf_ptr wb) {
-	Close();
-}
-
-void Server::Client::Close() {
+	if(colour != SPECTATE) {
+		protocol::message qmsg;
+		qmsg.set_msg(protocol::PQUIT);
+		qmsg.add_players();
+		qmsg.mutable_players(0)->set_name(playername);
+		qmsg.mutable_players(0)->set_colour((protocol::colour)colour);
+		qmsg.set_quit_msg(msg);
+		
+		server.WriteAll(qmsg, this);
+	}
+	
+	DestroyTeamPawns(server.tiles, colour);
+	
+	if(send_to_client) {
+		protocol::message pmsg;
+		pmsg.set_msg(protocol::QUIT);
+		pmsg.set_quit_msg(msg);
+		
+		Write(pmsg, &Server::Client::FinishQuit);
+	}
+	
 	server.clients.erase(shared_from_this());
 }
+
+void Server::Client::FinishQuit(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr) {}
 
 void Server::NextTurn(void) {
 	std::set<Server::Client::ptr>::iterator last = turn;

@@ -9,6 +9,7 @@ enum msgtype {
 			// allowing the player to try another one
 	BADMOVE = 5;	// Last move rejected, try again
 	QUIT = 6;	// Closing connection with supplied quit message
+	PQUIT = 7;	// Player has quit
 	
 	MOVE = 10;	// Move a single pawn
 	USE = 11;	// Use a power

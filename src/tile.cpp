@@ -129,3 +129,12 @@ void CopyTiles(Tile::List &dest, const Tile::List &src) {
 		dest.push_back(t);
 	}
 }
+
+void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour) {
+	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
+		if((*t)->pawn && (*t)->pawn->colour == colour) {
+			delete (*t)->pawn;
+			(*t)->pawn = NULL;
+		}
+	}
+}

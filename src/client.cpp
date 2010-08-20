@@ -303,6 +303,23 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			}
 		}
 	}
+	if(msg.msg() == protocol::PQUIT && msg.players_size() == 1) {
+		PlayerColour c = (PlayerColour)msg.players(0).colour();
+		
+		std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
+		DestroyTeamPawns(tiles, c);
+		
+		for(std::vector<Player>::iterator p = players.begin(); p != players.end(); p++) {
+			if((*p).colour == c) {
+				players.erase(p);
+				break;
+			}
+		}
+	}
+	if(msg.msg() == protocol::QUIT) {
+		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
+		abort();
+	}
 	
 	ReadSize();
 }

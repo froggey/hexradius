@@ -17,9 +17,10 @@ class Server {
 	struct Client : public boost::enable_shared_from_this<Server::Client> {
 		typedef boost::shared_ptr<Server::Client> ptr;
 		typedef boost::shared_array<char> wbuf_ptr;
-		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, wbuf_ptr);
+		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, wbuf_ptr, ptr);
 		
-		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(SPECTATE) {}
+		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(SPECTATE), qcalled(false) {}
+		~Client() { qcalled = true; }
 		
 		boost::asio::ip::tcp::socket socket;
 		Server &server;
@@ -30,19 +31,18 @@ class Server {
 		std::string playername;
 		PlayerColour colour;
 		
-		char shit[81920];
+		bool qcalled;
 		
 		void BeginRead();
-		void BeginRead2(const boost::system::error_code& error);
-		void FinishRead(const boost::system::error_code& error);
+		void BeginRead2(const boost::system::error_code& error, ptr cptr);
+		void FinishRead(const boost::system::error_code& error, ptr cptr);
 		
-		void FinishWrite(const boost::system::error_code& error, wbuf_ptr wb);
+		void FinishWrite(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr);
 		void Write(const protocol::message &msg, write_cb callback = &Server::Client::FinishWrite);
 		void WriteBasic(protocol::msgtype type);
 		
-		void Quit(const std::string &msg);
-		void FinishQuit(const boost::system::error_code& error, wbuf_ptr wb);
-		void Close();
+		void Quit(const std::string &msg, bool send_to_client = true);
+		void FinishQuit(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr);
 	};
 	
 	public:
@@ -74,7 +74,7 @@ class Server {
 		
 		typedef boost::shared_array<char> wbuf_ptr;
 		
-		void WriteAll(const protocol::message &msg);
+		void WriteAll(const protocol::message &msg, Server::Client *exempt = NULL);
 		
 		void StartGame(void);
 		

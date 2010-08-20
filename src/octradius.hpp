@@ -80,6 +80,7 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y);
 Pawn *PawnAtXY(Tile::List &tiles, int x, int y);
 void FreeTiles(Tile::List &tiles);
 void CopyTiles(Tile::List &dest, const Tile::List &src);
+void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
 struct Scenario {
 	int cols;

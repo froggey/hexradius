@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 	
 	if (is_server) {
 		LoadScenario(scenario_name, scn);
-		Server server(port, scn, 2);
+		Server server(port, scn, 3);
 		
 		Client client(host, port, "test");
 		
