@@ -16,7 +16,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), board((SDL_Rect){0,0,0,0}), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(NOINIT), screen(NULL), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -108,7 +108,7 @@ bool Client::DoStuff(void) {
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
 				if(within_rect(pmenu_area, event.button.x, event.button.y)) {
-					std::vector<struct pmenu_entry>::iterator i = pmenu.begin();
+					std::vector<pmenu_entry>::iterator i = pmenu.begin();
 					
 					while(i != pmenu.end()) {
 						if(within_rect((*i).rect, event.button.x, event.button.y)) {
@@ -326,7 +326,8 @@ void Client::DrawScreen(void) {
 	{
 		SDL_Rect rect = {0,0,0,0};
 		
-		FontStuff::BlitText(screen, rect, font, (SDL_Colour){255,255,255}, "Players: ");
+		SDL_Colour c = {255, 255, 255};
+		FontStuff::BlitText(screen, rect, font, c, "Players: ");
 		rect.x += FontStuff::TextWidth(font, "Players: ");
 		
 		std::vector<Player>::iterator p = players.begin();
@@ -404,7 +405,8 @@ void Client::DrawScreen(void) {
 			char ns[4];
 			sprintf(ns, "%d", i->second);
 			
-			pmenu.push_back((struct pmenu_entry){rect, i->first});
+			pmenu_entry foobar = {rect, i->first};
+			pmenu.push_back(foobar);
 			
 			FontStuff::BlitText(screen, rect, font, colour, ns);
 			

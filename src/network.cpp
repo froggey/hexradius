@@ -9,7 +9,8 @@
 #include "octradius.pb.h"
 #include "powers.hpp"
 
-Server::Server(uint16_t port, Scenario &s, uint players) : acceptor(io_service), scenario(s), req_players(players), turn(clients.end()), pspawn_turns(1), pspawn_num(1) {
+Server::Server(uint16_t port, Scenario &s, uint players)
+	: acceptor(io_service), scenario(s), req_players(players), turn(clients.end()), pspawn_turns(1), pspawn_num(1) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	CopyTiles(tiles, scenario.tiles);

@@ -28,7 +28,7 @@ struct uistate {
 	std::vector<struct pmenu_entry> pmenu;
 	SDL_Rect pmenu_area;
 	
-	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area((SDL_Rect){0,0,0,0}) {}
+	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area(SDL_Rect()) {}
 };
 
 static char *next_value(char *str) {
