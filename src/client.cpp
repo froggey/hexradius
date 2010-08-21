@@ -304,7 +304,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			
 			if(pawn->powers.size()) {
 				pawn->UsePower(power);
-			}else if(power >= 0 && power < Powers::num_powers) {
+			}
+			else if(power >= 0 && power < Powers::num_powers) {
 				Powers::powers[power].func(pawn);
 			}
 		}

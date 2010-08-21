@@ -14,21 +14,17 @@ namespace TileAnimators {
 	
 	Animator::Animator(Tile::List _tiles): tiles(_tiles) {}
 	
-	ElevationAnimator::ElevationAnimator(Tile::List _tiles, Tile* center, uint delay, uint target_elevation): Animator(_tiles) {
-		uint t = 0;
-		for (int r = 1; t < tiles.size(); r++) {
-			BOOST_FOREACH(Tile* t, tiles) {
-				if (!t->animating) {
-					t->anim_height = t->height * TILE_HEIGHT_FACTOR;
-					t->animating = true;
-					t->anim_delay = r * delay;
-					t->initial_elevation = t->height;
-					t->final_elevation = target_elevation;
-				}
+	ElevationAnimator::ElevationAnimator(Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation): Animator(_tiles) {
+		BOOST_FOREACH(Tile* t, tiles) {
+			if (!t->animating) {
+				int rx = (t->screen_x + t->height * TILE_HEIGHT_FACTOR) - (center->screen_x + center->height * TILE_HEIGHT_FACTOR);
+				int ry = (t->screen_y + t->height * TILE_HEIGHT_FACTOR) - (center->screen_y + center->height * TILE_HEIGHT_FACTOR);
+				t->anim_height = t->height * TILE_HEIGHT_FACTOR;
+				t->animating = true;
+				t->anim_delay = sqrt(pow(rx, 2) + pow(ry, 2)) * delay_factor;
+				t->initial_elevation = t->height;
+				t->final_elevation = target_elevation;
 			}
-			
-			//t += ts.size();
-			t = tiles.size();
 		}
 		start_time = SDL_GetTicks();
 	}
