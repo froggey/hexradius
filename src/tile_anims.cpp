@@ -21,7 +21,7 @@ namespace TileAnimators {
 			if (!t->animating) {
 				int rx = (t->screen_x + t->height * TILE_HEIGHT_FACTOR) - (center->screen_x + center->height * TILE_HEIGHT_FACTOR);
 				int ry = (t->screen_y + t->height * TILE_HEIGHT_FACTOR) - (center->screen_y + center->height * TILE_HEIGHT_FACTOR);
-				t->anim_height = t->height * TILE_HEIGHT_FACTOR;
+				t->anim_height = t->height;
 				t->animating = true;
 				t->anim_delay = sqrt(pow(rx, 2) + pow(ry, 2)) * delay_factor;
 				t->initial_elevation = t->height;
@@ -51,11 +51,13 @@ namespace TileAnimators {
 					tile->animating = false;
 				}
 				else if (this_t >= 0) {
-					tile->anim_height = tile->final_elevation - (tile->final_elevation - tile->initial_elevation)*cos(2*PI*this_t / 1000)/pow(2*(tile->final_elevation+2), this_t / 1000.0);
+					tile->anim_height = tile->final_elevation - (tile->final_elevation - tile->initial_elevation)*cos(2*PI*this_t / 1000.0)/pow(2*(tile->final_elevation+2), this_t / 1000.0);
 				}
 				
 				did_stuff = true;
 			}
+			if (tile->anim_height > 3)
+				std::cout << "tile->anim_height = " << tile->anim_height << ", ie = " << tile->initial_elevation << std::endl;
 		}
 		
 		if (!did_stuff) {

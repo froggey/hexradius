@@ -161,12 +161,14 @@ bool Client::DoStuff(void) {
 			
 			if(dpawn) {
 				last_redraw = 0;
-			}else if(!mpawn && tile && tile->pawn) {
+			}
+			else if(!mpawn && tile && tile->pawn) {
 				if(hpawn != tile->pawn) {
 					hpawn = tile->pawn;
 					last_redraw = 0;
 				}
-			}else{
+			}
+			else{
 				hpawn = NULL;
 			}
 		}
@@ -331,7 +333,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 	ReadSize();
 }
 
-void Client::DrawScreen(void) {
+void Client::DrawScreen() {
 	uint torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
