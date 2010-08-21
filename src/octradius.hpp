@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string.h>
 #include <map>
+#include <set>
 #include <SDL/SDL_ttf.h>
 
 #include "octradius.pb.h"
@@ -23,8 +24,9 @@ const uint TILE_HEIGHT = 51;
 const uint TILE_WOFF = 50;
 const uint TILE_HOFF = 38;
 const uint TILE_ROFF = 25;
+const uint TILE_HEIGHT_FACTOR = 5;
 
-enum PlayerColour { BLUE, RED, GREEN, YELLOW,  PURPLE, ORANGE, SPECTATE };
+enum PlayerColour { BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, SPECTATE };
 
 class Pawn;
 
@@ -37,9 +39,15 @@ struct Tile {
 	bool has_power;
 	Pawn *pawn;
 	
+	bool use_anim_height;
+	float anim_height;
+	int anim_delay;
+	int initial_elevation;
+	int final_elevation;
+	
 	int screen_x, screen_y;
 	
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0) {}
+	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0), use_anim_height(false) {}
 	~Tile();
 	
 	bool SetHeight(int h);

@@ -11,6 +11,7 @@
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
 #include "powers.hpp"
+#include "tile_anims.hpp"
 
 static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
@@ -92,7 +93,8 @@ bool Client::DoStuff(void) {
 	if(SDL_PollEvent(&event)) {
 		if(event.type == SDL_QUIT) {
 			return false;
-		}else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
+		}
+		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -103,7 +105,8 @@ bool Client::DoStuff(void) {
 					dpawn = tile->pawn;
 				}
 			}
-		}else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
+		}
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -151,7 +154,8 @@ bool Client::DoStuff(void) {
 				
 				dpawn = NULL;
 			}
-		}else if(event.type == SDL_MOUSEMOTION) {
+		}
+		else if(event.type == SDL_MOUSEMOTION) {
 			Tile *tile = TileAtXY(tiles, event.motion.x, event.motion.y);
 			
 			if(dpawn) {
@@ -164,7 +168,8 @@ bool Client::DoStuff(void) {
 			}else{
 				hpawn = NULL;
 			}
-		}else if(event.type == SDL_KEYDOWN) {
+		}
+		else if(event.type == SDL_KEYDOWN) {
 			if(event.key.keysym.scancode == 49) {
 				int mouse_x, mouse_y;
 				SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -338,6 +343,10 @@ void Client::DrawScreen(void) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 	
+	if (TileAnimators::current_animator) {
+		TileAnimators::current_animator->do_stuff();
+	}
+	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 	
 	{
@@ -371,8 +380,14 @@ void Client::DrawScreen(void) {
 		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
 		rect.w = rect.h = 0;
 		
-		rect.x += ((-1 * (*ti)->height) * 5);
-		rect.y += (-1 * (*ti)->height) * 5;
+		if ((*ti)->use_anim_height) {
+			rect.x += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
+			rect.y += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
+		}
+		else {
+			rect.x += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
+			rect.y += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
+		}
 		
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;

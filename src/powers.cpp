@@ -1,5 +1,6 @@
 #include "powers.hpp"
 #include "octradius.hpp"
+#include "tile_anims.hpp"
 
 Powers::Power Powers::powers[] = {
 	{"Destroy Row", &Powers::destroy_row, 50},
@@ -82,7 +83,8 @@ namespace Powers {
 	int hover(Pawn *pawn) {
 		if(pawn->flags & PWR_CLIMB) {
 			return 0;
-		}else{
+		}
+		else{
 			pawn->flags |= PWR_CLIMB;
 			return 1;
 		}
@@ -100,6 +102,7 @@ namespace Powers {
 	}
 	
 	int wall_row(Pawn *pawn) {
+		TileAnimators::current_animator = new TileAnimators::ElevationAnimator(pawn->RowTiles(), pawn->GetTile(), 1000); // FIXME memory leak!
 		return wall_tiles(pawn->RowTiles());
 	}
 	
