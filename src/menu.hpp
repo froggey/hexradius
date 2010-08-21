@@ -1,7 +1,7 @@
 #ifndef OR_MENU_HPP
 #define OR_MENU_HPP
 
-#include <SDL.h>
+#include <SDL/SDL.h>
 #include <string>
 #include <vector>
 

@@ -1,6 +1,6 @@
 #include <cassert>
 #include <iostream>
-#include <SDL.h>
+#include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include <boost/foreach.hpp>
 #include "menu.hpp"
