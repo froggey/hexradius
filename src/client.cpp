@@ -17,7 +17,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(SPECTATE), screen(NULL), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(SPECTATE), screen(NULL), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -94,7 +94,7 @@ bool Client::DoStuff(void) {
 		if(event.type == SDL_QUIT) {
 			return false;
 		}
-		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour && !TileAnimators::current_animator) {
+		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -106,7 +106,7 @@ bool Client::DoStuff(void) {
 				}
 			}
 		}
-		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour && !TileAnimators::current_animator) {
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -345,8 +345,8 @@ void Client::DrawScreen(void) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 	
-	if (TileAnimators::current_animator) {
-		TileAnimators::current_animator->do_stuff();
+	if (current_animator) {
+		current_animator->do_stuff();
 	}
 	
 	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);

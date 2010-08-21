@@ -106,6 +106,16 @@ void LoadScenario(std::string filename, Scenario &sc) {
 			assert(i < Powers::num_powers);
 			Powers::powers[i].spawn_rate = p;
 		}
+		else if(name == "HEIGHT") {
+			int x = atoi(bp);
+			int y = atoi((bp = next_value(bp)));
+			int h = atoi((bp = next_value(bp)));
+			
+			Tile *tile = FindTile(sc.tiles, x, y);
+			assert(tile);
+			
+			tile->height = h >= -2 && h <= 2? h : 0;
+		}
 	}
 }
 

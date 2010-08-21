@@ -10,12 +10,15 @@
 #include <set>
 
 #include "octradius.hpp"
+#include "tile_anims.hpp"
 #include "octradius.pb.h"
 
 class Client {
 	public:
 		Client(std::string host, uint16_t port, std::string name);
 		bool DoStuff(void);
+		
+		TileAnimators::Animator* current_animator;
 		
 	private:
 		typedef boost::shared_array<char> wbuf_ptr;

@@ -1,6 +1,7 @@
 #include "powers.hpp"
 #include "octradius.hpp"
 #include "tile_anims.hpp"
+#include "client.hpp"
 
 Powers::Power Powers::powers[] = {
 	{"Destroy Row", &Powers::destroy_row, 50},
@@ -102,8 +103,8 @@ namespace Powers {
 	}
 	
 	int wall_row(Pawn *pawn, Server *server, Client *client) {
-		if (!TileAnimators::current_animator)
-			TileAnimators::current_animator = new TileAnimators::ElevationAnimator(pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
 		return wall_tiles(pawn->RowTiles());
 	}
 	

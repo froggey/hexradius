@@ -3,22 +3,23 @@
 
 #include "octradius.hpp"
 
+class Client;
+
 namespace TileAnimators {
 	struct Animator {
 		Tile::List tiles;
 		uint start_time;
 		uint last_time;
+		Client* client;
 	
-		Animator(Tile::List _tiles);
+		Animator(Client* _client, Tile::List _tiles);
 		virtual void do_stuff() = 0;
 	};
 	
 	struct ElevationAnimator: public Animator {
-		ElevationAnimator(Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation);
+		ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation);
 		virtual void do_stuff();
 	};
-	
-	extern Animator* current_animator;
 }
 
 #endif

@@ -3,6 +3,7 @@
 #include <boost/foreach.hpp>
 #include "octradius.hpp"
 #include "tile_anims.hpp"
+#include "client.hpp"
 
 int sign(int n) { return (n == 0)? n : (abs(n) / n); }
 // Are these defined somewhere already?
@@ -12,9 +13,10 @@ const double E = 2.71828182845904523536;
 namespace TileAnimators {
 	Animator* current_animator = NULL;
 	
-	Animator::Animator(Tile::List _tiles): tiles(_tiles) {}
+	Animator::Animator(Client* _client, Tile::List _tiles): client(_client), tiles(_tiles) {}
 	
-	ElevationAnimator::ElevationAnimator(Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation): Animator(_tiles) {
+	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation):
+		Animator(_client, _tiles) {
 		BOOST_FOREACH(Tile* t, tiles) {
 			if (!t->animating) {
 				int rx = (t->screen_x + t->height * TILE_HEIGHT_FACTOR) - (center->screen_x + center->height * TILE_HEIGHT_FACTOR);
@@ -57,8 +59,8 @@ namespace TileAnimators {
 		}
 		
 		if (!did_stuff) {
-			assert(current_animator == this);
-			current_animator = NULL;
+			assert(client->current_animator == this);
+			client->current_animator = NULL;
 			delete this;
 		}
 	}
