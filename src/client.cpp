@@ -94,7 +94,7 @@ bool Client::DoStuff(void) {
 		if(event.type == SDL_QUIT) {
 			return false;
 		}
-		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour) {
+		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour && !TileAnimators::current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -106,7 +106,7 @@ bool Client::DoStuff(void) {
 				}
 			}
 		}
-		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour) {
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour && !TileAnimators::current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -140,7 +140,8 @@ bool Client::DoStuff(void) {
 					if(tile->pawn->powers.size()) {
 						mpawn = tile->pawn;
 					}
-				}else if(tile && tile != dpawn->GetTile()) {
+				}
+				else if(tile && tile != dpawn->GetTile()) {
 					protocol::message msg;
 					msg.set_msg(protocol::MOVE);
 					msg.add_pawns();

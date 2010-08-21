@@ -39,6 +39,8 @@ namespace TileAnimators {
 		//uint dt = ticks - last_time;
 		//last_time = ticks;
 		
+		bool did_stuff = false;
+		
 		BOOST_FOREACH(Tile* tile, tiles) {
 			if (tile->animating) {
 				if (tile->final_elevation == tile->initial_elevation) {
@@ -53,7 +55,15 @@ namespace TileAnimators {
 				else if (this_t >= 0) {
 					tile->anim_height = (tile->initial_elevation) + 0.75 * (tile->final_elevation - tile->initial_elevation) * atan(2 * this_t / 1000.0);
 				}
+				
+				did_stuff = true;
 			}
+		}
+		
+		if (!did_stuff) {
+			assert(current_animator == this);
+			current_animator = NULL;
+			delete this;
 		}
 	}
 }
