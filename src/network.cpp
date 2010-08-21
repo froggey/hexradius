@@ -316,6 +316,10 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	
 	DestroyTeamPawns(server.tiles, colour);
 	
+	if(*(server.turn) == shared_from_this()) {
+		server.NextTurn();
+	}
+	
 	if(send_to_client) {
 		protocol::message pmsg;
 		pmsg.set_msg(protocol::QUIT);
