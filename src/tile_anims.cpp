@@ -51,7 +51,7 @@ namespace TileAnimators {
 					tile->animating = false;
 				}
 				else if (this_t >= 0) {
-					tile->anim_height = (tile->initial_elevation) + 0.75 * (tile->final_elevation - tile->initial_elevation) * atan(2 * this_t / 1000.0);
+					tile->anim_height = tile->final_elevation - (tile->final_elevation - tile->initial_elevation)*cos(2*PI*this_t / 1000)/pow(2*(tile->final_elevation+2), this_t / 1000.0);
 				}
 				
 				did_stuff = true;
