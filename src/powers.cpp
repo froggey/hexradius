@@ -102,7 +102,8 @@ namespace Powers {
 	}
 	
 	int wall_row(Pawn *pawn) {
-		TileAnimators::current_animator = new TileAnimators::ElevationAnimator(pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
+		if (!TileAnimators::current_animator)
+			TileAnimators::current_animator = new TileAnimators::ElevationAnimator(pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
 		return wall_tiles(pawn->RowTiles());
 	}
 	
