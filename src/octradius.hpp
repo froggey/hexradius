@@ -39,7 +39,7 @@ struct Tile {
 	bool has_power;
 	Pawn *pawn;
 	
-	bool use_anim_height;
+	bool animating;
 	float anim_height;
 	int anim_delay;
 	int initial_elevation;
@@ -47,7 +47,7 @@ struct Tile {
 	
 	int screen_x, screen_y;
 	
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0), use_anim_height(false) {}
+	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0), animating(false) {}
 	~Tile();
 	
 	bool SetHeight(int h);

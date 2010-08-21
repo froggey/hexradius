@@ -185,7 +185,7 @@ bool Client::DoStuff(void) {
 	}
 	
 	// force a redraw if it's been too long (for animations)
-	if(SDL_GetTicks() >= last_redraw + 50) {
+	if(SDL_GetTicks() >= last_redraw + 25) {
 		DrawScreen();
 		last_redraw = SDL_GetTicks();
 	}
@@ -380,7 +380,7 @@ void Client::DrawScreen(void) {
 		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
 		rect.w = rect.h = 0;
 		
-		if ((*ti)->use_anim_height) {
+		if ((*ti)->animating) {
 			rect.x += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
 			rect.y += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
 		}

@@ -146,7 +146,7 @@ namespace Menu {
 		uint16_t port = atoi(host_port_box->contents.c_str());
 		Server server(port, scn, 2);
 		
-		Client client("localhost", port, "test");
+		Client client("127.0.0.1", port, "test");
 		
 		do {
 			server.DoStuff();

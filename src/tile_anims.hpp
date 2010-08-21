@@ -14,7 +14,7 @@ namespace TileAnimators {
 	};
 	
 	struct ElevationAnimator: public Animator {
-		ElevationAnimator(Tile::List _tiles, Tile* center, uint delay);
+		ElevationAnimator(Tile::List _tiles, Tile* center, uint delay, uint target_elevation);
 		virtual void do_stuff();
 	};
 	
