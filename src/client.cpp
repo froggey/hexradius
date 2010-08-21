@@ -303,10 +303,10 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			int power = msg.pawns(0).use_power();
 			
 			if(pawn->powers.size()) {
-				pawn->UsePower(power);
+				pawn->UsePower(power, NULL, this);
 			}
 			else if(power >= 0 && power < Powers::num_powers) {
-				Powers::powers[power].func(pawn);
+				Powers::powers[power].func(pawn, NULL, this);
 			}
 		}
 	}

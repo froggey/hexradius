@@ -3,6 +3,9 @@
 
 #include "octradius.hpp"
 
+class Server;
+class Client;
+
 const uint PWR_SHIELD = 1<<0;
 const uint PWR_CLIMB = 1<<1;
 const uint HAS_POWER = 1<<2;
@@ -11,7 +14,7 @@ const uint PWR_GOOD = (PWR_SHIELD | PWR_CLIMB);
 namespace Powers {
 	struct Power {
 		const char *name;
-		int (*func)(Pawn*);
+		int (*func)(Pawn*, Server*, Client*);
 		int spawn_rate;
 	};
 	
@@ -20,16 +23,16 @@ namespace Powers {
 	
 	int RandomPower(void);
 	
-	int destroy_row(Pawn *pawn);
-	int destroy_radial(Pawn *pawn);
-	int raise_tile(Pawn *pawn);
-	int lower_tile(Pawn *pawn);
-	int increase_range(Pawn *pawn);
-	int hover(Pawn *pawn);
-	int wall_row(Pawn *pawn);
-	int shield(Pawn *pawn);
-	int purify_row(Pawn *pawn);
-	int purify_radial(Pawn *pawn);
+	int destroy_row(Pawn *pawn, Server *server, Client *client);
+	int destroy_radial(Pawn *pawn, Server *server, Client *client);
+	int raise_tile(Pawn *pawn, Server *server, Client *client);
+	int lower_tile(Pawn *pawn, Server *server, Client *client);
+	int increase_range(Pawn *pawn, Server *server, Client *client);
+	int hover(Pawn *pawn, Server *server, Client *client);
+	int wall_row(Pawn *pawn, Server *server, Client *client);
+	int shield(Pawn *pawn, Server *server, Client *client);
+	int purify_row(Pawn *pawn, Server *server, Client *client);
+	int purify_radial(Pawn *pawn, Server *server, Client *client);
 }
 
 #endif /* !OR_POWERS_HPP */

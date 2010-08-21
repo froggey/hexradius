@@ -29,6 +29,8 @@ const uint TILE_HEIGHT_FACTOR = 5;
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, SPECTATE };
 
 class Pawn;
+class Server;
+class Client;
 
 struct Tile {
 	typedef std::vector<Tile*> List;
@@ -75,7 +77,7 @@ class Pawn {
 		bool Move(Tile *new_tile);
 		
 		void AddPower(int power);
-		bool UsePower(int power);
+		bool UsePower(int power, Server *server, Client *client);
 		
 		Tile::List RowTiles(void);
 		Tile::List RadialTiles(void);

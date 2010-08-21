@@ -53,13 +53,13 @@ void Pawn::AddPower(int power) {
 	}
 }
 
-bool Pawn::UsePower(int power) {
+bool Pawn::UsePower(int power, Server *server, Client *client) {
 	PowerList::iterator p = powers.find(power);
 	if(p == powers.end()) {
 		return false;
 	}
 	
-	if(!Powers::powers[power].func(this)) {
+	if(!Powers::powers[power].func(this, server, client)) {
 		return false;
 	}
 	

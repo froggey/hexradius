@@ -54,25 +54,25 @@ namespace Powers {
 		return ret;
 	}
 	
-	int destroy_row(Pawn *pawn) {
+	int destroy_row(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->RowTiles();
 		return destroy_enemies(tiles, pawn);
 	}
 	
-	int destroy_radial(Pawn *pawn) {
+	int destroy_radial(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->RadialTiles();
 		return destroy_enemies(tiles, pawn);
 	}
 	
-	int raise_tile(Pawn *pawn) {
+	int raise_tile(Pawn *pawn, Server *server, Client *client) {
 		return pawn->GetTile()->SetHeight(pawn->GetTile()->height+1);
 	}
 	
-	int lower_tile(Pawn *pawn) {
+	int lower_tile(Pawn *pawn, Server *server, Client *client) {
 		return pawn->GetTile()->SetHeight(pawn->GetTile()->height-1);
 	}
 	
-	int increase_range(Pawn *pawn) {
+	int increase_range(Pawn *pawn, Server *server, Client *client) {
 		if (pawn->range < 3) {
 			pawn->range++;
 			return 1;
@@ -80,7 +80,7 @@ namespace Powers {
 		else return 0;
 	}
 	
-	int hover(Pawn *pawn) {
+	int hover(Pawn *pawn, Server *server, Client *client) {
 		if(pawn->flags & PWR_CLIMB) {
 			return 0;
 		}
@@ -101,13 +101,13 @@ namespace Powers {
 		return ret;
 	}
 	
-	int wall_row(Pawn *pawn) {
+	int wall_row(Pawn *pawn, Server *server, Client *client) {
 		if (!TileAnimators::current_animator)
 			TileAnimators::current_animator = new TileAnimators::ElevationAnimator(pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
 		return wall_tiles(pawn->RowTiles());
 	}
 	
-	int shield(Pawn *pawn) {
+	int shield(Pawn *pawn, Server *server, Client *client) {
 		if(pawn->flags & PWR_SHIELD) {
 			return 0;
 		}
@@ -131,11 +131,11 @@ namespace Powers {
 		return ret;
 	}
 	
-	int purify_row(Pawn *pawn) {
+	int purify_row(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->RowTiles(), pawn);
 	}
 	
-	int purify_radial(Pawn *pawn) {
+	int purify_radial(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->RadialTiles(), pawn);
 	}
 }

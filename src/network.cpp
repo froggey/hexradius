@@ -175,7 +175,7 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
 		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 		
-		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power())) {
+		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power(), this, NULL)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
 			WriteAll(msg);
