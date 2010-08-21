@@ -149,7 +149,8 @@ int main(int argc, char **argv) {
 		LoadScenario(scenario_name, scn);
 		Server server(port, scn, 2);
 		
-		Client client(host, port, "test");
+		const char* username = getenv("USER");
+		Client client("127.0.0.1", port, username? username : "Someone who lost the game");
 		
 		do {
 			server.DoStuff();
@@ -157,7 +158,8 @@ int main(int argc, char **argv) {
 		} while(client.DoStuff());
 	}
 	else if (is_client) {
-		Client client(host, port, "test");
+		const char* username = getenv("USER");
+		Client client(host, port, username? username : "Someone who lost the game");
 
 		while (client.DoStuff()) {
 			uint8_t st = SDL_GetAppState();

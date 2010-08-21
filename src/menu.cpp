@@ -146,7 +146,8 @@ namespace Menu {
 		uint16_t port = atoi(host_port_box->contents.c_str());
 		Server server(port, scn, 2);
 		
-		Client client("127.0.0.1", port, "test");
+		const char* username = getenv("USER");
+		Client client("127.0.0.1", port, username? username : "Someone who lost the game");
 		
 		do {
 			server.DoStuff();
@@ -159,7 +160,9 @@ namespace Menu {
 	void join_do_stuff() {
 		std::string host = join_hostname_box->contents;
 		int port = atoi(join_port_box->contents.c_str());
-		Client client(host, port, "test");
+		
+		const char* username = getenv("USER");
+		Client client(host, port, username? username : "Someone who lost the game");
 
 		while (client.DoStuff()) {
 			uint8_t st = SDL_GetAppState();
