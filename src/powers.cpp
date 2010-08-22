@@ -11,6 +11,7 @@ Powers::Power Powers::powers[] = {
 	{"Increase Range", &Powers::increase_range, 20},
 	{"Hover", &Powers::hover, 30},
 	{"Wall Row", &Powers::wall_row, 70},
+	{"Dig Row", &Powers::dig_row, 70},
 	{"Shield", &Powers::shield, 30},
 	{"Purify Row", &Powers::purify_row, 50},
 	{"Purify Radial", &Powers::purify_radial, 50}
@@ -102,10 +103,27 @@ namespace Powers {
 		return ret;
 	}
 	
+	static int dig_tiles(Tile::List tiles) {
+		Tile::List::iterator i = tiles.begin();
+		int ret = 0;
+		
+		for(; i != tiles.end(); i++) {
+			ret |= (*i)->SetHeight(-2);
+		}
+		
+		return ret;
+	}
+	
 	int wall_row(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
 			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
 		return wall_tiles(pawn->RowTiles());
+	}
+	
+	int dig_row(Pawn *pawn, Server *server, Client *client) {
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, -2);
+		return dig_tiles(pawn->RowTiles());
 	}
 	
 	int shield(Pawn *pawn, Server *server, Client *client) {
