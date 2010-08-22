@@ -15,7 +15,7 @@ namespace TileAnimators {
 	
 	Animator::Animator(Client* _client, Tile::List _tiles): client(_client), tiles(_tiles) {}
 	
-	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation):
+	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
 		Animator(_client, _tiles) {
 		BOOST_FOREACH(Tile* t, tiles) {
 			if (!t->animating) {
@@ -25,7 +25,10 @@ namespace TileAnimators {
 				t->animating = true;
 				t->anim_delay = sqrt(pow(rx, 2) + pow(ry, 2)) * delay_factor;
 				t->initial_elevation = t->height;
-				t->final_elevation = target_elevation;
+				if (mode == ABSOLUTE)
+					t->final_elevation = target_elevation;
+				else
+					t->final_elevation = t->height + target_elevation;
 			}
 		}
 		start_time = SDL_GetTicks();

@@ -16,8 +16,10 @@ namespace TileAnimators {
 		virtual void do_stuff() = 0;
 	};
 	
+	enum ElevationMode { ABSOLUTE, RELATIVE };
+	
 	struct ElevationAnimator: public Animator {
-		ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, uint target_elevation);
+		ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation);
 		virtual void do_stuff();
 	};
 }

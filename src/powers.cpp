@@ -68,10 +68,14 @@ namespace Powers {
 	}
 	
 	int raise_tile(Pawn *pawn, Server *server, Client *client) {
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, Tile::List(1, pawn->GetTile()), pawn->GetTile(), 3.0, TileAnimators::RELATIVE, +1);
 		return pawn->GetTile()->SetHeight(pawn->GetTile()->height+1);
 	}
 	
 	int lower_tile(Pawn *pawn, Server *server, Client *client) {
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, Tile::List(1, pawn->GetTile()), pawn->GetTile(), 3.0, TileAnimators::RELATIVE, -1);
 		return pawn->GetTile()->SetHeight(pawn->GetTile()->height-1);
 	}
 	
@@ -117,19 +121,19 @@ namespace Powers {
 	
 	int elevate_row(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
+			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
 		return elevate_tiles(pawn->RowTiles());
 	}
 	
 	int elevate_radial(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RadialTiles(), pawn->GetTile(), 3.0, 2);
+			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RadialTiles(), pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
 		return elevate_tiles(pawn->RadialTiles());
 	}
 	
 	int dig_row(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, -2);
+			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, -2);
 		return dig_tiles(pawn->RowTiles());
 	}
 	
