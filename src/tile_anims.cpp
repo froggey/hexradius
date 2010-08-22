@@ -51,19 +51,18 @@ namespace TileAnimators {
 					tile->animating = false;
 				}
 				else if (this_t >= 0) {
-					int h1 = tile->final_elevation < tile->initial_elevation? tile->final_elevation : tile->initial_elevation;
-					int h2 = tile->final_elevation > tile->initial_elevation? tile->final_elevation : tile->initial_elevation;
-					tile->anim_height = h1 - (h2 - h1) *
-						cos(2 * PI * this_t / 1000.0) / pow(2 * (h2 + 2), this_t / 1000.0);
-					if (tile->final_elevation < tile->initial_elevation) {
+					if (tile->initial_elevation > tile->final_elevation) {
+						tile->anim_height = tile->final_elevation - (tile->initial_elevation - tile->final_elevation) *
+							cos(2 * PI * this_t / 1000.0) / pow(2 * (tile->initial_elevation + 2), this_t / 1000.0);
 						tile->anim_height = -4 - tile->anim_height;
+					}
+					else {
+						tile->anim_height = tile->final_elevation - (tile->final_elevation - tile->initial_elevation)*cos(2*PI*this_t / 1000.0)/pow(2*(tile->final_elevation+2), this_t / 1000.0);
 					}
 				}
 				
 				did_stuff = true;
 			}
-			if (tile->anim_height > 3)
-				std::cout << "tile->anim_height = " << tile->anim_height << ", ie = " << tile->initial_elevation << std::endl;
 		}
 		
 		if (!did_stuff) {
