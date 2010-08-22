@@ -10,11 +10,12 @@ Powers::Power Powers::powers[] = {
 	{"Lower Tile", &Powers::lower_tile, 100},
 	{"Increase Range", &Powers::increase_range, 20},
 	{"Hover", &Powers::hover, 30},
-	{"Wall Row", &Powers::wall_row, 70},
+	{"Elevate Row", &Powers::elevate_row, 70},
+	{"Elevate Radial", &Powers::elevate_radial, 70},
 	{"Dig Row", &Powers::dig_row, 70},
 	{"Shield", &Powers::shield, 30},
 	{"Purify Row", &Powers::purify_row, 50},
-	{"Purify Radial", &Powers::purify_radial, 50}
+	{"Purify Radial", &Powers::purify_radial, 50},
 };
 
 const int Powers::num_powers = sizeof(powers) / sizeof(Power);
@@ -92,7 +93,7 @@ namespace Powers {
 		}
 	}
 	
-	static int wall_tiles(Tile::List tiles) {
+	static int elevate_tiles(Tile::List tiles) {
 		Tile::List::iterator i = tiles.begin();
 		int ret = 0;
 		
@@ -114,10 +115,16 @@ namespace Powers {
 		return ret;
 	}
 	
-	int wall_row(Pawn *pawn, Server *server, Client *client) {
+	int elevate_row(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
 			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, 2);
-		return wall_tiles(pawn->RowTiles());
+		return elevate_tiles(pawn->RowTiles());
+	}
+	
+	int elevate_radial(Pawn *pawn, Server *server, Client *client) {
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RadialTiles(), pawn->GetTile(), 3.0, 2);
+		return elevate_tiles(pawn->RadialTiles());
 	}
 	
 	int dig_row(Pawn *pawn, Server *server, Client *client) {
