@@ -406,7 +406,7 @@ void Server::SpawnPowers(void) {
 	}
 	
 	pspawn_turns = (rand() % 6)+1;
-	pspawn_num = (rand() % 42)+1;
+	pspawn_num = (rand() % 4)+1;
 	
 	WriteAll(msg);
 }
