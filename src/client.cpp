@@ -92,7 +92,7 @@ bool Client::DoStuff(void) {
 	
 	if(SDL_PollEvent(&event)) {
 		if(event.type == SDL_QUIT) {
-			return false;
+			exit(0);
 		}
 		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
