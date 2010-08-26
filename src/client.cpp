@@ -12,12 +12,13 @@
 #include "fontstuff.hpp"
 #include "powers.hpp"
 #include "tile_anims.hpp"
+#include "gui.hpp"
 
 static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(SPECTATE), screen(NULL), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(SPECTATE), screen_set(false), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -57,7 +58,7 @@ void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
 bool Client::DoStuff(void) {
 	io_service.poll();
 	
-	if(!screen && grid_cols && grid_rows) {
+	if(!screen_set && grid_cols && grid_rows) {
 		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 		int bskip = TTF_FontLineSkip(bfont);
 		
@@ -81,10 +82,12 @@ bool Client::DoStuff(void) {
 		screen = SDL_SetVideoMode(board.w, board.h+bskip, 0, SDL_SWSURFACE);
 		assert(screen != NULL);
 		
+		screen_set = true;
+		
 		SDL_WM_SetCaption("OctRadius", "OctRadius");
 	}
 	
-	if(!screen) {
+	if(!screen_set) {
 		return true;
 	}
 	

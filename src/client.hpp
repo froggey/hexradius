@@ -39,7 +39,7 @@ class Client {
 		PlayerColour turn, mycolour;
 		std::vector<Player> players;
 		
-		SDL_Surface *screen;
+		bool screen_set;
 		uint last_redraw;
 		int xd, yd;
 		SDL_Rect board;
