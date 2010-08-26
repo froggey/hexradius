@@ -13,24 +13,24 @@
 
 static bool running, submenu;
 
-static void main_join_cb() {
+static void main_join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
 	JoinMenu jmenu;
 	jmenu.run();
 }
 
-static void main_host_cb() {
+static void main_host_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
 	
 }
 
-static void quit_cb() {
+static void quit_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
 	running = false;
 }
 
-static void back_cb() {
+static void back_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
 	submenu = false;
 }
 
-static void join_cb() {
+static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
 	
 }
 
@@ -60,12 +60,12 @@ void MainMenu::run() {
 JoinMenu::JoinMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
-	host_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/host.png"), 315, 250, 100, NULL);
+	host_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/host.png"), 315, 250, 100);
 	host_label->enable(false);
 	
 	host_input = new GUI::TextBox(gui, 375, 255, 200, 20, 1);
 	
-	port_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/port.png"), 325, 300, 101, NULL);
+	port_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/port.png"), 325, 300, 101);
 	port_label->enable(false);
 	
 	port_input = new GUI::TextBox(gui, 375, 305, 200, 20, 2);

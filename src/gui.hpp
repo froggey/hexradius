@@ -32,14 +32,18 @@ class GUI {
 	};
 	
 	struct ImgButton : Thing {
+		typedef void (*callback_f)(const ImgButton &button, const SDL_Event &event, void *arg);
+		
 		GUI &gui;
 		
-		button_callback callback;
+		callback_f callback;
+		void *callback_arg;
+		
 		SDL_Surface *image;
 		
 		int x_down, y_down;
 		
-		ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, button_callback c);
+		ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_f cb = NULL, void *arg = NULL);
 		~ImgButton();
 		
 		void HandleEvent(const SDL_Event &event);

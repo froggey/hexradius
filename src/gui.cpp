@@ -119,7 +119,7 @@ void GUI::focus_next() {
 	}
 }
 
-GUI::ImgButton::ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, button_callback c) : gui(_gui), callback(c), image(img) {
+GUI::ImgButton::ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_f cb, void *arg) : gui(_gui), callback(cb), callback_arg(arg), image(img) {
 	x = ax;
 	y = ay;
 	w = image->w;
@@ -143,7 +143,7 @@ void GUI::ImgButton::HandleEvent(const SDL_Event &event) {
 	
 	if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		if(event.button.x == x_down && event.button.y == y_down && callback) {
-			callback();
+			callback(*this, event, callback_arg);
 		}
 	}
 }
