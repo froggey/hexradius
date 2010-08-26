@@ -31,7 +31,35 @@ static void back_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 }
 
 static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
+	JoinMenu *menu = (JoinMenu*)arg;
 	
+	if(menu->host_input->text.empty()) {
+		std::cout << "No host" << std::endl;
+		return;
+	}
+	
+	if(menu->port_input->text.empty()) {
+		std::cout << "No port" << std::endl;
+		return;
+	}
+	
+	std::string host = menu->host_input->text;
+	int port = atoi(menu->port_input->text.c_str());
+	
+	if(port < 1 || port > 65535) {
+		std::cout << "Invalid port number" << std::endl;
+		return;
+	}
+	
+	const char* username = getenv("USER");
+	
+	Client client(host, port, username? username : "Someone who lost the game");
+	
+	while(client.DoStuff()) {
+		SDL_Delay(5);
+	}
+	
+	submenu = false;
 }
 
 MainMenu::MainMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
@@ -70,7 +98,7 @@ JoinMenu::JoinMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	
 	port_input = new GUI::TextBox(gui, 375, 305, 200, 20, 2);
 	
-	join_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &join_cb);
+	join_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &join_cb, this);
 	back_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/back.png"), 0, 570, 4, &back_cb);
 	quit_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/quit.png"), 700, 570, 5, &quit_cb);
 }
