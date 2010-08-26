@@ -61,9 +61,13 @@ JoinMenu::JoinMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu_background.png"));
 	
 	host_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menus/host.png"), 315, 250, 100, NULL);
+	host_label->enable(false);
+	
 	host_input = new GUI::TextBox(gui, 375, 255, 200, 20, 1);
 	
 	port_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menus/port.png"), 325, 300, 101, NULL);
+	port_label->enable(false);
+	
 	port_input = new GUI::TextBox(gui, 375, 305, 200, 20, 2);
 	
 	join_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menus/join_game.png"), 350, 350, 3, &join_cb);

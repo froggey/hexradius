@@ -64,7 +64,7 @@ void GUI::HandleEvent(const SDL_Event &event) {
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			for(thing_set::iterator t = things.begin(); t != things.end(); t++) {
-				if(event.button.x >= (*t)->x && event.button.x < (*t)->x+(*t)->w && event.button.y >= (*t)->y && event.button.y < (*t)->y+(*t)->h) {
+				if(event.button.x >= (*t)->x && event.button.x < (*t)->x+(*t)->w && event.button.y >= (*t)->y && event.button.y < (*t)->y+(*t)->h && (*t)->enabled) {
 					(*t)->HandleEvent(event);
 					break;
 				}
@@ -112,6 +112,10 @@ void GUI::del_thing(Thing *thing) {
 void GUI::focus_next() {
 	if(!things.empty() && ++focus == things.end()) {
 		focus = things.begin();
+	}
+	
+	if(!things.empty() && !(*focus)->enabled) {
+		focus_next();
 	}
 }
 

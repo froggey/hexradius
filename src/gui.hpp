@@ -18,9 +18,16 @@ class GUI {
 		
 		int x, y, w, h;
 		int tab_order;
+		bool enabled;
+		
+		Thing() : enabled(true) {}
 		
 		bool operator()(const Thing *left, const Thing *right) {
 			return left->tab_order < right->tab_order;
+		}
+		
+		void enable(bool enable) {
+			enabled = enable;
 		}
 	};
 	
