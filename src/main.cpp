@@ -17,6 +17,7 @@
 #include "network.hpp"
 #include "client.hpp"
 #include "menu.hpp"
+#include "gui.hpp"
 
 struct pmenu_entry {
 	SDL_Rect rect;
@@ -151,6 +152,9 @@ int main(int argc, char **argv) {
 	assert(TTF_Init() == 0);
 	SDL_EnableUNICODE(1);
 	
+	screen = SDL_SetVideoMode(800, 600, 0, SDL_SWSURFACE);
+	assert(screen != NULL);
+	
 	atexit(SDL_Quit);
 	atexit(FontStuff::FreeFonts);
 	atexit(ImgStuff::FreeImages);
@@ -180,8 +184,8 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
-		Menu::init();
-		Menu::main_menu.show();
+		MainMenu menu;
+		menu.run();
 	}
 	
 	return 0;

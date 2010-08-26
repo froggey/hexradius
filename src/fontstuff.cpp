@@ -54,6 +54,10 @@ void FontStuff::FreeFonts(void) {
 }
 
 void FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SDL_Color colour, std::string text) {
+	if(text.empty()) {
+		return;
+	}
+	
 	SDL_Surface *rt = TTF_RenderText_Blended(font, text.c_str(), colour);
 	if(!rt) {
 		throw std::runtime_error(std::string("Unable to render text: ") + TTF_GetError());
