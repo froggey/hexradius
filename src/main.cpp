@@ -152,9 +152,6 @@ int main(int argc, char **argv) {
 	assert(TTF_Init() == 0);
 	SDL_EnableUNICODE(1);
 	
-	screen = SDL_SetVideoMode(800, 600, 0, SDL_SWSURFACE);
-	assert(screen != NULL);
-	
 	atexit(SDL_Quit);
 	atexit(FontStuff::FreeFonts);
 	atexit(ImgStuff::FreeImages);
@@ -184,6 +181,9 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
+		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
+		assert(screen != NULL);
+		
 		MainMenu menu;
 		menu.run();
 	}

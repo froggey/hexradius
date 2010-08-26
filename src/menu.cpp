@@ -59,6 +59,9 @@ static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 		SDL_Delay(5);
 	}
 	
+	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
+	assert(screen != NULL);
+	
 	submenu = false;
 }
 
