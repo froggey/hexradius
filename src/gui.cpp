@@ -167,6 +167,10 @@ GUI::TextBox::TextBox(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g) {
 	tab_order = to;
 	
 	enter_callback = NULL;
+	enter_callback_arg = NULL;
+	
+	input_callback = NULL;
+	input_callback_arg = NULL;
 	
 	gui.add_thing(this);
 }
@@ -185,10 +189,18 @@ void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 			}
 		}else if(event.key.keysym.sym == SDLK_RETURN) {
 			if(enter_callback) {
-				enter_callback();
+				enter_callback(*this, event, enter_callback_arg);
 			}
 		}else if(isprint(event.key.keysym.sym)) {
-			text.append(1, event.key.keysym.sym);
+			if(input_callback) {
+				if(input_callback(*this, event, input_callback_arg)) {
+					text.append(1, event.key.keysym.sym);
+				}else{
+					std::cerr << "Illegal character" << std::endl;
+				}
+			}else{
+				text.append(1, event.key.keysym.sym);
+			}
 		}
 	}
 }

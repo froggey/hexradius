@@ -9,8 +9,6 @@ extern SDL_Surface *screen;
 
 class GUI {
 	public:
-		
-	typedef void (*button_callback)();
 	
 	struct Thing {
 		virtual void HandleEvent(const SDL_Event &event) {};
@@ -51,10 +49,18 @@ class GUI {
 	};
 	
 	struct TextBox : Thing {
+		typedef bool (*bool_callback)(const TextBox &tbox, const SDL_Event &event, void *arg);
+		typedef void (*void_callback)(const TextBox &tbox, const SDL_Event &event, void *arg);
+		
 		GUI &gui;
 		
-		button_callback enter_callback;
 		std::string text;
+		
+		void_callback enter_callback;
+		void *enter_callback_arg;
+		
+		bool_callback input_callback;
+		void *input_callback_arg;
 		
 		TextBox(GUI &g, int ax, int ay, int aw, int ah, int to);
 		~TextBox();

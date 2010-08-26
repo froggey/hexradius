@@ -65,6 +65,15 @@ static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 	submenu = false;
 }
 
+static bool port_input_filter(const GUI::TextBox &tbox, const SDL_Event &event, void *arg) {
+	return isdigit(event.key.keysym.sym);
+}
+
+static void join_textbox_enter(const GUI::TextBox &tbox, const SDL_Event &event, void *arg) {
+	JoinMenu *menu = (JoinMenu*)arg;
+	join_cb(*(menu->join_btn), event, arg);
+}
+
 MainMenu::MainMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
@@ -95,11 +104,16 @@ JoinMenu::JoinMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	host_label->enable(false);
 	
 	host_input = new GUI::TextBox(gui, 375, 255, 200, 20, 1);
+	host_input->enter_callback = &join_textbox_enter;
+	host_input->enter_callback_arg = this;
 	
 	port_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/port.png"), 325, 300, 101);
 	port_label->enable(false);
 	
 	port_input = new GUI::TextBox(gui, 375, 305, 200, 20, 2);
+	port_input->enter_callback = &join_textbox_enter;
+	port_input->enter_callback_arg = this;
+	port_input->input_callback = &port_input_filter;
 	
 	join_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &join_cb, this);
 	back_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/back.png"), 0, 570, 4, &back_cb);
