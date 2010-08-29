@@ -4,6 +4,7 @@
 #include <string>
 #include <SDL/SDL.h>
 #include <set>
+#include <SDL/SDL_ttf.h>
 
 extern SDL_Surface *screen;
 
@@ -66,6 +67,19 @@ class GUI {
 		~TextBox();
 		
 		void HandleEvent(const SDL_Event &event);
+		void Draw();
+	};
+	
+	struct TextDisplay : Thing {
+		GUI &gui;
+		
+		std::string text;
+		TTF_Font *font;
+		SDL_Colour colour;
+		
+		TextDisplay(GUI &g, int ax, int ay, int to, std::string txt = "");
+		~TextDisplay();
+		
 		void Draw();
 	};
 	

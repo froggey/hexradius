@@ -225,3 +225,26 @@ void GUI::TextBox::Draw() {
 	
 	FontStuff::BlitText(screen, rect, font, fc, text);
 }
+
+GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, int to, std::string txt) : gui(g) {
+	x = gui.x + ax;
+	y = gui.y + ay;
+	w = h = 0;
+	tab_order = to;
+	enabled = false;
+	
+	text = txt;
+	font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 12);
+	colour = (SDL_Colour){255, 255, 255, 0};
+	
+	gui.add_thing(this);
+}
+
+GUI::TextDisplay::~TextDisplay() {
+	gui.del_thing(this);
+}
+
+void GUI::TextDisplay::Draw() {
+	SDL_Rect rect = {x, y, 0, 0};
+	FontStuff::BlitText(screen, rect, font, colour, text);
+}
