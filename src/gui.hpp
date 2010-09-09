@@ -22,6 +22,10 @@ class GUI {
 		Thing() : enabled(true) {}
 		
 		bool operator()(const Thing *left, const Thing *right) {
+			if(left->tab_order == 0 && right->tab_order == 0) {
+				return left < right;
+			}
+			
 			return left->tab_order < right->tab_order;
 		}
 		

@@ -286,7 +286,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		}
 		
 		if(my_id == ADMIN_ID) {
-			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 3, &start_cb, this);
+			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 1, &start_cb, this);
 		}
 		
 		lobby_regen();
@@ -562,14 +562,14 @@ void Client::lobby_dostuff() {
 }
 
 void Client::lobby_regen() {
-	int y = 0, tn = 100;
+	int y = 0;
 	
 	for(player_set::iterator i = players.begin(); i != players.end(); i++) {
 		Player *p = (Player*)&(*i);
 		
 		delete p->lobby_name;
 		
-		p->lobby_name = new GUI::TextDisplay(lobby_gui, 0, y, tn++, p->name);
+		p->lobby_name = new GUI::TextDisplay(lobby_gui, 0, y, 0, p->name);
 		y += TTF_FontLineSkip(p->lobby_name->font);
 	}
 }
