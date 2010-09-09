@@ -18,8 +18,15 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
+static void start_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
+	Client *client = (Client*)arg;
+	client->send_begin();
+}
+
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
+	
+	start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &start_cb, this);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
@@ -36,6 +43,10 @@ Client::Client(std::string host, uint16_t port, std::string name) : socket(io_se
 	WriteProto(msg);
 	
 	ReadSize();
+}
+
+Client::~Client() {
+	delete start_btn;
 }
 
 void Client::WriteProto(const protocol::message &msg) {
@@ -559,4 +570,11 @@ void Client::lobby_regen() {
 		p->lobby_name = new GUI::TextDisplay(lobby_gui, 0, y, tn++, p->name);
 		y += TTF_FontLineSkip(p->lobby_name->font);
 	}
+}
+
+void Client::send_begin() {
+	protocol::message msg;
+	msg.set_msg(protocol::BEGIN);
+	
+	WriteProto(msg);
 }

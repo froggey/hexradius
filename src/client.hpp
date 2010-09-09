@@ -17,9 +17,13 @@
 class Client {
 	public:
 		Client(std::string host, uint16_t port, std::string name);
+		~Client();
+		
 		bool DoStuff(void);
 		
 		TileAnimators::Animator* current_animator;
+		
+		void send_begin();
 		
 	private:
 		typedef boost::shared_array<char> wbuf_ptr;
@@ -75,6 +79,7 @@ class Client {
 		SDL_Rect pmenu_area;
 		
 		GUI lobby_gui;
+		GUI::ImgButton *start_btn;
 		
 		void WriteProto(const protocol::message &msg);
 		void WriteFinish(const boost::system::error_code& error, wbuf_ptr wb);

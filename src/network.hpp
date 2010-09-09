@@ -52,7 +52,7 @@ class Server {
 	};
 	
 	public:
-		Server(uint16_t port, Scenario &s, uint players);
+		Server(uint16_t port, Scenario &s);
 		void DoStuff(void);
 		
 		~Server() {
@@ -69,7 +69,6 @@ class Server {
 		Tile::List tiles;
 		
 		Scenario scenario;
-		uint req_players;
 		
 		std::set<Server::Client::ptr>::iterator turn;
 		enum { LOBBY, GAME } state;

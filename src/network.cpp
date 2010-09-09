@@ -9,8 +9,8 @@
 #include "octradius.pb.h"
 #include "powers.hpp"
 
-Server::Server(uint16_t port, Scenario &s, uint players)
-	: acceptor(io_service), scenario(s), req_players(players), turn(clients.end()), state(LOBBY), pspawn_turns(1), pspawn_num(1) {
+Server::Server(uint16_t port, Scenario &s)
+	: acceptor(io_service), scenario(s), turn(clients.end()), state(LOBBY), pspawn_turns(1), pspawn_num(1) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	CopyTiles(tiles, scenario.tiles);
@@ -159,18 +159,6 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 		pjoin.mutable_players(0)->set_id(client->id);
 		
 		WriteAll(pjoin, client.get());
-		
-		uint n_clients = 0;
-		
-		for(client_set::iterator ci = clients.begin(); ci != clients.end(); ci++) {
-			if((*ci)->colour != SPECTATE) {
-				n_clients++;
-			}
-		}
-		
-		if(n_clients == req_players) {
-			StartGame();
-		}
 	}
 	
 	if(msg.msg() == protocol::MOVE) {
@@ -228,6 +216,10 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 			
 			client->WriteBasic(protocol::OK);
 		}
+	}
+	
+	if(msg.msg() == protocol::BEGIN && client->id == 0) {
+		StartGame();
 	}
 	
 	return true;

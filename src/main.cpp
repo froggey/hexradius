@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
 	
 	if (is_server) {
 		LoadScenario(scenario_name, scn);
-		Server server(port, scn, 2);
+		Server server(port, scn);
 		
 		const char* username = getenv("USER");
 		Client client("127.0.0.1", port, username? username : "Someone who lost the game");
