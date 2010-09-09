@@ -48,7 +48,7 @@ class Client {
 		player_set players;
 		enum { LOBBY, GAME } state;
 		
-		bool screen_set;
+		int screen_w, screen_h;
 		uint last_redraw;
 		int xd, yd;
 		SDL_Rect board;

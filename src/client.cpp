@@ -18,7 +18,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), screen_set(false), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -58,36 +58,7 @@ void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
 bool Client::DoStuff(void) {
 	io_service.poll();
 	
-	if(!screen_set && state == GAME) {
-		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
-		int bskip = TTF_FontLineSkip(bfont);
-		
-		Tile::List::iterator tile = tiles.begin();
-		
-		board.x = 0;
-		board.y = bskip;
-		
-		for(; tile != tiles.end(); tile++) {
-			int w = 2*BOARD_OFFSET + (*tile)->col * TILE_WOFF + TILE_WIDTH + (((*tile)->row % 2) * TILE_ROFF);
-			int h = 2*BOARD_OFFSET + (*tile)->row * TILE_HOFF + TILE_HEIGHT;
-			
-			if(board.w < w) {
-				board.w = w;
-			}
-			if(board.h < h) {
-				board.h = h;
-			}
-		}
-		
-		screen = SDL_SetVideoMode(board.w, board.h+bskip, 0, SDL_SWSURFACE);
-		assert(screen != NULL);
-		
-		screen_set = true;
-		
-		SDL_WM_SetCaption("OctRadius", "OctRadius");
-	}
-	
-	if(!screen_set) {
+	if(state != GAME) {
 		return true;
 	}
 	
@@ -109,7 +80,7 @@ bool Client::DoStuff(void) {
 				}
 			}
 		}
-		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_colour && !current_animator) {
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -231,6 +202,10 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 	}
 	
 	if(msg.msg() == protocol::BEGIN) {
+		if(state == GAME) {
+			throw std::runtime_error("Recieved BEGIN message during game");
+		}
+		
 		for(int i = 0; i < msg.tiles_size(); i++) {
 			tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
 		}
@@ -245,6 +220,34 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		}
 		
 		state = GAME;
+		
+		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
+		int bskip = TTF_FontLineSkip(bfont);
+		
+		Tile::List::iterator tile = tiles.begin();
+		
+		board.x = 0;
+		board.y = bskip;
+		
+		for(; tile != tiles.end(); tile++) {
+			int w = 2*BOARD_OFFSET + (*tile)->col * TILE_WOFF + TILE_WIDTH + (((*tile)->row % 2) * TILE_ROFF);
+			int h = 2*BOARD_OFFSET + (*tile)->row * TILE_HOFF + TILE_HEIGHT;
+			
+			if(board.w < w) {
+				board.w = w;
+			}
+			if(board.h < h) {
+				board.h = h;
+			}
+		}
+		
+		screen_w = board.w;
+		screen_h = board.h+bskip;
+		
+		screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
+		assert(screen != NULL);
+		
+		SDL_WM_SetCaption("OctRadius", "OctRadius");
 	}
 	if(msg.msg() == protocol::GINFO) {
 		grid_cols = msg.scenario().cols();
@@ -456,6 +459,14 @@ void Client::DrawScreen() {
 		}
 		
 		SDL_Rect rect = { mpawn->GetTile()->screen_x+TILE_WIDTH, mpawn->GetTile()->screen_y, fw+30, mpawn->powers.size() * fh };
+		
+		if(rect.x+rect.w > screen_w) {
+			rect.x = mpawn->GetTile()->screen_x-rect.w;
+		}
+		if(rect.y+rect.h > screen_h) {
+			rect.y = mpawn->GetTile()->screen_y-rect.h;
+		}
+		
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
 		
 		pmenu_area = rect;
