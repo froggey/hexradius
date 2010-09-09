@@ -18,7 +18,9 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
+	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
+	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -57,6 +59,10 @@ void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
 
 bool Client::DoStuff(void) {
 	io_service.poll();
+	
+	if(state == LOBBY) {
+		lobby_dostuff();
+	}
 	
 	if(state != GAME) {
 		return true;
@@ -269,6 +275,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 				my_colour = p.colour;
 			}
 		}
+		
+		lobby_regen();
 	}
 	if(msg.msg() == protocol::TURN) {
 		turn = msg.player_id();
@@ -340,6 +348,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 				break;
 			}
 		}
+		
+		lobby_regen();
 	}
 	if(msg.msg() == protocol::PJOIN && msg.players_size() == 1) {
 		Player p;
@@ -349,6 +359,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		p.id = msg.players(0).id();
 		
 		players.insert(p);
+		
+		lobby_regen();
 	}
 	if(msg.msg() == protocol::QUIT) {
 		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
@@ -529,5 +541,22 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 		rect.x += climb_offset;
 		rect.y += climb_offset;
+	}
+}
+
+void Client::lobby_dostuff() {
+	lobby_gui.poll(true);
+}
+
+void Client::lobby_regen() {
+	int y = 0, tn = 100;
+	
+	for(player_set::iterator i = players.begin(); i != players.end(); i++) {
+		Player *p = (Player*)&(*i);
+		
+		delete p->lobby_name;
+		
+		p->lobby_name = new GUI::TextDisplay(lobby_gui, 0, y, tn++, p->name);
+		y += TTF_FontLineSkip(p->lobby_name->font);
 	}
 }

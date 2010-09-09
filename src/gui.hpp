@@ -100,6 +100,8 @@ class GUI {
 		SDL_Surface *bgimg;
 		
 		thing_set things;
+		
+		bool v_focus;
 		thing_set::iterator focus;
 		
 		void add_thing(Thing *thing);

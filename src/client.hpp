@@ -12,6 +12,7 @@
 #include "octradius.hpp"
 #include "tile_anims.hpp"
 #include "octradius.pb.h"
+#include "gui.hpp"
 
 class Client {
 	public:
@@ -27,6 +28,14 @@ class Client {
 			std::string name;
 			PlayerColour colour;
 			uint16_t id;
+			
+			GUI::TextDisplay *lobby_name;
+			
+			Player() : lobby_name(NULL) {}
+			
+			~Player() {
+				//delete lobby_name;
+			}
 			
 			bool operator()(const Player left, const Player right) {
 				return left.id < right.id;
@@ -65,6 +74,8 @@ class Client {
 		std::vector<pmenu_entry> pmenu;
 		SDL_Rect pmenu_area;
 		
+		GUI lobby_gui;
+		
 		void WriteProto(const protocol::message &msg);
 		void WriteFinish(const boost::system::error_code& error, wbuf_ptr wb);
 		
@@ -74,6 +85,9 @@ class Client {
 		
 		void DrawScreen(void);
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset);
+		
+		void lobby_dostuff();
+		void lobby_regen();
 };
 
 #endif /* !OR_CLIENT_HPP */

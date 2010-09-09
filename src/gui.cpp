@@ -9,7 +9,7 @@
 
 SDL_Surface *screen = NULL;
 
-GUI::GUI(int ax, int ay, int aw, int ah) : x(ax), y(ay), w(aw), h(ah) {
+GUI::GUI(int ax, int ay, int aw, int ah) : x(ax), y(ay), w(aw), h(ah), v_focus(false) {
 	set_bg_colour(0, 0, 0);
 }
 
@@ -47,12 +47,12 @@ void GUI::poll(bool read_events) {
 	}
 	
 	for(thing_set::iterator t = things.begin(); t != things.end(); t++) {
-		if(t != focus) {
+		if(!(v_focus && t == focus)) {
 			(*t)->Draw();
 		}
 	}
 	
-	if(!things.empty()) {
+	if(v_focus) {
 		(*focus)->Draw();
 	}
 	
@@ -79,7 +79,7 @@ void GUI::HandleEvent(const SDL_Event &event) {
 			}
 			
 		case SDL_KEYUP:
-			if(!things.empty()) {
+			if(v_focus) {
 				(*focus)->HandleEvent(event);
 			}
 			
@@ -94,7 +94,7 @@ void GUI::add_thing(Thing *thing) {
 	assert(things.find(thing) == things.end());
 	things.insert(thing);
 	
-	if(things.size() == 1) {
+	if(!v_focus && thing->enabled) {
 		focus = things.find(thing);
 	}
 }
@@ -110,12 +110,36 @@ void GUI::del_thing(Thing *thing) {
 }
 
 void GUI::focus_next() {
-	if(!things.empty() && ++focus == things.end()) {
-		focus = things.begin();
+	thing_set::iterator fv = things.end(), of = focus;
+	
+	for(thing_set::iterator i = things.begin(); i != things.end(); i++) {
+		if((*i)->enabled) {
+			fv = i;
+			break;
+		}
 	}
 	
-	if(!things.empty() && !(*focus)->enabled) {
-		focus_next();
+	if(fv == things.end()) {
+		v_focus = false;
+		return;
+	}
+	
+	if(!v_focus) {
+		focus = fv;
+		v_focus = true;
+		return;
+	}
+	
+	do {
+		focus++;
+	} while(focus != things.end() && !(*focus)->enabled);
+	
+	if(focus == things.end()) {
+		if(fv == of) {
+			v_focus = false;
+		}else{
+			focus = fv;
+		}
 	}
 }
 

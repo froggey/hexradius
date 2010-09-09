@@ -156,6 +156,9 @@ int main(int argc, char **argv) {
 	atexit(FontStuff::FreeFonts);
 	atexit(ImgStuff::FreeImages);
 	
+	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
+	assert(screen != NULL);
+	
 	if (is_server) {
 		LoadScenario(scenario_name, scn);
 		Server server(port, scn, 2);
@@ -181,9 +184,6 @@ int main(int argc, char **argv) {
 		}
 	}
 	else {
-		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
-		assert(screen != NULL);
-		
 		MainMenu menu;
 		menu.run();
 	}
