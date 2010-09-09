@@ -26,6 +26,8 @@ const uint TILE_HOFF = 38;
 const uint TILE_ROFF = 25;
 const uint TILE_HEIGHT_FACTOR = 5;
 
+const uint16_t ADMIN_ID = 0;
+
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, SPECTATE, NOINIT };
 
 class Pawn;

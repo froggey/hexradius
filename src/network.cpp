@@ -218,7 +218,7 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 		}
 	}
 	
-	if(msg.msg() == protocol::BEGIN && client->id == 0) {
+	if(msg.msg() == protocol::BEGIN && client->id == ADMIN_ID) {
 		StartGame();
 	}
 	

@@ -26,8 +26,6 @@ static void start_cb(const GUI::ImgButton &button, const SDL_Event &event, void 
 Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
-	start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &start_cb, this);
-	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -285,6 +283,10 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			if(p.id == my_id) {
 				my_colour = p.colour;
 			}
+		}
+		
+		if(my_id == ADMIN_ID) {
+			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &start_cb, this);
 		}
 		
 		lobby_regen();
