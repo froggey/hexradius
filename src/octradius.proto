@@ -10,6 +10,9 @@ enum msgtype {
 	BADMOVE = 5;	// Last move rejected, try again
 	QUIT = 6;	// Closing connection with supplied quit message
 	PQUIT = 7;	// Player has quit
+	PJOIN = 8;	// New player has joined
+	GINFO = 9;	// Game info - sent to client if server accepts their INIT
+			// Contains scenario and currently joined players
 	
 	MOVE = 10;	// Move a single pawn
 	USE = 11;	// Use a power
@@ -25,6 +28,7 @@ enum colour {
 	YELLOW = 3;
 	PURPLE = 4;
 	ORANGE = 5;
+	SPECTATE = 6;
 }
 
 message power {
@@ -65,19 +69,25 @@ message pawn {
 message player {
 	required string name = 1;
 	required colour colour = 2;
+	required uint32 id = 3;
+}
+
+message scenario {
+	optional string name = 1;
+	optional uint32 cols = 2;
+	optional uint32 rows = 3;
 }
 
 message message {
 	required msgtype msg = 1;
 	
 	optional string player_name = 2;
-	optional colour colour = 3;
+	optional uint32 player_id = 3;
 	
 	repeated tile tiles = 4;
 	repeated pawn pawns = 5;
-	optional uint32 grid_cols = 6;
-	optional uint32 grid_rows = 7;
 	repeated player players = 8;
+	optional scenario scenario = 9;
 	
 	optional string quit_msg = 11;
 }

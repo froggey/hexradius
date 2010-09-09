@@ -19,7 +19,7 @@ class Server {
 		typedef boost::shared_array<char> wbuf_ptr;
 		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, wbuf_ptr, ptr);
 		
-		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(SPECTATE), qcalled(false) {}
+		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(NOINIT), qcalled(false) {}
 		
 		boost::asio::ip::tcp::socket socket;
 		Server &server;
@@ -27,6 +27,7 @@ class Server {
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
 		
+		uint16_t id;
 		std::string playername;
 		PlayerColour colour;
 		
@@ -44,6 +45,12 @@ class Server {
 		void FinishQuit(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr);
 	};
 	
+	struct client_compare {
+		bool operator()(const Server::Client::ptr left, const Server::Client::ptr right) {
+			return left->id < right->id;
+		}
+	};
+	
 	public:
 		Server(uint16_t port, Scenario &s, uint players);
 		void DoStuff(void);
@@ -53,16 +60,19 @@ class Server {
 		}
 		
 	private:
+		typedef std::set<Server::Client::ptr,client_compare> client_set;
+		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::acceptor acceptor;
 		
-		std::set<Server::Client::ptr> clients;
+		client_set clients;
 		Tile::List tiles;
 		
 		Scenario scenario;
 		uint req_players;
 		
 		std::set<Server::Client::ptr>::iterator turn;
+		enum { LOBBY, GAME } state;
 		
 		int pspawn_turns;
 		int pspawn_num;

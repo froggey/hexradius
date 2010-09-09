@@ -10,7 +10,7 @@
 #include "powers.hpp"
 
 Server::Server(uint16_t port, Scenario &s, uint players)
-	: acceptor(io_service), scenario(s), req_players(players), turn(clients.end()), pspawn_turns(1), pspawn_num(1) {
+	: acceptor(io_service), scenario(s), req_players(players), turn(clients.end()), state(LOBBY), pspawn_turns(1), pspawn_num(1) {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	CopyTiles(tiles, scenario.tiles);
@@ -38,7 +38,15 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 		throw std::runtime_error("Accept error: " + err.message());
 	}
 	
-	clients.insert(client);
+	static uint16_t idcounter = 0;
+	
+	std::pair<client_set::iterator,bool> ir;
+	
+	do {
+		client->id = idcounter++;
+		ir = clients.insert(client);
+	} while(!ir.second);
+	
 	client->BeginRead();
 	
 	StartAccept();
@@ -98,10 +106,9 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 		bool match = true;
 		
 		for(c = 0; c < SPECTATE && match;) {
-			std::set<Server::Client::ptr>::iterator i = clients.begin();
 			match = false;
 			
-			for(; i != clients.end(); i++) {
+			for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
 				if((*i)->colour != SPECTATE && (*i)->colour == (PlayerColour)c) {
 					match = true;
 					c++;
@@ -109,11 +116,6 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 					break;
 				}
 			}
-		}
-		
-		if(c == SPECTATE) {
-			client->Quit("No colours available");
-			return false;
 		}
 		
 		if(msg.player_name().empty()) {
@@ -124,9 +126,43 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 		client->playername = msg.player_name();
 		client->colour = (PlayerColour)c;
 		
+		protocol::message ginfo;
+		
+		ginfo.set_msg(protocol::GINFO);
+		ginfo.mutable_scenario()->set_cols(scenario.cols);
+		ginfo.mutable_scenario()->set_rows(scenario.rows);
+		
+		ginfo.set_player_id(client->id);
+		
+		for(client_set::iterator c = clients.begin(); c != clients.end(); c++) {
+			if((*c)->colour == NOINIT) {
+				continue;
+			}
+			
+			int i = ginfo.players_size();
+			
+			ginfo.add_players();
+			ginfo.mutable_players(i)->set_name((*c)->playername);
+			ginfo.mutable_players(i)->set_colour((protocol::colour)(*c)->colour);
+			ginfo.mutable_players(i)->set_id((*c)->id);
+		}
+		
+		client->Write(ginfo);
+		
+		protocol::message pjoin;
+		
+		pjoin.set_msg(protocol::PJOIN);
+		
+		pjoin.add_players();
+		pjoin.mutable_players(0)->set_name(client->playername);
+		pjoin.mutable_players(0)->set_colour((protocol::colour)client->colour);
+		pjoin.mutable_players(0)->set_id(client->id);
+		
+		WriteAll(pjoin, client.get());
+		
 		uint n_clients = 0;
 		
-		for(std::set<Server::Client::ptr>::iterator ci = clients.begin(); ci != clients.end(); ci++) {
+		for(client_set::iterator ci = clients.begin(); ci != clients.end(); ci++) {
 			if((*ci)->colour != SPECTATE) {
 				n_clients++;
 			}
@@ -231,11 +267,8 @@ void Server::Client::FinishWrite(const boost::system::error_code& error, wbuf_pt
 void Server::StartGame(void) {
 	protocol::message begin;
 	Tile::List::iterator i = tiles.begin();
-	std::set<Server::Client::ptr>::iterator c;
 	
 	begin.set_msg(protocol::BEGIN);
-	begin.set_grid_cols(scenario.cols);
-	begin.set_grid_rows(scenario.rows);
 	
 	for(; i != tiles.end(); i++) {
 		begin.add_tiles();
@@ -244,7 +277,7 @@ void Server::StartGame(void) {
 		if((*i)->pawn) {
 			int cm = 0;
 			
-			for(c = clients.begin(); c != clients.end(); c++) {
+			for(client_set::iterator c = clients.begin(); c != clients.end(); c++) {
 				if((*i)->pawn->colour == (*c)->colour) {
 					cm = 1;
 					break;
@@ -261,20 +294,7 @@ void Server::StartGame(void) {
 		}
 	}
 	
-	for(c = clients.begin(); c != clients.end(); c++) {
-		int i = begin.players_size();
-		
-		begin.add_players();
-		begin.mutable_players(i)->set_name((*c)->playername);
-		begin.mutable_players(i)->set_colour((protocol::colour)(*c)->colour);
-		
-		std::cout << "Added colour " << (*c)->colour << std::endl;
-	}
-	
-	for(c = clients.begin(); c != clients.end(); c++) {
-		begin.set_colour((protocol::colour)(*c)->colour);
-		(*c)->Write(begin);
-	}
+	WriteAll(begin);
 	
 	acceptor.cancel();
 	acceptor.close();
@@ -287,10 +307,8 @@ void Server::DoStuff(void) {
 }
 
 void Server::WriteAll(const protocol::message &msg, Server::Client *exempt) {
-	std::set<Server::Client::ptr>::iterator i = clients.begin();
-	
-	for(; i != clients.end(); i++) {
-		if((*i).get() != exempt) {
+	for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
+		if((*i).get() != exempt && (*i)->colour != NOINIT) {
 			(*i)->Write(msg);
 		}
 	}
@@ -309,6 +327,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 		qmsg.add_players();
 		qmsg.mutable_players(0)->set_name(playername);
 		qmsg.mutable_players(0)->set_colour((protocol::colour)colour);
+		qmsg.mutable_players(0)->set_id(id);
 		qmsg.set_quit_msg(msg);
 		
 		server.WriteAll(qmsg, this);
@@ -334,7 +353,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 void Server::Client::FinishQuit(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr) {}
 
 void Server::NextTurn(void) {
-	std::set<Server::Client::ptr>::iterator last = turn;
+	client_set::iterator last = turn;
 	
 	while(1) {
 		if(turn == clients.end()) {
@@ -377,7 +396,7 @@ void Server::NextTurn(void) {
 	
 	protocol::message tmsg;
 	tmsg.set_msg(protocol::TURN);
-	tmsg.set_colour((protocol::colour)(*turn)->colour);
+	tmsg.set_player_id((*turn)->id);
 	
 	WriteAll(tmsg);
 }

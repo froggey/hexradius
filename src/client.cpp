@@ -18,7 +18,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(SPECTATE), screen_set(false), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), screen_set(false), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL) {
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
 	boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
@@ -58,7 +58,7 @@ void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
 bool Client::DoStuff(void) {
 	io_service.poll();
 	
-	if(!screen_set && grid_cols && grid_rows) {
+	if(!screen_set && state == GAME) {
 		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 		int bskip = TTF_FontLineSkip(bfont);
 		
@@ -97,19 +97,19 @@ bool Client::DoStuff(void) {
 		if(event.type == SDL_QUIT) {
 			exit(0);
 		}
-		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == mycolour && !current_animator) {
+		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
 				xd = event.button.x;
 				yd = event.button.y;
 				
-				if(tile && tile->pawn && tile->pawn->colour == mycolour) {
+				if(tile && tile->pawn && tile->pawn->colour == my_colour) {
 					dpawn = tile->pawn;
 				}
 			}
 		}
-		else if(event.type == SDL_MOUSEBUTTONUP && turn == mycolour && !current_animator) {
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_colour && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -231,9 +231,6 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 	}
 	
 	if(msg.msg() == protocol::BEGIN) {
-		grid_cols = msg.grid_cols();
-		grid_rows = msg.grid_rows();
-		
 		for(int i = 0; i < msg.tiles_size(); i++) {
 			tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
 		}
@@ -247,19 +244,32 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			tile->pawn = new Pawn((PlayerColour)msg.pawns(i).colour(), tiles, tile);
 		}
 		
+		state = GAME;
+	}
+	if(msg.msg() == protocol::GINFO) {
+		grid_cols = msg.scenario().cols();
+		grid_rows = msg.scenario().rows();
+		
+		my_id = msg.player_id();
+		
+		std::cout << "My ID = " << my_id << std::endl;
+		
 		for(int i = 0; i < msg.players_size(); i++) {
 			Player p;
 			p.name = msg.players(i).name();
 			p.colour = (PlayerColour)msg.players(i).colour();
+			p.id = msg.players(i).id();
 			
-			players.push_back(p);
+			players.insert(p);
+			
+			if(p.id == my_id) {
+				my_colour = p.colour;
+			}
 		}
-		
-		mycolour = (PlayerColour)msg.colour();
 	}
 	if(msg.msg() == protocol::TURN) {
-		turn = (PlayerColour)msg.colour();
-		std::cout << "Turn for colour " << turn << std::endl;
+		turn = msg.player_id();
+		std::cout << "Turn for player " << turn << std::endl;
 	}
 	if(msg.msg() == protocol::MOVE && msg.pawns_size() == 1) {
 		Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
@@ -321,12 +331,21 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
 		DestroyTeamPawns(tiles, c);
 		
-		for(std::vector<Player>::iterator p = players.begin(); p != players.end(); p++) {
+		for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 			if((*p).colour == c) {
 				players.erase(p);
 				break;
 			}
 		}
+	}
+	if(msg.msg() == protocol::PJOIN && msg.players_size() == 1) {
+		Player p;
+		
+		p.name = msg.players(0).name();
+		p.colour = (PlayerColour)msg.players(0).colour();
+		p.id = msg.players(0).id();
+		
+		players.insert(p);
 	}
 	if(msg.msg() == protocol::QUIT) {
 		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
@@ -363,12 +382,16 @@ void Client::DrawScreen() {
 		FontStuff::BlitText(screen, rect, font, c, "Players: ");
 		rect.x += FontStuff::TextWidth(font, "Players: ");
 		
-		std::vector<Player>::iterator p = players.begin();
+		player_set::iterator p = players.begin();
 		
 		const SDL_Colour colours[] = {{0,0,255},{255,0,0},{0,255,0},{255,255,0},{160,32,240},{255,165,0}};
 		
 		for(; p != players.end(); p++) {
-			TTF_Font *f = (*p).colour == turn ? bfont : font;
+			if((*p).colour >= SPECTATE) {
+				continue;
+			}
+			
+			TTF_Font *f = (*p).id == turn ? bfont : font;
 			
 			FontStuff::BlitText(screen, rect, f, colours[(*p).colour], (*p).name + " ");
 			rect.x += FontStuff::TextWidth(f, (*p).name + " ");
@@ -474,7 +497,7 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 		rect.y -= climb_offset;
 	}
 	
-	if(pawn == hpawn && pawn->colour == mycolour) {
+	if(pawn == hpawn && pawn->colour == my_colour) {
 		torus_frame = 10;
 	}
 	else if(!(pawn->flags & HAS_POWER)) {

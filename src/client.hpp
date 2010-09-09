@@ -26,7 +26,14 @@ class Client {
 		struct Player {
 			std::string name;
 			PlayerColour colour;
+			uint16_t id;
+			
+			bool operator()(const Player left, const Player right) {
+				return left.id < right.id;
+			}
 		};
+		
+		typedef std::set<Player,Player> player_set;
 		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::socket socket;
@@ -36,8 +43,10 @@ class Client {
 		
 		int grid_cols, grid_rows;
 		Tile::List tiles;
-		PlayerColour turn, mycolour;
-		std::vector<Player> players;
+		PlayerColour my_colour;
+		uint16_t my_id, turn;
+		player_set players;
+		enum { LOBBY, GAME } state;
 		
 		bool screen_set;
 		uint last_redraw;
