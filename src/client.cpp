@@ -23,7 +23,7 @@ static void start_cb(const GUI::ImgButton &button, const SDL_Event &event, void 
 	client->send_begin();
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), grid_cols(0), grid_rows(0), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
+Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
@@ -265,9 +265,6 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		SDL_WM_SetCaption("OctRadius", "OctRadius");
 	}
 	if(msg.msg() == protocol::GINFO) {
-		grid_cols = msg.scenario().cols();
-		grid_rows = msg.scenario().rows();
-		
 		my_id = msg.player_id();
 		
 		std::cout << "My ID = " << my_id << std::endl;

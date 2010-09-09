@@ -129,8 +129,6 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 		protocol::message ginfo;
 		
 		ginfo.set_msg(protocol::GINFO);
-		ginfo.mutable_scenario()->set_cols(scenario.cols);
-		ginfo.mutable_scenario()->set_rows(scenario.rows);
 		
 		ginfo.set_player_id(client->id);
 		

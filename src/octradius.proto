@@ -74,8 +74,6 @@ message player {
 
 message scenario {
 	optional string name = 1;
-	optional uint32 cols = 2;
-	optional uint32 rows = 3;
 }
 
 message message {

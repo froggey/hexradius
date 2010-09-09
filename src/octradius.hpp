@@ -95,11 +95,9 @@ void CopyTiles(Tile::List &dest, const Tile::List &src);
 void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
 struct Scenario {
-	int cols;
-	int rows;
 	Tile::List tiles;
 	
-	Scenario() : cols(0), rows(0) {}
+	Scenario() {}
 	
 	~Scenario() {
 		FreeTiles(tiles);
@@ -107,8 +105,6 @@ struct Scenario {
 	
 	Scenario &operator=(const Scenario &s) {
 		if(this != &s) {
-			cols = s.cols;
-			rows = s.rows;
 			CopyTiles(tiles, s.tiles);
 		}
 		
@@ -116,8 +112,6 @@ struct Scenario {
 	}
 	
 	Scenario(const Scenario &s) {
-		cols = s.cols;
-		rows = s.rows;
 		CopyTiles(tiles, s.tiles);
 	}
 };

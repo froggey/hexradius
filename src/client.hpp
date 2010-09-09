@@ -54,7 +54,6 @@ class Client {
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
 		
-		int grid_cols, grid_rows;
 		Tile::List tiles;
 		PlayerColour my_colour;
 		uint16_t my_id, turn;

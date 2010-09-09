@@ -59,20 +59,18 @@ void LoadScenario(std::string filename, Scenario &sc) {
 		std::string name = buf;
 		
 		if(name == "GRID") {
-			sc.cols = atoi(bp);
-			sc.rows = atoi(next_value(bp));
+			int cols = atoi(bp);
+			int rows = atoi(next_value(bp));
 			
-			assert(sc.cols > 0 && sc.rows > 0);
+			assert(cols > 0 && rows > 0);
 			
-			for(int r = 0; r < sc.rows; r++) {
-				for(int c = 0; c < sc.cols; c++) {
+			for(int r = 0; r < rows; r++) {
+				for(int c = 0; c < cols; c++) {
 					sc.tiles.push_back(new Tile(c, r, 0));
 				}
 			}
 		}
 		else if(name == "SPAWN") {
-			assert(sc.cols > 0 && sc.rows > 0);
-			
 			/* SPAWN x y c */
 			
 			int x = atoi(bp);
