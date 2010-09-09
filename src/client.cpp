@@ -561,13 +561,14 @@ void Client::lobby_dostuff() {
 void Client::lobby_regen() {
 	int y = 0;
 	
-	for(player_set::iterator i = players.begin(); i != players.end(); i++) {
-		Player *p = (Player*)&(*i);
+	lobby_ptexts.clear();
+	
+	for(player_set::iterator p = players.begin(); p != players.end(); p++) {
+		boost::shared_ptr<GUI::TextDisplay> td(new GUI::TextDisplay(lobby_gui, 0, y, 0, (*p).name));
 		
-		delete p->lobby_name;
+		lobby_ptexts.push_back(td);
 		
-		p->lobby_name = new GUI::TextDisplay(lobby_gui, 0, y, 0, p->name);
-		y += TTF_FontLineSkip(p->lobby_name->font);
+		y += TTF_FontLineSkip(td->font);
 	}
 }
 

@@ -33,14 +33,6 @@ class Client {
 			PlayerColour colour;
 			uint16_t id;
 			
-			GUI::TextDisplay *lobby_name;
-			
-			Player() : lobby_name(NULL) {}
-			
-			~Player() {
-				//delete lobby_name;
-			}
-			
 			bool operator()(const Player left, const Player right) {
 				return left.id < right.id;
 			}
@@ -79,6 +71,7 @@ class Client {
 		
 		GUI lobby_gui;
 		GUI::ImgButton *start_btn;
+		std::vector<boost::shared_ptr<GUI::TextDisplay> > lobby_ptexts;
 		
 		void WriteProto(const protocol::message &msg);
 		void WriteFinish(const boost::system::error_code& error, wbuf_ptr wb);
