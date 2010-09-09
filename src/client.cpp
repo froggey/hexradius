@@ -286,7 +286,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		}
 		
 		if(my_id == ADMIN_ID) {
-			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &start_cb, this);
+			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 3, &start_cb, this);
 		}
 		
 		lobby_regen();
