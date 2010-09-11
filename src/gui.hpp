@@ -132,6 +132,21 @@ class GUI {
 		}
 	};
 	
+	struct DropDown : Thing {
+		GUI &gui;
+		
+		TextButton button;
+		
+		DropDown(GUI &g, int ax, int ay, int aw, int ah, int to);
+		~DropDown();
+		
+		void Draw();
+		
+		bool has_focus() {
+			return r_has_focus(gui);
+		}
+	};
+	
 	typedef std::set<Thing*,Thing> thing_set;
 	
 	public:

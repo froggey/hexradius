@@ -73,6 +73,7 @@ class Client {
 		GUI lobby_gui;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_players;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_buttons;
+		std::vector<boost::shared_ptr<GUI::DropDown> > lobby_drops;
 		
 		std::string req_name;
 		

@@ -358,3 +358,34 @@ void GUI::TextButton::HandleEvent(const SDL_Event &event) {
 		}
 	}
 }
+
+GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g), button(g, ax, ay, aw-ah, ah, 0, "UNSET") {
+	x = gui.x + ax;
+	y = gui.y + ay;
+	w = aw;
+	h = ah;
+	tab_order = to;
+	
+	button.align(LEFT);
+	
+	gui.add_thing(this);
+}
+
+GUI::DropDown::~DropDown() {
+	gui.del_thing(this);
+}
+
+void GUI::DropDown::Draw() {
+	SDL_Rect rect = {x+w-h, y, h, h};
+	
+	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+	
+	Uint32 bcolour = has_focus() ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
+	SDL_Rect ra = {x,y,w,1}, rb = {x,y,1,h}, rc = {x,y+h,w,1}, rd = {x+w,y,1,h+1}, re = {x+w-h,y,1,h};
+	
+	assert(SDL_FillRect(screen, &ra, bcolour) == 0);
+	assert(SDL_FillRect(screen, &rb, bcolour) == 0);
+	assert(SDL_FillRect(screen, &rc, bcolour) == 0);
+	assert(SDL_FillRect(screen, &rd, bcolour) == 0);
+	assert(SDL_FillRect(screen, &re, bcolour) == 0);
+}

@@ -312,8 +312,11 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		
 		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
 		pn->align(GUI::LEFT);
-		
 		lobby_buttons.push_back(pn);
+		
+		boost::shared_ptr<GUI::TextButton> pc(new GUI::TextButton(lobby_gui, 330, 20, 135, 35, 0, "Team"));
+		pc->align(GUI::LEFT);
+		lobby_buttons.push_back(pc);
 		
 		if(my_id == ADMIN_ID) {
 			boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", &start_cb, this));
@@ -611,12 +614,15 @@ void Client::lobby_regen() {
 	int y = 65;
 	
 	lobby_players.clear();
+	lobby_drops.clear();
 	
 	for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, y, 300, 35, 0, (*p).name));
 		pn->align(GUI::LEFT);
-		
 		lobby_players.push_back(pn);
+		
+		boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
+		lobby_drops.push_back(pc);
 		
 		y += 40;
 	}
