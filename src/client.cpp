@@ -286,8 +286,6 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		
 		screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
 		assert(screen != NULL);
-		
-		SDL_WM_SetCaption("OctRadius", "OctRadius");
 	}
 	if(msg.msg() == protocol::GINFO) {
 		state = LOBBY;

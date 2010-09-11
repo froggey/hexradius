@@ -139,6 +139,8 @@ int main(int argc, char **argv) {
 	atexit(FontStuff::FreeFonts);
 	atexit(ImgStuff::FreeImages);
 	
+	SDL_WM_SetCaption("OctRadius", "OctRadius");
+	
 	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
 	assert(screen != NULL);
 	
