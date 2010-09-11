@@ -7,6 +7,8 @@
 #include <SDL/SDL.h>
 #include <set>
 #include <SDL/SDL_ttf.h>
+#include <vector>
+#include <boost/shared_ptr.hpp>
 
 extern SDL_Surface *screen;
 
@@ -132,8 +134,16 @@ class GUI {
 			m_fgc = ImgStuff::Colour(r, g, b);
 		}
 		
+		void set_fg_colour(const SDL_Colour &colour) {
+			m_fgc = colour;
+		}
+		
 		void set_bg_colour(int r, int g, int b) {
 			m_bgc = ImgStuff::Colour(r, g, b);
+		}
+		
+		void set_bg_colour(const SDL_Colour &colour) {
+			m_bgc = colour;
 		}
 		
 		void Draw();
@@ -145,14 +155,26 @@ class GUI {
 	};
 	
 	struct DropDown : Thing {
+		struct Item {
+			Item() {}
+			Item(std::string t, SDL_Colour c) : text(t), colour(c) {}
+			
+			std::string text;
+			SDL_Colour colour;
+		};
+		
 		GUI &gui;
 		
 		TextButton button;
+		
+		std::vector<Item> items;
+		std::vector<boost::shared_ptr<TextButton> > item_buttons;
 		
 		DropDown(GUI &g, int ax, int ay, int aw, int ah, int to);
 		~DropDown();
 		
 		void Draw();
+		void HandleEvent(const SDL_Event &event);
 		
 		bool has_focus() {
 			return r_has_focus(gui);

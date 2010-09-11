@@ -622,6 +622,11 @@ void Client::lobby_regen() {
 		lobby_players.push_back(pn);
 		
 		boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
+		
+		for(int i = 0; i < 7; i++) {
+			pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i]));
+		}
+		
 		lobby_drops.push_back(pc);
 		
 		y += 40;

@@ -28,6 +28,9 @@ const uint TILE_HEIGHT_FACTOR = 5;
 
 const uint16_t ADMIN_ID = 0;
 
+extern const char *team_names[];
+extern const SDL_Colour team_colours[];
+
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, SPECTATE, NOINIT };
 
 class Pawn;

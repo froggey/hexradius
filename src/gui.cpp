@@ -3,6 +3,7 @@
 #include <SDL/SDL.h>
 #include <stdexcept>
 #include <iostream>
+#include <boost/shared_ptr.hpp>
 
 #include "gui.hpp"
 #include "fontstuff.hpp"
@@ -391,4 +392,34 @@ void GUI::DropDown::Draw() {
 	assert(SDL_FillRect(screen, &rc, bcolour) == 0);
 	assert(SDL_FillRect(screen, &rd, bcolour) == 0);
 	assert(SDL_FillRect(screen, &re, bcolour) == 0);
+}
+
+static void dropdown_set(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+	GUI::DropDown *drop = (GUI::DropDown*)arg;
+	
+	drop->button.m_text = button.m_text;
+	drop->button.set_fg_colour(button.m_fgc);
+	drop->item_buttons.clear();
+}
+
+void GUI::DropDown::HandleEvent(const SDL_Event &event) {
+	if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		if(item_buttons.empty()) {
+			int ty = y+h;
+			int to = 2000;
+			
+			for(std::vector<Item>::iterator i = items.begin(); i != items.end(); i++) {
+				boost::shared_ptr<TextButton> btn(new TextButton(gui, x, ty, w, h, to, (*i).text, &dropdown_set, this));
+				btn->set_fg_colour((*i).colour);
+				btn->align(LEFT);
+				
+				item_buttons.push_back(btn);
+				
+				ty += h;
+				to++;
+			}
+		}else{
+			item_buttons.clear();
+		}
+	}
 }
