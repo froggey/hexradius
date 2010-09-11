@@ -19,7 +19,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-static void start_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
+static void start_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	Client *client = (Client*)arg;
 	client->send_begin();
 }
@@ -29,7 +29,7 @@ static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
 	client->quit = true;
 }
 
-static void leave_cb(const GUI::ImgButton &btn, const SDL_Event &event, void *arg) {
+static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
 	Client *client = (Client*)arg;
 	client->rfalse = true;
 }
@@ -38,10 +38,10 @@ Client::Client(std::string host, uint16_t port, std::string name) : quit(false),
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
-	boost::shared_ptr<GUI::ImgButton> cm(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/connecting.png"), 300, 285, 0));
+	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 285, 200, 35, 0, "Connecting..."));
 	lobby_buttons.push_back(cm);
 	
-	boost::shared_ptr<GUI::ImgButton> ab(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/abort.png"), 350, 345, 1, &leave_cb, this));
+	boost::shared_ptr<GUI::TextButton> ab(new GUI::TextButton(lobby_gui, 350, 345, 100, 35, 1, "Abort", &leave_cb, this));
 	lobby_buttons.push_back(ab);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
@@ -310,12 +310,15 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		
 		lobby_buttons.clear();
 		
+		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
+		lobby_buttons.push_back(pn);
+		
 		if(my_id == ADMIN_ID) {
-			boost::shared_ptr<GUI::ImgButton> sg(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 1, &start_cb, this));
+			boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", &start_cb, this));
 			lobby_buttons.push_back(sg);
 		}
 		
-		boost::shared_ptr<GUI::ImgButton> lg(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/leave_game.png"), 5, 570, 2, &leave_cb, this));
+		boost::shared_ptr<GUI::TextButton> lg(new GUI::TextButton(lobby_gui, 645, 384, 135, 35, 2, "Leave Game", &leave_cb, this));
 		lobby_buttons.push_back(lg);
 		
 		lobby_regen();
@@ -603,16 +606,15 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 }
 
 void Client::lobby_regen() {
-	int y = 0;
+	int y = 65;
 	
-	lobby_ptexts.clear();
+	lobby_players.clear();
 	
 	for(player_set::iterator p = players.begin(); p != players.end(); p++) {
-		boost::shared_ptr<GUI::TextDisplay> td(new GUI::TextDisplay(lobby_gui, 0, y, 0, (*p).name));
+		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, y, 300, 35, 0, (*p).name));
+		lobby_players.push_back(pn);
 		
-		lobby_ptexts.push_back(td);
-		
-		y += TTF_FontLineSkip(td->font);
+		y += 40;
 	}
 }
 

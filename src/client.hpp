@@ -71,8 +71,8 @@ class Client {
 		SDL_Rect pmenu_area;
 		
 		GUI lobby_gui;
-		std::vector<boost::shared_ptr<GUI::TextDisplay> > lobby_ptexts;
-		std::vector<boost::shared_ptr<GUI::ImgButton> > lobby_buttons;
+		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_players;
+		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_buttons;
 		
 		std::string req_name;
 		
