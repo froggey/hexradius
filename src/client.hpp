@@ -52,7 +52,7 @@ class Client {
 		PlayerColour my_colour;
 		uint16_t my_id, turn;
 		player_set players;
-		enum { LOBBY, GAME } state;
+		enum { CONNECTING, LOBBY, GAME } state;
 		
 		int screen_w, screen_h;
 		uint last_redraw;
@@ -75,6 +75,10 @@ class Client {
 		GUI::ImgButton *start_btn;
 		std::vector<boost::shared_ptr<GUI::TextDisplay> > lobby_ptexts;
 		GUI::ImgButton *leave_btn;
+		
+		std::string req_name;
+		
+		void connect_callback(const boost::system::error_code& error);
 		
 		void WriteProto(const protocol::message &msg);
 		void WriteFinish(const boost::system::error_code& error, wbuf_ptr wb);

@@ -33,7 +33,7 @@ static void leave_cb(const GUI::ImgButton &btn, const SDL_Event &event, void *ar
 	client->rfalse = true;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL), leave_btn(NULL) {
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL), leave_btn(NULL), req_name(name) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
@@ -45,11 +45,18 @@ Client::Client(std::string host, uint16_t port, std::string name) : quit(false),
 	
 	boost::asio::ip::tcp::endpoint ep = *it;
 	ep.port(port);
-	socket.connect(ep);
+	
+	socket.async_connect(ep, boost::bind(&Client::connect_callback, this, boost::asio::placeholders::error));
+}
+
+void Client::connect_callback(const boost::system::error_code& error) {
+	if(error) {
+		throw std::runtime_error("Connection failed: " + error.message());
+	}
 	
 	protocol::message msg;
 	msg.set_msg(protocol::INIT);
-	msg.set_player_name(name);
+	msg.set_player_name(req_name);
 	
 	WriteProto(msg);
 	
@@ -284,6 +291,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		SDL_WM_SetCaption("OctRadius", "OctRadius");
 	}
 	if(msg.msg() == protocol::GINFO) {
+		state = LOBBY;
+		
 		my_id = msg.player_id();
 		
 		std::cout << "My ID = " << my_id << std::endl;
