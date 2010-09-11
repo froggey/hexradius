@@ -38,10 +38,10 @@ Client::Client(std::string host, uint16_t port, std::string name) : quit(false),
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
-	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 285, 200, 35, 0, "Connecting..."));
+	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
 	lobby_buttons.push_back(cm);
 	
-	boost::shared_ptr<GUI::TextButton> ab(new GUI::TextButton(lobby_gui, 350, 345, 100, 35, 1, "Abort", &leave_cb, this));
+	boost::shared_ptr<GUI::TextButton> ab(new GUI::TextButton(lobby_gui, 350, 310, 100, 35, 1, "Abort", &leave_cb, this));
 	lobby_buttons.push_back(ab);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
