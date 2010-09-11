@@ -37,7 +37,7 @@ Client::Client(std::string host, uint16_t port, std::string name) : quit(false),
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
-	leave_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/leave_game.png"), 5, 570, 2, &leave_cb, this);
+	start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/connecting.png"), 300, 285, 0);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
@@ -90,8 +90,8 @@ void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
 bool Client::DoStuff(void) {
 	io_service.poll();
 	
-	if(state == LOBBY) {
-		lobby_dostuff();
+	if(state == CONNECTING || state == LOBBY) {
+		lobby_gui.poll(true);
 	}
 	
 	if(quit || rfalse) {
@@ -310,9 +310,14 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			}
 		}
 		
+		delete start_btn;
+		start_btn = NULL;
+		
 		if(my_id == ADMIN_ID) {
 			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 1, &start_cb, this);
 		}
+		
+		leave_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/leave_game.png"), 5, 570, 2, &leave_cb, this);
 		
 		lobby_regen();
 	}
@@ -580,10 +585,6 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 		rect.x += climb_offset;
 		rect.y += climb_offset;
 	}
-}
-
-void Client::lobby_dostuff() {
-	lobby_gui.poll(true);
 }
 
 void Client::lobby_regen() {

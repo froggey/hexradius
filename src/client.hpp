@@ -90,7 +90,6 @@ class Client {
 		void DrawScreen(void);
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset);
 		
-		void lobby_dostuff();
 		void lobby_regen();
 };
 
