@@ -16,6 +16,8 @@
 
 class Client {
 	public:
+		bool quit;
+		
 		Client(std::string host, uint16_t port, std::string name);
 		~Client();
 		

@@ -9,7 +9,7 @@
 
 SDL_Surface *screen = NULL;
 
-GUI::GUI(int ax, int ay, int aw, int ah) : quit_callback(NULL), x(ax), y(ay), w(aw), h(ah), v_focus(false) {
+GUI::GUI(int ax, int ay, int aw, int ah) : x(ax), y(ay), w(aw), h(ah), v_focus(false), quit_callback(NULL) {
 	set_bg_colour(0, 0, 0);
 }
 
@@ -20,6 +20,11 @@ void GUI::set_bg_colour(int r, int g, int b) {
 
 void GUI::set_bg_image(SDL_Surface *img) {
 	bgimg = img;
+}
+
+void GUI::set_quit_callback(void_callback callback, void *arg) {
+	quit_callback = callback;
+	quit_callback_arg = arg;
 }
 
 void GUI::poll(bool read_events) {
@@ -87,7 +92,7 @@ void GUI::HandleEvent(const SDL_Event &event) {
 			
 		case SDL_QUIT:
 			if(quit_callback) {
-				quit_callback(*this, event);
+				quit_callback(*this, event, quit_callback_arg);
 			}
 			
 			break;
@@ -102,7 +107,7 @@ void GUI::add_thing(Thing *thing) {
 	things.insert(thing);
 	
 	if(!v_focus && thing->enabled) {
-		focus = things.find(thing);
+		focus_next();
 	}
 }
 
@@ -170,6 +175,7 @@ void GUI::ImgButton::HandleEvent(const SDL_Event &event) {
 		y_down = event.button.y;
 		
 		gui.focus = gui.things.find(this);
+		gui.v_focus = true;
 	}
 	
 	if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
@@ -213,6 +219,7 @@ GUI::TextBox::~TextBox() {
 void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 	if(event.type == SDL_MOUSEBUTTONDOWN) {
 		gui.focus = gui.things.find(this);
+		gui.v_focus = true;
 	}else if(event.type == SDL_KEYDOWN) {
 		if(event.key.keysym.sym == SDLK_BACKSPACE) {
 			if(!text.empty()) {

@@ -90,14 +90,14 @@ class GUI {
 	typedef std::set<Thing*,Thing> thing_set;
 	
 	public:
-		typedef void (*void_callback)(const GUI &gui, const SDL_Event &event);
-		
-		void_callback quit_callback;
+		typedef void (*void_callback)(const GUI &gui, const SDL_Event &event, void *arg);
 		
 		GUI(int ax, int ay, int aw, int ah);
 		
 		void set_bg_colour(int r, int g, int b);
 		void set_bg_image(SDL_Surface *img);
+		
+		void set_quit_callback(void_callback callback, void *arg = NULL);
 		
 		void poll(bool read_events);
 		void HandleEvent(const SDL_Event &event);
@@ -111,6 +111,9 @@ class GUI {
 		
 		bool v_focus;
 		thing_set::iterator focus;
+		
+		void_callback quit_callback;
+		void *quit_callback_arg;
 		
 		void add_thing(Thing *thing);
 		void del_thing(Thing *thing);

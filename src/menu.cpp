@@ -59,6 +59,10 @@ static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 		SDL_Delay(5);
 	}
 	
+	if(client.quit) {
+		running = false;
+	}
+	
 	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
 	assert(screen != NULL);
 	
@@ -74,13 +78,13 @@ static void join_textbox_enter(const GUI::TextBox &tbox, const SDL_Event &event,
 	join_cb(*(menu->join_btn), event, arg);
 }
 
-static void app_quit_cb(const GUI &gui, const SDL_Event &event) {
+static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
 	running = false;
 }
 
 MainMenu::MainMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
-	gui.quit_callback = &app_quit_cb;
+	gui.set_quit_callback(&app_quit_cb);
 	
 	join_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 300, 2, &main_join_cb);
 	host_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/host_game.png"), 350, 250, 1, &main_host_cb);
@@ -104,7 +108,7 @@ void MainMenu::run() {
 
 JoinMenu::JoinMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
-	gui.quit_callback = &app_quit_cb;
+	gui.set_quit_callback(&app_quit_cb);
 	
 	host_label = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/host.png"), 315, 250, 100);
 	host_label->enable(false);

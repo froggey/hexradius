@@ -23,8 +23,14 @@ static void start_cb(const GUI::ImgButton &button, const SDL_Event &event, void 
 	client->send_begin();
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : socket(io_service), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
+static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
+	Client *client = (Client*)arg;
+	client->quit = true;
+}
+
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
+	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
@@ -73,6 +79,10 @@ bool Client::DoStuff(void) {
 		lobby_dostuff();
 	}
 	
+	if(quit) {
+		return false;
+	}
+	
 	if(state != GAME) {
 		return true;
 	}
@@ -81,7 +91,8 @@ bool Client::DoStuff(void) {
 	
 	if(SDL_PollEvent(&event)) {
 		if(event.type == SDL_QUIT) {
-			exit(0);
+			quit = true;
+			return false;
 		}
 		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
