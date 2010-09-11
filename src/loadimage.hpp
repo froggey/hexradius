@@ -26,12 +26,23 @@ namespace ImgStuff {
 		}
 	};
 	
+	struct Colour : SDL_Colour {
+		Colour() {}
+		
+		Colour(int ar, int ag, int ab) {
+			r = ar;
+			g = ag;
+			b = ab;
+		}
+	};
+	
 	SDL_Surface *GetImage(std::string filename, const TintValues &tint = TintValues(0,0,0,0));
 	SDL_Surface *GetImageNC(std::string filename);
 	void FreeImages(void);
 	Uint32 GetPixel(SDL_Surface *surface, int x, int y);
 	void SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 	void TintSurface(SDL_Surface *surface, const TintValues &tint);
+	Uint32 MapColour(SDL_Colour &colour);
 }
 
 #endif /* !OR_LOADIMAGE_HPP */

@@ -6,6 +6,7 @@
 
 #include "gui.hpp"
 #include "fontstuff.hpp"
+#include "loadimage.hpp"
 
 SDL_Surface *screen = NULL;
 
@@ -295,6 +296,9 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	enabled = tab_order ? true : false;
 	m_align = CENTER;
 	
+	m_fgc = ImgStuff::Colour(255, 255, 255);
+	m_bgc = ImgStuff::Colour(0, 0, 0);
+	
 	m_text = text;
 	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 18);
 	m_callback = callback;
@@ -310,7 +314,7 @@ GUI::TextButton::~TextButton() {
 void GUI::TextButton::Draw() {
 	SDL_Rect rect = {x, y, w, h};
 	
-	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+	assert(SDL_FillRect(screen, &rect, ImgStuff::MapColour(m_bgc)) == 0);
 	
 	Uint32 bcolour = has_focus() ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
 	SDL_Rect ra = {x,y,w,1}, rb = {x,y,1,h}, rc = {x,y+h,w,1}, rd = {x+w,y,1,h+1};
@@ -343,9 +347,7 @@ void GUI::TextButton::Draw() {
 			break;
 	}
 	
-	SDL_Colour fg = {255,255,255};
-	
-	FontStuff::BlitText(screen, rect, m_font, fg, m_text);
+	FontStuff::BlitText(screen, rect, m_font, m_fgc, m_text);
 }
 
 void GUI::TextButton::HandleEvent(const SDL_Event &event) {
@@ -367,6 +369,7 @@ GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g)
 	tab_order = to;
 	
 	button.align(LEFT);
+	button.set_fg_colour(255, 0, 0);
 	
 	gui.add_thing(this);
 }

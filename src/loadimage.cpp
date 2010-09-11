@@ -8,6 +8,8 @@
 
 #include "loadimage.hpp"
 
+extern SDL_Surface *screen;
+
 struct image_cache_key {
 	std::string filename;
 	ImgStuff::TintValues tint;
@@ -185,4 +187,8 @@ void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
 	}
 	
 	SDL_UnlockSurface(surface);
+}
+
+Uint32 ImgStuff::MapColour(SDL_Colour &colour) {
+	return SDL_MapRGB(screen->format, colour.r, colour.g, colour.b);
 }

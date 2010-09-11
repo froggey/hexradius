@@ -1,6 +1,8 @@
 #ifndef OR_GUI_HPP
 #define OR_GUI_HPP
 
+#include "loadimage.hpp"
+
 #include <string>
 #include <SDL/SDL.h>
 #include <set>
@@ -111,6 +113,8 @@ class GUI {
 		std::string m_text;
 		TTF_Font *m_font;
 		alignment m_align;
+		SDL_Colour m_fgc;
+		SDL_Colour m_bgc;
 		
 		void_callback m_callback;
 		void *m_arg;
@@ -122,6 +126,14 @@ class GUI {
 		
 		void align(alignment align) {
 			m_align = align;
+		}
+		
+		void set_fg_colour(int r, int g, int b) {
+			m_fgc = ImgStuff::Colour(r, g, b);
+		}
+		
+		void set_bg_colour(int r, int g, int b) {
+			m_bgc = ImgStuff::Colour(r, g, b);
 		}
 		
 		void Draw();
