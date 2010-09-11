@@ -88,6 +88,9 @@ class Server {
 		
 		void NextTurn(void);
 		void SpawnPowers(void);
+		
+		bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
+		bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
 };
 
 #endif /* !OR_NETWORK_HPP */

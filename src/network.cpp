@@ -38,6 +38,18 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 		throw std::runtime_error("Accept error: " + err.message());
 	}
 	
+	StartAccept();
+	
+	if(state == GAME) {
+		protocol::message qmsg;
+		qmsg.set_msg(protocol::QUIT);
+		qmsg.set_quit_msg("Game already in progress");
+		
+		client->Write(qmsg, &Server::Client::FinishQuit);
+		
+		return;
+	}
+	
 	static uint16_t idcounter = 0;
 	
 	std::pair<client_set::iterator,bool> ir;
@@ -48,8 +60,6 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 	} while(!ir.second);
 	
 	client->BeginRead();
-	
-	StartAccept();
 }
 
 void Server::Client::BeginRead() {
@@ -101,126 +111,11 @@ void Server::Client::FinishRead(const boost::system::error_code& error, ptr cptr
 }
 
 bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &msg) {
-	if(msg.msg() == protocol::INIT) {
-		int c;
-		bool match = true;
-		
-		for(c = 0; c < SPECTATE && match;) {
-			match = false;
-			
-			for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
-				if((*i)->colour != SPECTATE && (*i)->colour == (PlayerColour)c) {
-					match = true;
-					c++;
-					
-					break;
-				}
-			}
-		}
-		
-		if(msg.player_name().empty()) {
-			client->Quit("No player name supplied");
-			return false;
-		}
-		
-		client->playername = msg.player_name();
-		client->colour = (PlayerColour)c;
-		
-		protocol::message ginfo;
-		
-		ginfo.set_msg(protocol::GINFO);
-		
-		ginfo.set_player_id(client->id);
-		
-		for(client_set::iterator c = clients.begin(); c != clients.end(); c++) {
-			if((*c)->colour == NOINIT) {
-				continue;
-			}
-			
-			int i = ginfo.players_size();
-			
-			ginfo.add_players();
-			ginfo.mutable_players(i)->set_name((*c)->playername);
-			ginfo.mutable_players(i)->set_colour((protocol::colour)(*c)->colour);
-			ginfo.mutable_players(i)->set_id((*c)->id);
-		}
-		
-		client->Write(ginfo);
-		
-		protocol::message pjoin;
-		
-		pjoin.set_msg(protocol::PJOIN);
-		
-		pjoin.add_players();
-		pjoin.mutable_players(0)->set_name(client->playername);
-		pjoin.mutable_players(0)->set_colour((protocol::colour)client->colour);
-		pjoin.mutable_players(0)->set_id(client->id);
-		
-		WriteAll(pjoin, client.get());
+	if(state == LOBBY) {
+		return handle_msg_lobby(client, msg);
+	}else{
+		return handle_msg_game(client, msg);
 	}
-	
-	if(msg.msg() == protocol::MOVE) {
-		if(msg.pawns_size() != 1) {
-			return true;
-		}
-		
-		const protocol::pawn &p_pawn = msg.pawns(0);
-		
-		Pawn *pawn = FindPawn(tiles, p_pawn.col(), p_pawn.row());
-		Tile *tile = FindTile(tiles, p_pawn.new_col(), p_pawn.new_row());
-		
-		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
-			return true;
-		}
-		
-		bool hp = tile->has_power;
-		
-		if(pawn->Move(tile)) {
-			WriteAll(msg);
-			
-			if(hp) {
-				protocol::message msg;
-				msg.set_msg(protocol::UPDATE);
-				
-				msg.add_pawns();
-				pawn->CopyToProto(msg.mutable_pawns(0), true);
-				
-				client->Write(msg);
-			}
-			
-			NextTurn();
-		}else{
-			client->WriteBasic(protocol::BADMOVE);
-		}
-	}
-	
-	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
-		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
-		
-		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power(), this, NULL)) {
-			client->WriteBasic(protocol::BADMOVE);
-		}else{
-			WriteAll(msg);
-			
-			if(tile->pawn && tile->pawn->powers.empty()) {
-				protocol::message update;
-				update.set_msg(protocol::UPDATE);
-				
-				update.add_pawns();
-				tile->pawn->CopyToProto(update.mutable_pawns(0), false);
-				
-				WriteAll(update);
-			}
-			
-			client->WriteBasic(protocol::OK);
-		}
-	}
-	
-	if(msg.msg() == protocol::BEGIN && client->id == ADMIN_ID) {
-		StartGame();
-	}
-	
-	return true;
 }
 
 void Server::Client::Write(const protocol::message &msg, write_cb callback) {
@@ -286,7 +181,7 @@ void Server::StartGame(void) {
 	
 	WriteAll(begin);
 	
-	acceptor.cancel();
+	state = GAME;
 	
 	NextTurn();
 }
@@ -310,7 +205,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	
 	qcalled = true;
 	
-	if(colour != SPECTATE) {
+	if(colour != NOINIT) {
 		protocol::message qmsg;
 		qmsg.set_msg(protocol::PQUIT);
 		qmsg.add_players();
@@ -365,8 +260,6 @@ void Server::NextTurn(void) {
 			
 			WriteAll(gover);
 			
-			StartAccept();
-			
 			return;
 		}
 		
@@ -398,8 +291,6 @@ void Server::NextTurn(void) {
 		turn = clients.end();
 		
 		WriteAll(gover);
-		
-		StartAccept();
 		
 		return;
 	}
@@ -442,4 +333,127 @@ void Server::SpawnPowers(void) {
 	pspawn_num = (rand() % 4)+1;
 	
 	WriteAll(msg);
+}
+
+bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg) {
+	if(msg.msg() == protocol::INIT) {
+		int c;
+		bool match = true;
+		
+		for(c = 0; c < SPECTATE && match;) {
+			match = false;
+			
+			for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
+				if((*i)->colour != SPECTATE && (*i)->colour == (PlayerColour)c) {
+					match = true;
+					c++;
+					
+					break;
+				}
+			}
+		}
+		
+		if(msg.player_name().empty()) {
+			client->Quit("No player name supplied");
+			return false;
+		}
+		
+		client->playername = msg.player_name();
+		client->colour = (PlayerColour)c;
+		
+		protocol::message ginfo;
+		
+		ginfo.set_msg(protocol::GINFO);
+		
+		ginfo.set_player_id(client->id);
+		
+		for(client_set::iterator c = clients.begin(); c != clients.end(); c++) {
+			if((*c)->colour == NOINIT) {
+				continue;
+			}
+			
+			int i = ginfo.players_size();
+			
+			ginfo.add_players();
+			ginfo.mutable_players(i)->set_name((*c)->playername);
+			ginfo.mutable_players(i)->set_colour((protocol::colour)(*c)->colour);
+			ginfo.mutable_players(i)->set_id((*c)->id);
+		}
+		
+		client->Write(ginfo);
+		
+		protocol::message pjoin;
+		
+		pjoin.set_msg(protocol::PJOIN);
+		
+		pjoin.add_players();
+		pjoin.mutable_players(0)->set_name(client->playername);
+		pjoin.mutable_players(0)->set_colour((protocol::colour)client->colour);
+		pjoin.mutable_players(0)->set_id(client->id);
+		
+		WriteAll(pjoin, client.get());
+	}else if(msg.msg() == protocol::BEGIN && client->id == ADMIN_ID) {
+		StartGame();
+	}
+	
+	return true;
+}
+
+bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message &msg) {
+	if(msg.msg() == protocol::MOVE) {
+		if(msg.pawns_size() != 1) {
+			return true;
+		}
+		
+		const protocol::pawn &p_pawn = msg.pawns(0);
+		
+		Pawn *pawn = FindPawn(tiles, p_pawn.col(), p_pawn.row());
+		Tile *tile = FindTile(tiles, p_pawn.new_col(), p_pawn.new_row());
+		
+		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
+			return true;
+		}
+		
+		bool hp = tile->has_power;
+		
+		if(pawn->Move(tile)) {
+			WriteAll(msg);
+			
+			if(hp) {
+				protocol::message msg;
+				msg.set_msg(protocol::UPDATE);
+				
+				msg.add_pawns();
+				pawn->CopyToProto(msg.mutable_pawns(0), true);
+				
+				client->Write(msg);
+			}
+			
+			NextTurn();
+		}else{
+			client->WriteBasic(protocol::BADMOVE);
+		}
+	}else if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
+		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		
+		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power(), this, NULL)) {
+			client->WriteBasic(protocol::BADMOVE);
+		}else{
+			WriteAll(msg);
+			
+			if(tile->pawn && tile->pawn->powers.empty()) {
+				protocol::message update;
+				update.set_msg(protocol::UPDATE);
+				
+				update.add_pawns();
+				tile->pawn->CopyToProto(update.mutable_pawns(0), false);
+				
+				WriteAll(update);
+			}
+			
+			client->WriteBasic(protocol::OK);
+		}
+	}
+	
+	return true;
 }
