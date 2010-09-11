@@ -11,6 +11,8 @@ extern SDL_Surface *screen;
 class GUI {
 	public:
 	
+	enum alignment { LEFT, CENTER, RIGHT };
+	
 	struct Thing {
 		virtual void HandleEvent(const SDL_Event &event) {};
 		virtual void Draw() {};
@@ -108,6 +110,7 @@ class GUI {
 		
 		std::string m_text;
 		TTF_Font *m_font;
+		alignment m_align;
 		
 		void_callback m_callback;
 		void *m_arg;
@@ -116,6 +119,10 @@ class GUI {
 		
 		TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback = NULL, void *callback_arg = NULL);
 		~TextButton();
+		
+		void align(alignment align) {
+			m_align = align;
+		}
 		
 		void Draw();
 		void HandleEvent(const SDL_Event &event);

@@ -293,6 +293,7 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	h = ah;
 	tab_order = to;
 	enabled = tab_order ? true : false;
+	m_align = CENTER;
 	
 	m_text = text;
 	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 18);
@@ -319,12 +320,32 @@ void GUI::TextButton::Draw() {
 	assert(SDL_FillRect(screen, &rc, bcolour) == 0);
 	assert(SDL_FillRect(screen, &rd, bcolour) == 0);
 	
-	int off = (h - TTF_FontLineSkip(m_font)) / 2;
+	rect.w = 0;
+	rect.h = 0;
+	
+	int hoff = (h - TTF_FontLineSkip(m_font)) / 2;
+	int width = FontStuff::TextWidth(m_font, m_text);
+	
+	switch(m_align) {
+		case LEFT:
+			rect.x = x + hoff;
+			rect.y = y + hoff;
+			break;
+			
+		case CENTER:
+			rect.x = x + (w - width) / 2;
+			rect.y = y + hoff;
+			break;
+			
+		case RIGHT:
+			rect.x = (x + w) - (width + hoff);
+			rect.y = y + hoff;
+			break;
+	}
 	
 	SDL_Colour fg = {255,255,255};
-	SDL_Rect tr = {x + off, y + off, 0, 0};
 	
-	FontStuff::BlitText(screen, tr, m_font, fg, m_text);
+	FontStuff::BlitText(screen, rect, m_font, fg, m_text);
 }
 
 void GUI::TextButton::HandleEvent(const SDL_Event &event) {

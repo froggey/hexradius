@@ -311,6 +311,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		lobby_buttons.clear();
 		
 		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
+		pn->align(GUI::LEFT);
+		
 		lobby_buttons.push_back(pn);
 		
 		if(my_id == ADMIN_ID) {
@@ -612,6 +614,8 @@ void Client::lobby_regen() {
 	
 	for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, y, 300, 35, 0, (*p).name));
+		pn->align(GUI::LEFT);
+		
 		lobby_players.push_back(pn);
 		
 		y += 40;
