@@ -287,7 +287,6 @@ void Server::StartGame(void) {
 	WriteAll(begin);
 	
 	acceptor.cancel();
-	acceptor.close();
 	
 	NextTurn();
 }
@@ -355,8 +354,20 @@ void Server::NextTurn(void) {
 		}
 		
 		if(turn == last) {
-			std::cout << "It's a draw!" << std::endl;
-			exit(0);
+			CopyTiles(tiles, scenario.tiles);
+			state = LOBBY;
+			
+			turn = clients.end();
+			
+			protocol::message gover;
+			gover.set_msg(protocol::GOVER);
+			gover.set_is_draw(true);
+			
+			WriteAll(gover);
+			
+			StartAccept();
+			
+			return;
 		}
 		
 		if((*turn)->colour != SPECTATE) {
@@ -376,8 +387,21 @@ void Server::NextTurn(void) {
 	}
 	
 	if(turn == last) {
-		std::cout << "Team " << (*turn)->colour << " won!" << std::endl;
-		exit(0);
+		CopyTiles(tiles, scenario.tiles);
+		state = LOBBY;
+		
+		protocol::message gover;
+		gover.set_msg(protocol::GOVER);
+		gover.set_is_draw(false);
+		gover.set_player_id((*turn)->id);
+		
+		turn = clients.end();
+		
+		WriteAll(gover);
+		
+		StartAccept();
+		
+		return;
 	}
 	
 	if(--pspawn_turns == 0) {

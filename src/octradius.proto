@@ -13,10 +13,12 @@ enum msgtype {
 	PJOIN = 8;	// New player has joined
 	GINFO = 9;	// Game info - sent to client if server accepts their INIT
 			// Contains scenario and currently joined players
+	GOVER = 10;	// Game over - player_id identifies the winning player
+			// unless is_draw is true. Return to lobby.
 	
-	MOVE = 10;	// Move a single pawn
-	USE = 11;	// Use a power
-	UPDATE = 13;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
+	MOVE = 21;	// Move a single pawn
+	USE = 22;	// Use a power
+	UPDATE = 23;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
 }
 
 enum colour {
@@ -86,4 +88,5 @@ message message {
 	optional scenario scenario = 9;
 	
 	optional string quit_msg = 11;
+	optional bool is_draw = 12;
 }

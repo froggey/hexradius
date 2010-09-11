@@ -13,6 +13,7 @@
 #include "powers.hpp"
 #include "tile_anims.hpp"
 #include "gui.hpp"
+#include "menu.hpp"
 
 static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
@@ -406,6 +407,22 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 	if(msg.msg() == protocol::QUIT) {
 		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
 		abort();
+	}
+	if(msg.msg() == protocol::GOVER) {
+		if(msg.is_draw()) {
+			std::cout << "Game draw" << std::endl;
+		}else{
+			Player *winner = get_player(msg.player_id()); 
+			assert(winner);
+			
+			std::cout << "Player '" << winner->name << "' won" << std::endl;
+		}
+		
+		state = LOBBY;
+		FreeTiles(tiles);
+		
+		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
+		assert(screen != NULL);
 	}
 	
 	ReadSize();

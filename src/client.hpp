@@ -89,6 +89,15 @@ class Client {
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset);
 		
 		void lobby_regen();
+		
+		Player *get_player(uint16_t id) {
+			Player key;
+			key.id = id;
+			
+			player_set::iterator i = players.find(key);
+			
+			return i == players.end() ? NULL : (Player*)&(*i);
+		}
 };
 
 #endif /* !OR_CLIENT_HPP */
