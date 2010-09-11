@@ -28,9 +28,16 @@ static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
 	client->quit = true;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL) {
+static void leave_cb(const GUI::ImgButton &btn, const SDL_Event &event, void *arg) {
+	Client *client = (Client*)arg;
+	client->rfalse = true;
+}
+
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), turn(0), state(LOBBY), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL), leave_btn(NULL) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	lobby_gui.set_quit_callback(&app_quit_cb, this);
+	
+	leave_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/leave_game.png"), 5, 570, 2, &leave_cb, this);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
@@ -51,6 +58,7 @@ Client::Client(std::string host, uint16_t port, std::string name) : quit(false),
 
 Client::~Client() {
 	delete start_btn;
+	delete leave_btn;
 }
 
 void Client::WriteProto(const protocol::message &msg) {
@@ -79,7 +87,7 @@ bool Client::DoStuff(void) {
 		lobby_dostuff();
 	}
 	
-	if(quit) {
+	if(quit || rfalse) {
 		return false;
 	}
 	

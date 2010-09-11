@@ -16,7 +16,7 @@
 
 class Client {
 	public:
-		bool quit;
+		bool quit, rfalse;
 		
 		Client(std::string host, uint16_t port, std::string name);
 		~Client();
@@ -74,6 +74,7 @@ class Client {
 		GUI lobby_gui;
 		GUI::ImgButton *start_btn;
 		std::vector<boost::shared_ptr<GUI::TextDisplay> > lobby_ptexts;
+		GUI::ImgButton *leave_btn;
 		
 		void WriteProto(const protocol::message &msg);
 		void WriteFinish(const boost::system::error_code& error, wbuf_ptr wb);
