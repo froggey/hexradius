@@ -32,6 +32,12 @@ class GUI {
 		void enable(bool enable) {
 			enabled = enable;
 		}
+		
+		virtual bool has_focus() { return false; };
+		
+		bool r_has_focus(GUI &gui) {
+			return gui.v_focus && *(gui.focus) == this;
+		}
 	};
 	
 	struct ImgButton : Thing {
@@ -51,6 +57,10 @@ class GUI {
 		
 		void HandleEvent(const SDL_Event &event);
 		void Draw();
+		
+		bool has_focus() {
+			return r_has_focus(gui);
+		}
 	};
 	
 	struct TextBox : Thing {
@@ -72,6 +82,10 @@ class GUI {
 		
 		void HandleEvent(const SDL_Event &event);
 		void Draw();
+		
+		bool has_focus() {
+			return r_has_focus(gui);
+		}
 	};
 	
 	struct TextDisplay : Thing {
@@ -103,6 +117,10 @@ class GUI {
 		
 		void Draw();
 		void HandleEvent(const SDL_Event &event);
+		
+		bool has_focus() {
+			return r_has_focus(gui);
+		}
 	};
 	
 	typedef std::set<Thing*,Thing> thing_set;

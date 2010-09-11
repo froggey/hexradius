@@ -70,6 +70,11 @@ void GUI::HandleEvent(const SDL_Event &event) {
 		case SDL_MOUSEBUTTONUP:
 			for(thing_set::iterator t = things.begin(); t != things.end(); t++) {
 				if(event.button.x >= (*t)->x && event.button.x < (*t)->x+(*t)->w && event.button.y >= (*t)->y && event.button.y < (*t)->y+(*t)->h && (*t)->enabled) {
+					if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+						focus = things.find(*t);
+						v_focus = true;
+					}
+					
 					(*t)->HandleEvent(event);
 					break;
 				}
@@ -173,9 +178,6 @@ void GUI::ImgButton::HandleEvent(const SDL_Event &event) {
 	if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		x_down = event.button.x;
 		y_down = event.button.y;
-		
-		gui.focus = gui.things.find(this);
-		gui.v_focus = true;
 	}
 	
 	if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
@@ -189,7 +191,7 @@ void GUI::ImgButton::Draw() {
 	SDL_Rect srect = {0, 0, image->w/2, image->h/2};
 	SDL_Rect rect = {x, y, 0, 0};
 	
-	if(*gui.focus == this) {
+	if(has_focus()) {
 		srect.x = srect.w;
 	}
 	
@@ -217,10 +219,7 @@ GUI::TextBox::~TextBox() {
 }
 
 void GUI::TextBox::HandleEvent(const SDL_Event &event) {
-	if(event.type == SDL_MOUSEBUTTONDOWN) {
-		gui.focus = gui.things.find(this);
-		gui.v_focus = true;
-	}else if(event.type == SDL_KEYDOWN) {
+	if(event.type == SDL_KEYDOWN) {
 		if(event.key.keysym.sym == SDLK_BACKSPACE) {
 			if(!text.empty()) {
 				text.erase(text.size()-1);
@@ -312,7 +311,7 @@ void GUI::TextButton::Draw() {
 	
 	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
 	
-	Uint32 bcolour = *(gui.focus) == this ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
+	Uint32 bcolour = has_focus() ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
 	SDL_Rect ra = {x,y,w,1}, rb = {x,y,1,h}, rc = {x,y+h,w,1}, rd = {x+w,y,1,h+1};
 	
 	assert(SDL_FillRect(screen, &ra, bcolour) == 0);
