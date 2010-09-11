@@ -16,8 +16,6 @@ enum msgtype {
 	
 	MOVE = 10;	// Move a single pawn
 	USE = 11;	// Use a power
-	SCRAMBLE = 12;	// Scramble pawns, message.pawns contains
-			// updated positions of all affected pawns.
 	UPDATE = 13;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
 }
 

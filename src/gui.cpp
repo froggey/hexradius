@@ -9,7 +9,7 @@
 
 SDL_Surface *screen = NULL;
 
-GUI::GUI(int ax, int ay, int aw, int ah) : x(ax), y(ay), w(aw), h(ah), v_focus(false) {
+GUI::GUI(int ax, int ay, int aw, int ah) : quit_callback(NULL), x(ax), y(ay), w(aw), h(ah), v_focus(false) {
 	set_bg_colour(0, 0, 0);
 }
 
@@ -81,6 +81,13 @@ void GUI::HandleEvent(const SDL_Event &event) {
 		case SDL_KEYUP:
 			if(v_focus) {
 				(*focus)->HandleEvent(event);
+			}
+			
+			break;
+			
+		case SDL_QUIT:
+			if(quit_callback) {
+				quit_callback(*this, event);
 			}
 			
 			break;

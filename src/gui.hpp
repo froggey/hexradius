@@ -90,6 +90,10 @@ class GUI {
 	typedef std::set<Thing*,Thing> thing_set;
 	
 	public:
+		typedef void (*void_callback)(const GUI &gui, const SDL_Event &event);
+		
+		void_callback quit_callback;
+		
 		GUI(int ax, int ay, int aw, int ah);
 		
 		void set_bg_colour(int r, int g, int b);
