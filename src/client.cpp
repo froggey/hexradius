@@ -33,11 +33,15 @@ static void leave_cb(const GUI::ImgButton &btn, const SDL_Event &event, void *ar
 	client->rfalse = true;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), start_btn(NULL), leave_btn(NULL), req_name(name) {
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
-	start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/connecting.png"), 300, 285, 0);
+	boost::shared_ptr<GUI::ImgButton> cm(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/connecting.png"), 300, 285, 0));
+	lobby_buttons.push_back(cm);
+	
+	boost::shared_ptr<GUI::ImgButton> ab(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/abort.png"), 350, 345, 1, &leave_cb, this));
+	lobby_buttons.push_back(ab);
 	
 	boost::asio::ip::tcp::resolver resolver(io_service);
 	boost::asio::ip::tcp::resolver::query query(host, "");
@@ -61,11 +65,6 @@ void Client::connect_callback(const boost::system::error_code& error) {
 	WriteProto(msg);
 	
 	ReadSize();
-}
-
-Client::~Client() {
-	delete start_btn;
-	delete leave_btn;
 }
 
 void Client::WriteProto(const protocol::message &msg) {
@@ -310,14 +309,15 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			}
 		}
 		
-		delete start_btn;
-		start_btn = NULL;
+		lobby_buttons.clear();
 		
 		if(my_id == ADMIN_ID) {
-			start_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 1, &start_cb, this);
+			boost::shared_ptr<GUI::ImgButton> sg(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/start_game.png"), 350, 350, 1, &start_cb, this));
+			lobby_buttons.push_back(sg);
 		}
 		
-		leave_btn = new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/leave_game.png"), 5, 570, 2, &leave_cb, this);
+		boost::shared_ptr<GUI::ImgButton> lg(new GUI::ImgButton(lobby_gui, ImgStuff::GetImage("graphics/menu/leave_game.png"), 5, 570, 2, &leave_cb, this));
+		lobby_buttons.push_back(lg);
 		
 		lobby_regen();
 	}

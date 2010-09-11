@@ -19,7 +19,6 @@ class Client {
 		bool quit, rfalse;
 		
 		Client(std::string host, uint16_t port, std::string name);
-		~Client();
 		
 		bool DoStuff(void);
 		
@@ -72,9 +71,8 @@ class Client {
 		SDL_Rect pmenu_area;
 		
 		GUI lobby_gui;
-		GUI::ImgButton *start_btn;
 		std::vector<boost::shared_ptr<GUI::TextDisplay> > lobby_ptexts;
-		GUI::ImgButton *leave_btn;
+		std::vector<boost::shared_ptr<GUI::ImgButton> > lobby_buttons;
 		
 		std::string req_name;
 		
