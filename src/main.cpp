@@ -19,21 +19,6 @@
 #include "menu.hpp"
 #include "gui.hpp"
 
-struct pmenu_entry {
-	SDL_Rect rect;
-	int power;
-};
-
-struct uistate {
-	Pawn *dpawn;
-	Pawn *mpawn;
-	
-	std::vector<struct pmenu_entry> pmenu;
-	SDL_Rect pmenu_area;
-	
-	uistate() : dpawn(NULL), mpawn(NULL), pmenu_area(SDL_Rect()) {}
-};
-
 static char *next_value(char *str) {
 	char *r = str+strcspn(str, "\t ");
 	
