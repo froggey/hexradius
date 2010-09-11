@@ -286,3 +286,48 @@ void GUI::TextDisplay::Draw() {
 	SDL_Rect rect = {x, y, 0, 0};
 	FontStuff::BlitText(screen, rect, font, colour, text);
 }
+
+GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback, void *callback_arg) : gui(g) {
+	x = gui.x + ax;
+	y = gui.y + ay;
+	w = aw;
+	h = ah;
+	tab_order = to;
+	enabled = tab_order ? true : false;
+	
+	m_text = text;
+	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 18);
+	m_callback = callback;
+	m_arg = callback_arg;
+	
+	gui.add_thing(this);
+}
+
+GUI::TextButton::~TextButton() {
+	gui.del_thing(this);
+}
+
+void GUI::TextButton::Draw() {
+	SDL_Rect rect = {x, y, w, h};
+	
+	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+	
+	Uint32 bcolour = *(gui.focus) == this ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
+	SDL_Rect ra = {x,y,w,1}, rb = {x,y,1,h}, rc = {x,y+h,w,1}, rd = {x+w,y,1,h+1};
+	
+	assert(SDL_FillRect(screen, &ra, bcolour) == 0);
+	assert(SDL_FillRect(screen, &rb, bcolour) == 0);
+	assert(SDL_FillRect(screen, &rc, bcolour) == 0);
+	assert(SDL_FillRect(screen, &rd, bcolour) == 0);
+	
+	int off = (h - TTF_FontLineSkip(m_font)) / 2;
+	
+	SDL_Colour fg = {255,255,255};
+	SDL_Rect tr = {x + off, y + off, 0, 0};
+	
+	FontStuff::BlitText(screen, tr, m_font, fg, m_text);
+}
+
+void GUI::TextButton::HandleEvent(const SDL_Event &event) {
+	
+}

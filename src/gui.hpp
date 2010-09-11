@@ -87,6 +87,24 @@ class GUI {
 		void Draw();
 	};
 	
+	struct TextButton : Thing {
+		typedef void (*void_callback)(const TextButton &button, const SDL_Event &event, void *arg);
+		
+		GUI &gui;
+		
+		std::string m_text;
+		TTF_Font *m_font;
+		
+		void_callback m_callback;
+		void *m_arg;
+		
+		TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback = NULL, void *callback_arg = NULL);
+		~TextButton();
+		
+		void Draw();
+		void HandleEvent(const SDL_Event &event);
+	};
+	
 	typedef std::set<Thing*,Thing> thing_set;
 	
 	public:
