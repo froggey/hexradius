@@ -112,6 +112,8 @@ class GUI {
 		void_callback m_callback;
 		void *m_arg;
 		
+		int x_down, y_down;
+		
 		TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback = NULL, void *callback_arg = NULL);
 		~TextButton();
 		

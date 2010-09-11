@@ -328,5 +328,12 @@ void GUI::TextButton::Draw() {
 }
 
 void GUI::TextButton::HandleEvent(const SDL_Event &event) {
-	
+	if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		x_down = event.button.x;
+		y_down = event.button.y;
+	}else if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+		if(event.button.x == x_down && event.button.y == y_down && m_callback) {
+			m_callback(*this, event, m_arg);
+		}
+	}
 }
