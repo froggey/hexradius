@@ -625,6 +625,10 @@ void Client::lobby_regen() {
 		
 		for(int i = 0; i < 7; i++) {
 			pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i]));
+			
+			if(p->colour == i) {
+				pc->select(pc->items.end()-1);
+			}
 		}
 		
 		lobby_drops.push_back(pc);

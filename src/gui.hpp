@@ -164,11 +164,15 @@ class GUI {
 			SDL_Colour colour;
 		};
 		
+		typedef std::vector<Item> item_list;
+		
 		GUI &gui;
 		
 		TextButton button;
 		
-		std::vector<Item> items;
+		item_list items;
+		item_list::iterator selected;
+		
 		std::vector<boost::shared_ptr<TextButton> > item_buttons;
 		
 		DropDown(GUI &g, int ax, int ay, int aw, int ah, int to);
@@ -176,6 +180,8 @@ class GUI {
 		
 		void Draw();
 		void HandleEvent(const SDL_Event &event);
+		
+		void select(item_list::iterator item);
 		
 		bool has_focus() {
 			return r_has_focus(gui);

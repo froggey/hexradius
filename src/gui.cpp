@@ -376,6 +376,8 @@ GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g)
 	button.align(LEFT);
 	button.set_fg_colour(255, 0, 0);
 	
+	selected = items.end();
+	
 	gui.add_thing(this);
 }
 
@@ -401,8 +403,13 @@ void GUI::DropDown::Draw() {
 static void dropdown_set(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	GUI::DropDown *drop = (GUI::DropDown*)arg;
 	
-	drop->button.m_text = button.m_text;
-	drop->button.set_fg_colour(button.m_fgc);
+	for(GUI::DropDown::item_list::iterator i = drop->items.begin(); i != drop->items.end(); i++) {
+		if(button.m_text == (*i).text) {
+			drop->select(i);
+			break;
+		}
+	}
+	
 	drop->item_buttons.clear();
 }
 
@@ -439,5 +446,15 @@ void GUI::DropDown::HandleEvent(const SDL_Event &event) {
 				(*i)->set_bg_colour(0, 0, 0);
 			}
 		}
+	}else if(event.type == SDL_KEYDOWN) {
+		if(event.key.keysym.sym == SDLK_ESCAPE) {
+			item_buttons.clear();
+		}
 	}
+}
+
+void GUI::DropDown::select(item_list::iterator item) {
+	button.m_text = item->text;
+	button.set_fg_colour(item->colour);
+	selected = item;
 }
