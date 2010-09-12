@@ -117,6 +117,7 @@ class GUI {
 		alignment m_align;
 		SDL_Colour m_fgc;
 		SDL_Colour m_bgc;
+		bool m_borders;
 		
 		void_callback m_callback;
 		void *m_arg;
