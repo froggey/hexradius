@@ -15,6 +15,8 @@ enum msgtype {
 			// Contains scenario and currently joined players
 	GOVER = 10;	// Game over - player_id identifies the winning player
 			// unless is_draw is true. Return to lobby.
+	CCOLOUR = 11;	// Change a single player's colour, can be used by host
+			// or the target player.
 	
 	MOVE = 21;	// Move a single pawn
 	USE = 22;	// Use a power
@@ -67,9 +69,9 @@ message pawn {
 }
 
 message player {
-	required string name = 1;
-	required colour colour = 2;
-	required uint32 id = 3;
+	optional string name = 1;
+	optional colour colour = 2;
+	optional uint32 id = 3;
 }
 
 message scenario {

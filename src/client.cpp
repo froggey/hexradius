@@ -432,6 +432,14 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
 		assert(screen != NULL);
 	}
+	if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
+		Player *p = get_player(msg.players(0).id());
+		
+		if(p) {
+			p->colour = (PlayerColour)msg.players(0).colour();
+			lobby_regen();
+		}
+	}
 	
 	ReadSize();
 }
@@ -621,17 +629,23 @@ void Client::lobby_regen() {
 		pn->align(GUI::LEFT);
 		lobby_players.push_back(pn);
 		
-		boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
-		
-		for(int i = 0; i < 7; i++) {
-			pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i]));
+		if(my_id == p->id || my_id == ADMIN_ID) {
+			boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
 			
-			if(p->colour == i) {
-				pc->select(pc->items.end()-1);
+			for(int i = 0; i < 7; i++) {
+				pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i]));
 			}
+			
+			pc->select(pc->items.begin()+p->colour);
+			
+			lobby_drops.push_back(pc);
+		}else{
+			boost::shared_ptr<GUI::TextButton> pc(new GUI::TextButton(lobby_gui, 330, y, 135, 35, 0, team_names[p->colour]));
+			pc->align(GUI::LEFT);
+			pc->set_fg_colour(team_colours[p->colour]);
+			
+			lobby_players.push_back(pc);
 		}
-		
-		lobby_drops.push_back(pc);
 		
 		y += 40;
 	}

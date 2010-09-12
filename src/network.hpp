@@ -91,6 +91,8 @@ class Server {
 		
 		bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
 		bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
+		
+		Server::Client *get_client(uint16_t id);
 };
 
 #endif /* !OR_NETWORK_HPP */

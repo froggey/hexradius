@@ -394,6 +394,17 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		WriteAll(pjoin, client.get());
 	}else if(msg.msg() == protocol::BEGIN && client->id == ADMIN_ID) {
 		StartGame();
+	}else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
+		if(client->id == ADMIN_ID || client->id == msg.players(0).id()) {
+			Client *c = get_client(msg.players(0).id());
+			
+			if(c) {
+				c->colour = (PlayerColour)msg.players(0).colour();
+				WriteAll(msg);
+			}else{
+				std::cout << "Invalid player ID in CCOLOUR message" << std::endl;
+			}
+		}
 	}
 	
 	return true;
@@ -456,4 +467,16 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 	}
 	
 	return true;
+}
+
+Server::Client *Server::get_client(uint16_t id) {
+	std::set<Server::Client::ptr>::iterator i = clients.begin();
+	
+	for(; i != clients.end(); i++) {
+		if((*i)->id == id) {
+			return i->get();
+		}
+	}
+	
+	return NULL;
 }
