@@ -618,6 +618,13 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_
 	}
 }
 
+static bool ccolour_callback(const GUI::DropDown &dropdown, const GUI::DropDown::Item &item, void *arg) {
+	Client *client = (Client*)arg;
+	client->change_colour(item.i1, (PlayerColour)item.i2);
+	
+	return false;
+}
+
 void Client::lobby_regen() {
 	int y = 65;
 	
@@ -633,10 +640,12 @@ void Client::lobby_regen() {
 			boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
 			
 			for(int i = 0; i < 7; i++) {
-				pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i]));
+				pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i], p->id, i));
 			}
 			
 			pc->select(pc->items.begin()+p->colour);
+			pc->callback = &ccolour_callback;
+			pc->callback_arg = this;
 			
 			lobby_drops.push_back(pc);
 		}else{
@@ -654,6 +663,17 @@ void Client::lobby_regen() {
 void Client::send_begin() {
 	protocol::message msg;
 	msg.set_msg(protocol::BEGIN);
+	
+	WriteProto(msg);
+}
+
+void Client::change_colour(uint16_t id, PlayerColour colour) {
+	protocol::message msg;
+	msg.set_msg(protocol::CCOLOUR);
+	
+	msg.add_players();
+	msg.mutable_players(0)->set_id(id);
+	msg.mutable_players(0)->set_colour((protocol::colour)colour);
 	
 	WriteProto(msg);
 }

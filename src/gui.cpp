@@ -378,6 +378,9 @@ GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g)
 	
 	selected = items.end();
 	
+	callback = NULL;
+	callback_arg = NULL;
+	
 	gui.add_thing(this);
 }
 
@@ -454,7 +457,9 @@ void GUI::DropDown::HandleEvent(const SDL_Event &event) {
 }
 
 void GUI::DropDown::select(item_list::iterator item) {
-	button.m_text = item->text;
-	button.set_fg_colour(item->colour);
-	selected = item;
+	if(!callback || callback(*this, *item, callback_arg)) {
+		button.m_text = item->text;
+		button.set_fg_colour(item->colour);
+		selected = item;
+	}
 }

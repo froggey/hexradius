@@ -25,6 +25,7 @@ class Client {
 		TileAnimators::Animator* current_animator;
 		
 		void send_begin();
+		void change_colour(uint16_t id, PlayerColour colour);
 		
 	private:
 		typedef boost::shared_array<char> wbuf_ptr;

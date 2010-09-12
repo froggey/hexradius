@@ -158,11 +158,14 @@ class GUI {
 	struct DropDown : Thing {
 		struct Item {
 			Item() {}
-			Item(std::string t, SDL_Colour c) : text(t), colour(c) {}
+			Item(std::string t, SDL_Colour c, int ia = 0, int ib = 0) : text(t), colour(c), i1(ia), i2(ib) {}
 			
 			std::string text;
 			SDL_Colour colour;
+			int i1, i2;
 		};
+		
+		typedef bool (*bool_callback)(const GUI::DropDown &drop, const Item &item, void *arg);
 		
 		typedef std::vector<Item> item_list;
 		
@@ -174,6 +177,9 @@ class GUI {
 		item_list::iterator selected;
 		
 		std::vector<boost::shared_ptr<TextButton> > item_buttons;
+		
+		bool_callback callback;
+		void *callback_arg;
 		
 		DropDown(GUI &g, int ax, int ay, int aw, int ah, int to);
 		~DropDown();
