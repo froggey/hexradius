@@ -453,6 +453,7 @@ void Client::DrawScreen() {
 	
 	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
 	SDL_Surface *tint_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
+	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
 	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
@@ -511,7 +512,47 @@ void Client::DrawScreen() {
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;
 		
-		assert(SDL_BlitSurface(htile == *ti ? tint_tile : tile, NULL, screen, &rect) == 0);
+		SDL_Surface *tile_img = tile;
+		
+		if(htile == *ti) {
+			tile_img = tint_tile;
+		}else if(htile) {
+			int bs_col = htile->col;
+			int fs_col = htile->col;
+			
+			for(int row = htile->row-1; row >= (*ti)->row; row--) {
+				if(row % 2) {
+					bs_col--;
+				}else{
+					fs_col++;
+				}
+				
+				if(row == (*ti)->row && (bs_col == (*ti)->col || fs_col == (*ti)->col)) {
+					tile_img = line_tile;
+				}
+			}
+			
+			bs_col = htile->col;
+			fs_col = htile->col;
+			
+			for(int row = htile->row+1; row <= (*ti)->row; row++) {
+				if(row % 2) {
+					fs_col--;
+				}else{
+					bs_col++;
+				}
+				
+				if(row == (*ti)->row && (bs_col == (*ti)->col || fs_col == (*ti)->col)) {
+					tile_img = line_tile;
+				}
+			}
+			
+			if(htile->row == (*ti)->row) {
+				tile_img = line_tile;
+			}
+		}
+		
+		assert(SDL_BlitSurface(tile_img, NULL, screen, &rect) == 0);
 		
 		if((*ti)->has_power) {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
