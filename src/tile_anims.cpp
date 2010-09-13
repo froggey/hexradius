@@ -23,7 +23,7 @@ namespace TileAnimators {
 				int ry = (t->screen_y + t->height * TILE_HEIGHT_FACTOR) - (center->screen_y + center->height * TILE_HEIGHT_FACTOR);
 				t->anim_height = t->height;
 				t->animating = true;
-				t->anim_delay = sqrt(pow(rx, 2) + pow(ry, 2)) * delay_factor;
+				t->anim_delay = sqrt(pow((double)rx, 2) + pow((double)ry, 2)) * delay_factor;
 				t->initial_elevation = t->height;
 				if (mode == ABSOLUTE)
 					t->final_elevation = target_elevation;
