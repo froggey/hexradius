@@ -95,6 +95,8 @@ class Pawn {
 		
 		Tile::List RowTiles(void);
 		Tile::List RadialTiles(void);
+		Tile::List bs_tiles();
+		Tile::List fs_tiles();
 };
 
 Tile *FindTile(Tile::List &list, int c, int r);

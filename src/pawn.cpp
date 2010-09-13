@@ -134,6 +134,68 @@ Tile::List Pawn::RadialTiles(void) {
 	return ret;
 }
 
+Tile::List Pawn::bs_tiles() {
+	Tile::List tiles;
+	
+	int base = GetTile()->col;
+	
+	for(int r = GetTile()->row; r > 0; r--) {
+		if(r % 2 == 0) {
+			base--;
+		}
+	}
+	
+	for(Tile::List::iterator tile = all_tiles.begin(); tile != all_tiles.end(); tile++) {
+		int col = (*tile)->col, row = (*tile)->row;
+		int mcol = base;
+		
+		for(int i = 1; i <= row; i++) {
+			if(i % 2 == 0) {
+				mcol++;
+			}
+		}
+		
+		int min = mcol-range, max = mcol+range;
+		
+		if(col >= min && col <= max) {
+			tiles.push_back(*tile);
+		}
+	}
+	
+	return tiles;
+}
+
+Tile::List Pawn::fs_tiles() {
+	Tile::List tiles;
+	
+	int base = GetTile()->col;
+	
+	for(int r = GetTile()->row; r > 0; r--) {
+		if(r % 2) {
+			base++;
+		}
+	}
+	
+	for(Tile::List::iterator tile = all_tiles.begin(); tile != all_tiles.end(); tile++) {
+		int col = (*tile)->col, row = (*tile)->row;
+		int mcol = base;
+		
+		for(int i = 0; i <= row; i++) {
+			if(i % 2) {
+				mcol--;
+			}
+		}
+		
+		int min = mcol-range, max = mcol+range;
+		
+		if(col >= min && col <= max) {
+			tiles.push_back(*tile);
+		}
+	}
+	
+	return tiles;
+}
+
 void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 	p->set_col(cur_tile->col);
 	p->set_row(cur_tile->row);

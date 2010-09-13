@@ -9,16 +9,29 @@
 Powers::Power Powers::powers[] = {
 	{"Destroy Row", &Powers::destroy_row, 50},
 	{"Destroy Radial", &Powers::destroy_radial, 50},
+	{"Destroy NW-SE", &Powers::destroy_bs, 50},
+	{"Destroy NE-SW", &Powers::destroy_fs, 50},
+	
 	{"Raise Tile", &Powers::raise_tile, 100},
 	{"Lower Tile", &Powers::lower_tile, 100},
 	{"Increase Range", &Powers::increase_range, 20},
 	{"Hover", &Powers::hover, 30},
+	{"Shield", &Powers::shield, 30},
+	
 	{"Elevate Row", &Powers::elevate_row, 70},
 	{"Elevate Radial", &Powers::elevate_radial, 70},
+	{"Elevate NW-SE", &Powers::elevate_bs, 70},
+	{"Elevate NE-SW", &Powers::elevate_fs, 70},
+	
 	{"Dig Row", &Powers::dig_row, 70},
-	{"Shield", &Powers::shield, 30},
+	{"Dig Radial", &Powers::dig_radial, 70},
+	{"Dig NW-SE", &Powers::dig_bs, 70},
+	{"Dig NE-SW", &Powers::dig_fs, 70},
+	
 	{"Purify Row", &Powers::purify_row, 50},
 	{"Purify Radial", &Powers::purify_radial, 50},
+	{"Purify NW-SE", &Powers::purify_bs, 50},
+	{"Purify NE-SW", &Powers::purify_fs, 50}
 };
 
 const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
@@ -42,7 +55,7 @@ int Powers::RandomPower(void) {
 }
 
 namespace Powers {
-	static int destroy_enemies(Tile::List &area, Pawn *pawn) {
+	static int destroy_enemies(Tile::List area, Pawn *pawn) {
 		Tile::List::iterator i = area.begin();
 		int ret = 0;
 		
@@ -61,13 +74,19 @@ namespace Powers {
 	}
 	
 	int destroy_row(Pawn *pawn, Server *server, Client *client) {
-		Tile::List tiles = pawn->RowTiles();
-		return destroy_enemies(tiles, pawn);
+		return destroy_enemies(pawn->RowTiles(), pawn);
 	}
 	
 	int destroy_radial(Pawn *pawn, Server *server, Client *client) {
-		Tile::List tiles = pawn->RadialTiles();
-		return destroy_enemies(tiles, pawn);
+		return destroy_enemies(pawn->RadialTiles(), pawn);
+	}
+	
+	int destroy_bs(Pawn *pawn, Server *server, Client *client) {
+		return destroy_enemies(pawn->bs_tiles(), pawn);
+	}
+	
+	int destroy_fs(Pawn *pawn, Server *server, Client *client) {
+		return destroy_enemies(pawn->fs_tiles(), pawn);
 	}
 	
 	int raise_tile(Pawn *pawn, Server *server, Client *client) {
@@ -100,7 +119,7 @@ namespace Powers {
 		}
 	}
 	
-	static int elevate_tiles(Tile::List tiles) {
+	static int elevate_tiles(Tile::List &tiles) {
 		Tile::List::iterator i = tiles.begin();
 		int ret = 0;
 		
@@ -111,7 +130,7 @@ namespace Powers {
 		return ret;
 	}
 	
-	static int dig_tiles(Tile::List tiles) {
+	static int dig_tiles(Tile::List &tiles) {
 		Tile::List::iterator i = tiles.begin();
 		int ret = 0;
 		
@@ -123,21 +142,75 @@ namespace Powers {
 	}
 	
 	int elevate_row(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->RowTiles();
+		
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
-		return elevate_tiles(pawn->RowTiles());
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
+		
+		return elevate_tiles(tiles);
 	}
 	
 	int elevate_radial(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->RadialTiles();
+		
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RadialTiles(), pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
-		return elevate_tiles(pawn->RadialTiles());
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
+		
+		return elevate_tiles(tiles);
+	}
+	
+	int elevate_bs(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->bs_tiles();
+		
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
+		
+		return elevate_tiles(tiles);
+	}
+	
+	int elevate_fs(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->fs_tiles();
+		
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, 2);
+		
+		return elevate_tiles(tiles);
 	}
 	
 	int dig_row(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->RowTiles();
+		
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, pawn->RowTiles(), pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, -2);
-		return dig_tiles(pawn->RowTiles());
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, -2);
+		
+		return dig_tiles(tiles);
+	}
+	
+	int dig_radial(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->RadialTiles();
+		
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, -2);
+		
+		return dig_tiles(tiles);
+	}
+	
+	int dig_bs(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->bs_tiles();
+		
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, -2);
+		
+		return dig_tiles(tiles);
+	}
+	
+	int dig_fs(Pawn *pawn, Server *server, Client *client) {
+		Tile::List tiles = pawn->fs_tiles();
+		
+		if (client && !client->current_animator)
+			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->GetTile(), 3.0, TileAnimators::ABSOLUTE, -2);
+		
+		return dig_tiles(tiles);
 	}
 	
 	int shield(Pawn *pawn, Server *server, Client *client) {
@@ -170,5 +243,13 @@ namespace Powers {
 	
 	int purify_radial(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->RadialTiles(), pawn);
+	}
+	
+	int purify_bs(Pawn *pawn, Server *server, Client *client) {
+		return purify(pawn->bs_tiles(), pawn);
+	}
+	
+	int purify_fs(Pawn *pawn, Server *server, Client *client) {
+		return purify(pawn->fs_tiles(), pawn);
 	}
 }
