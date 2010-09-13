@@ -275,7 +275,7 @@ GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, int to, std::string txt) :
 	
 	text = txt;
 	font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 12);
-	colour = (SDL_Colour){255, 255, 255, 0};
+	colour = ImgStuff::Colour(255, 255, 255);
 	
 	gui.add_thing(this);
 }

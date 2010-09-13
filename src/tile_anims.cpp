@@ -35,8 +35,8 @@ namespace TileAnimators {
 	}
 	
 	void ElevationAnimator::do_stuff() {
-		uint ticks = SDL_GetTicks();
-		uint t = ticks - start_time;
+		unsigned int ticks = SDL_GetTicks();
+		unsigned int t = ticks - start_time;
 		//uint dt = ticks - last_time;
 		//last_time = ticks;
 		

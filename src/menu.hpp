@@ -7,9 +7,9 @@
 
 #include "gui.hpp"
 
-const uint MENU_WIDTH = 800;
-const uint MENU_HEIGHT = 600;
-const uint MENU_DELAY = 100;
+const int MENU_WIDTH = 800;
+const int MENU_HEIGHT = 600;
+const int MENU_DELAY = 100;
 
 struct MainMenu {
 	GUI gui;

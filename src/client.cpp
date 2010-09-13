@@ -445,7 +445,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 }
 
 void Client::DrawScreen() {
-	uint torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
+	unsigned int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
 	
@@ -581,7 +581,7 @@ void Client::DrawScreen() {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset) {
+void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset) {
 	SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
 	SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
 	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");

@@ -55,7 +55,7 @@ class Client {
 		enum { CONNECTING, LOBBY, GAME } state;
 		
 		int screen_w, screen_h;
-		uint last_redraw;
+		unsigned int last_redraw;
 		int xd, yd;
 		SDL_Rect board;
 		
@@ -88,7 +88,7 @@ class Client {
 		void ReadFinish(const boost::system::error_code& error);
 		
 		void DrawScreen(void);
-		void DrawPawn(Pawn *pawn, SDL_Rect rect, uint torus_frame, double climb_offset);
+		void DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset);
 		
 		void lobby_regen();
 		

@@ -8,7 +8,6 @@
 #include <map>
 #include <SDL/SDL_ttf.h>
 #include <math.h>
-#include <boost/algorithm/string.hpp>
 
 #include "loadimage.hpp"
 #include "fontstuff.hpp"

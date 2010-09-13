@@ -14,17 +14,17 @@
 
 #include "octradius.pb.h"
 
-const uint MAX_MSGSIZE = 8192; // YAAAAAAAAAAAAAAAAY I CAN USE LINE COMMENTS PROPERLY TOO!
+const unsigned int MAX_MSGSIZE = 8192;
 
 const int BOARD_OFFSET = 10;
-const uint TORUS_FRAMES = 11;
+const unsigned int TORUS_FRAMES = 11;
 
-const uint TILE_WIDTH = 50;
-const uint TILE_HEIGHT = 51;
-const uint TILE_WOFF = 50;
-const uint TILE_HOFF = 38;
-const uint TILE_ROFF = 25;
-const uint TILE_HEIGHT_FACTOR = 5;
+const unsigned int TILE_WIDTH = 50;
+const unsigned int TILE_HEIGHT = 51;
+const unsigned int TILE_WOFF = 50;
+const unsigned int TILE_HOFF = 38;
+const unsigned int TILE_ROFF = 25;
+const unsigned int TILE_HEIGHT_FACTOR = 5;
 
 const uint16_t ADMIN_ID = 0;
 
@@ -72,7 +72,8 @@ class Pawn {
 		
 		PlayerColour colour;
 		PowerList powers;
-		int range, flags;
+		int range;
+		uint32_t flags;
 		
 		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0) {}
 		

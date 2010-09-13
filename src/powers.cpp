@@ -3,6 +3,9 @@
 #include "tile_anims.hpp"
 #include "client.hpp"
 
+#undef ABSOLUTE
+#undef RELATIVE
+
 Powers::Power Powers::powers[] = {
 	{"Destroy Row", &Powers::destroy_row, 50},
 	{"Destroy Radial", &Powers::destroy_radial, 50},
@@ -18,7 +21,7 @@ Powers::Power Powers::powers[] = {
 	{"Purify Radial", &Powers::purify_radial, 50},
 };
 
-const int Powers::num_powers = sizeof(powers) / sizeof(Power);
+const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
 
 int Powers::RandomPower(void) {
 	int total = 0;

@@ -55,7 +55,7 @@ message pawn {
 	//
 	optional colour colour = 11;
 	optional uint32 range = 12;
-	optional int32 flags = 13;
+	optional uint32 flags = 13;
 	repeated power powers = 15;
 	
 	// Used to move/update pawn

@@ -1,15 +1,17 @@
 #ifndef OR_POWERS_HPP
 #define OR_POWERS_HPP
 
+#include <stdint.h>
+
 #include "octradius.hpp"
 
 class Server;
 class Client;
 
-const uint PWR_SHIELD = 1<<0;
-const uint PWR_CLIMB = 1<<1;
-const uint HAS_POWER = 1<<2;
-const uint PWR_GOOD = (PWR_SHIELD | PWR_CLIMB);
+const uint32_t PWR_SHIELD = 1<<0;
+const uint32_t PWR_CLIMB = 1<<1;
+const uint32_t HAS_POWER = 1<<2;
+const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB);
 
 namespace Powers {
 	struct Power {

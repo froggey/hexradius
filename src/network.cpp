@@ -470,7 +470,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 }
 
 Server::Client *Server::get_client(uint16_t id) {
-	std::set<Server::Client::ptr>::iterator i = clients.begin();
+	client_iterator i = clients.begin();
 	
 	for(; i != clients.end(); i++) {
 		if((*i)->id == id) {

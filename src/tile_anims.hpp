@@ -3,13 +3,16 @@
 
 #include "octradius.hpp"
 
+#undef ABSOLUTE
+#undef RELATIVE
+
 class Client;
 
 namespace TileAnimators {
 	struct Animator {
 		Tile::List tiles;
-		uint start_time;
-		uint last_time;
+		unsigned int start_time;
+		unsigned int last_time;
 		Client* client;
 	
 		Animator(Client* _client, Tile::List _tiles);

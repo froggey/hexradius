@@ -61,6 +61,7 @@ class Server {
 		
 	private:
 		typedef std::set<Server::Client::ptr,client_compare> client_set;
+		typedef client_set::iterator client_iterator;
 		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::acceptor acceptor;
@@ -70,7 +71,7 @@ class Server {
 		
 		Scenario scenario;
 		
-		std::set<Server::Client::ptr>::iterator turn;
+		client_iterator turn;
 		enum { LOBBY, GAME } state;
 		
 		int pspawn_turns;
