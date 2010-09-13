@@ -19,7 +19,8 @@ static void main_join_cb(const GUI::ImgButton &button, const SDL_Event &event, v
 }
 
 static void main_host_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
-	
+	HostMenu hmenu;
+	hmenu.run();
 }
 
 static void quit_cb(const GUI::ImgButton &button, const SDL_Event &event, void *arg) {
@@ -143,6 +144,71 @@ JoinMenu::~JoinMenu() {
 }
 
 void JoinMenu::run() {
+	submenu = true;
+	
+	while(running && submenu) {
+		gui.poll(true);
+		SDL_Delay(MENU_DELAY);
+	}
+}
+
+static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+	HostMenu *menu = (HostMenu*)arg;
+	
+	int port = atoi(menu->port_input.text.c_str());
+	std::string scenario = menu->scenario_input.text;
+	
+	if(port < 1 || port > 65535) {
+		std::cerr << "Invalid port number" << std::endl;
+		return;
+	}
+	
+	Scenario scn;
+	
+	LoadScenario(scenario, scn);
+	
+	Server server(port, scn);
+	
+	const char* username = getenv("USER");
+	Client client("127.0.0.1", port, username? username : "Someone who lost the game");
+	
+	do {
+		server.DoStuff();
+		SDL_Delay(5);
+	} while(client.DoStuff());
+	
+	if(client.quit) {
+		running = false;
+	}
+	
+	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
+	assert(screen != NULL);
+	
+	submenu = false;
+}
+
+HostMenu::HostMenu() :
+		gui(0, 0, MENU_WIDTH, MENU_HEIGHT),
+		
+		port_label(gui, 245, 232, 100, 25, 0, "Port:"),
+		port_input(gui, 355, 232, 200, 25, 1),
+		
+		scenario_label(gui, 245, 277, 100, 25, 0, "Scenario:"),
+		scenario_input(gui, 355, 277, 200, 25, 2),
+		
+		host_btn(gui, 332, 322, 135, 35, 3, "Host Game", &host_cb, this)
+{
+	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
+	gui.set_quit_callback(&app_quit_cb);
+	
+	port_label.align(GUI::RIGHT);
+	port_input.text = to_string(DEFAULT_PORT);
+	
+	scenario_label.align(GUI::RIGHT);
+	scenario_input.text = "scenario/hex_2p.txt";
+}
+
+void HostMenu::run() {
 	submenu = true;
 	
 	while(running && submenu) {

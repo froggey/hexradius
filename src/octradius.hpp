@@ -11,10 +11,12 @@
 #include <map>
 #include <set>
 #include <SDL/SDL_ttf.h>
+#include <sstream>
 
 #include "octradius.pb.h"
 
 const unsigned int MAX_MSGSIZE = 8192;
+const uint16_t DEFAULT_PORT = 9012;
 
 const int BOARD_OFFSET = 10;
 const unsigned int TORUS_FRAMES = 11;
@@ -30,6 +32,12 @@ const uint16_t ADMIN_ID = 0;
 
 extern const char *team_names[];
 extern const SDL_Colour team_colours[];
+
+template <class T> std::string to_string(const T &t) {
+	std::ostringstream ss;
+	ss << t;
+	return ss.str();
+}
 
 enum PlayerColour { BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, SPECTATE, NOINIT };
 

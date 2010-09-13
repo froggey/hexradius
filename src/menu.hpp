@@ -4,6 +4,7 @@
 #include <SDL/SDL.h>
 #include <string>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
 #include "gui.hpp"
 
@@ -38,6 +39,22 @@ struct JoinMenu {
 	
 	JoinMenu();
 	~JoinMenu();
+	
+	void run();
+};
+
+struct HostMenu {
+	GUI gui;
+	
+	GUI::TextButton port_label;
+	GUI::TextBox port_input;
+	
+	GUI::TextButton scenario_label;
+	GUI::TextBox scenario_input;
+	
+	GUI::TextButton host_btn;
+	
+	HostMenu();
 	
 	void run();
 };
