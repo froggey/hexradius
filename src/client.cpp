@@ -468,13 +468,10 @@ void Client::DrawScreen() {
 	{
 		SDL_Rect rect = {0,0,0,0};
 		
-		SDL_Colour c = {255, 255, 255};
-		FontStuff::BlitText(screen, rect, font, c, "Players: ");
+		FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(255,255,255), "Players: ");
 		rect.x += FontStuff::TextWidth(font, "Players: ");
 		
 		player_set::iterator p = players.begin();
-		
-		const SDL_Colour colours[] = {{0,0,255},{255,0,0},{0,255,0},{255,255,0},{160,32,240},{255,165,0}};
 		
 		for(; p != players.end(); p++) {
 			if((*p).colour >= SPECTATE) {
@@ -483,7 +480,7 @@ void Client::DrawScreen() {
 			
 			TTF_Font *f = (*p).id == turn ? bfont : font;
 			
-			FontStuff::BlitText(screen, rect, f, colours[(*p).colour], (*p).name + " ");
+			FontStuff::BlitText(screen, rect, f, team_colours[(*p).colour], (*p).name + " ");
 			rect.x += FontStuff::TextWidth(f, (*p).name + " ");
 		}
 	}
