@@ -18,7 +18,7 @@ Powers::Power Powers::powers[] = {
 	{"Increase Range", &Powers::increase_range, 20},
 	{"Hover", &Powers::hover, 30},
 	{"Shield", &Powers::shield, 30},
-	{"Teleport", &Powers::teleport, 10000},
+	{"Teleport", &Powers::teleport, 60},
 	
 	{"Elevate Row", &Powers::elevate_row, 70},
 	{"Elevate Radial", &Powers::elevate_radial, 70},
