@@ -18,6 +18,12 @@ namespace Powers {
 		const char *name;
 		bool (*func)(Pawn*, Server*, Client*);
 		int spawn_rate;
+		
+		/* Executing pawn is guarenteed to not be destroyed by power.
+		 * This must be true if the pawn may be moved to another tile.
+		*/
+		
+		bool pawn_survive;
 	};
 	
 	extern Power powers[];

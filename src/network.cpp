@@ -446,10 +446,14 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		}
 	}else if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
 		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		Pawn *pawn = tile ? tile->pawn : NULL;
+		
+		int power = msg.pawns(0).use_power();
+		bool pawn_ok = Powers::powers[power].pawn_survive;
 		
 		power_rand_vals.clear();
 		
-		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power(), this, NULL)) {
+		if(!pawn || !pawn->UsePower(power, this, NULL)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
 			protocol::message smsg = msg;
@@ -462,12 +466,12 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			
 			WriteAll(smsg);
 			
-			if(tile->pawn && tile->pawn->powers.empty()) {
+			if((pawn_ok || tile->pawn) && pawn->powers.empty()) {
 				protocol::message update;
 				update.set_msg(protocol::UPDATE);
 				
 				update.add_pawns();
-				tile->pawn->CopyToProto(update.mutable_pawns(0), false);
+				pawn->CopyToProto(update.mutable_pawns(0), false);
 				
 				WriteAll(update);
 			}

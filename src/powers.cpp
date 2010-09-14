@@ -8,32 +8,32 @@
 #undef RELATIVE
 
 Powers::Power Powers::powers[] = {
-	{"Destroy Row", &Powers::destroy_row, 50},
-	{"Destroy Radial", &Powers::destroy_radial, 50},
-	{"Destroy NW-SE", &Powers::destroy_bs, 50},
-	{"Destroy NE-SW", &Powers::destroy_fs, 50},
+	{"Destroy Row", &Powers::destroy_row, 50, true},
+	{"Destroy Radial", &Powers::destroy_radial, 50, true},
+	{"Destroy NW-SE", &Powers::destroy_bs, 50, true},
+	{"Destroy NE-SW", &Powers::destroy_fs, 50, true},
 	
-	{"Raise Tile", &Powers::raise_tile, 100},
-	{"Lower Tile", &Powers::lower_tile, 100},
-	{"Increase Range", &Powers::increase_range, 20},
-	{"Hover", &Powers::hover, 30},
-	{"Shield", &Powers::shield, 30},
-	{"Teleport", &Powers::teleport, 60},
+	{"Raise Tile", &Powers::raise_tile, 100, true},
+	{"Lower Tile", &Powers::lower_tile, 100, true},
+	{"Increase Range", &Powers::increase_range, 20, true},
+	{"Hover", &Powers::hover, 30, true},
+	{"Shield", &Powers::shield, 30, true},
+	{"Teleport", &Powers::teleport, 60, true},
 	
-	{"Elevate Row", &Powers::elevate_row, 70},
-	{"Elevate Radial", &Powers::elevate_radial, 70},
-	{"Elevate NW-SE", &Powers::elevate_bs, 70},
-	{"Elevate NE-SW", &Powers::elevate_fs, 70},
+	{"Elevate Row", &Powers::elevate_row, 70, true},
+	{"Elevate Radial", &Powers::elevate_radial, 70, true},
+	{"Elevate NW-SE", &Powers::elevate_bs, 70, true},
+	{"Elevate NE-SW", &Powers::elevate_fs, 70, true},
 	
-	{"Dig Row", &Powers::dig_row, 70},
-	{"Dig Radial", &Powers::dig_radial, 70},
-	{"Dig NW-SE", &Powers::dig_bs, 70},
-	{"Dig NE-SW", &Powers::dig_fs, 70},
+	{"Dig Row", &Powers::dig_row, 70, true},
+	{"Dig Radial", &Powers::dig_radial, 70, true},
+	{"Dig NW-SE", &Powers::dig_bs, 70, true},
+	{"Dig NE-SW", &Powers::dig_fs, 70, true},
 	
-	{"Purify Row", &Powers::purify_row, 50},
-	{"Purify Radial", &Powers::purify_radial, 50},
-	{"Purify NW-SE", &Powers::purify_bs, 50},
-	{"Purify NE-SW", &Powers::purify_fs, 50}
+	{"Purify Row", &Powers::purify_row, 50, true},
+	{"Purify Radial", &Powers::purify_radial, 50, true},
+	{"Purify NW-SE", &Powers::purify_bs, 50, true},
+	{"Purify NE-SW", &Powers::purify_fs, 50, true}
 };
 
 const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
