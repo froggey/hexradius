@@ -156,12 +156,12 @@ bool Client::DoStuff(void) {
 						mpawn = tile->pawn;
 					}
 				}
-				else if(tile && tile != dpawn->GetTile()) {
+				else if(tile && tile != dpawn->cur_tile) {
 					protocol::message msg;
 					msg.set_msg(protocol::MOVE);
 					msg.add_pawns();
-					msg.mutable_pawns(0)->set_col(dpawn->GetTile()->col);
-					msg.mutable_pawns(0)->set_row(dpawn->GetTile()->row);
+					msg.mutable_pawns(0)->set_col(dpawn->cur_tile->col);
+					msg.mutable_pawns(0)->set_row(dpawn->cur_tile->row);
 					msg.mutable_pawns(0)->set_new_col(tile->col);
 					msg.mutable_pawns(0)->set_new_row(tile->row);
 					
@@ -588,13 +588,13 @@ void Client::DrawScreen() {
 			}
 		}
 		
-		SDL_Rect rect = { mpawn->GetTile()->screen_x+TILE_WIDTH, mpawn->GetTile()->screen_y, fw+30, mpawn->powers.size() * fh };
+		SDL_Rect rect = { mpawn->cur_tile->screen_x+TILE_WIDTH, mpawn->cur_tile->screen_y, fw+30, mpawn->powers.size() * fh };
 		
 		if(rect.x+rect.w > screen_w) {
-			rect.x = mpawn->GetTile()->screen_x-rect.w;
+			rect.x = mpawn->cur_tile->screen_x-rect.w;
 		}
 		if(rect.y+rect.h > screen_h) {
-			rect.y = mpawn->GetTile()->screen_y-rect.h;
+			rect.y = mpawn->cur_tile->screen_y-rect.h;
 		}
 		
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);

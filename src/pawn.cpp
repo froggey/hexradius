@@ -137,9 +137,9 @@ Tile::List Pawn::RadialTiles(void) {
 Tile::List Pawn::bs_tiles() {
 	Tile::List tiles;
 	
-	int base = GetTile()->col;
+	int base = cur_tile->col;
 	
-	for(int r = GetTile()->row; r > 0; r--) {
+	for(int r = cur_tile->row; r > 0; r--) {
 		if(r % 2 == 0) {
 			base--;
 		}
@@ -168,9 +168,9 @@ Tile::List Pawn::bs_tiles() {
 Tile::List Pawn::fs_tiles() {
 	Tile::List tiles;
 	
-	int base = GetTile()->col;
+	int base = cur_tile->col;
 	
-	for(int r = GetTile()->row; r > 0; r--) {
+	for(int r = cur_tile->row; r > 0; r--) {
 		if(r % 2) {
 			base++;
 		}

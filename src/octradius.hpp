@@ -72,11 +72,12 @@ struct Tile {
 
 class Pawn {
 	private:
-		Tile *cur_tile;
 		Tile::List &all_tiles;
 		
 	public:
 		typedef std::map<int,int> PowerList;
+		
+		Tile *cur_tile;
 		
 		PlayerColour colour;
 		PowerList powers;
@@ -84,9 +85,6 @@ class Pawn {
 		uint32_t flags;
 		
 		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0) {}
-		
-		Tile *GetTile(void) { return cur_tile; }
-		void set_tile(Tile *t) { cur_tile = t; }
 		
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
 		
