@@ -35,6 +35,7 @@ namespace Powers {
 	int increase_range(Pawn *pawn, Server *server, Client *client);
 	int hover(Pawn *pawn, Server *server, Client *client);
 	int shield(Pawn *pawn, Server *server, Client *client);
+	int teleport(Pawn *pawn, Server *server, Client *client);
 	
 	int elevate_row(Pawn *pawn, Server *server, Client *client);
 	int elevate_radial(Pawn *pawn, Server *server, Client *client);

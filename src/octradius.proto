@@ -91,4 +91,5 @@ message message {
 	
 	optional string quit_msg = 11;
 	optional bool is_draw = 12;
+	repeated uint32 power_rand_vals = 13;
 }

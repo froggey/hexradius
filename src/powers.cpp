@@ -2,6 +2,7 @@
 #include "octradius.hpp"
 #include "tile_anims.hpp"
 #include "client.hpp"
+#include "network.hpp"
 
 #undef ABSOLUTE
 #undef RELATIVE
@@ -17,6 +18,7 @@ Powers::Power Powers::powers[] = {
 	{"Increase Range", &Powers::increase_range, 20},
 	{"Hover", &Powers::hover, 30},
 	{"Shield", &Powers::shield, 30},
+	{"Teleport", &Powers::teleport, 10000},
 	
 	{"Elevate Row", &Powers::elevate_row, 70},
 	{"Elevate Radial", &Powers::elevate_radial, 70},
@@ -251,5 +253,43 @@ namespace Powers {
 	
 	int purify_fs(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->fs_tiles(), pawn);
+	}
+	
+	int teleport(Pawn *pawn, Server *server, Client *client) {
+		if(server) {
+			Tile::List tlist;
+			Tile *tile;
+			
+			do {
+				tlist = RandomTiles(server->tiles, 1, false);
+				tile = *(tlist.begin());
+			} while(tile->pawn);
+			
+			server->power_rand_vals.push_back(tile->col);
+			server->power_rand_vals.push_back(tile->row);
+			
+			pawn->GetTile()->pawn = NULL;
+			tile->pawn = pawn;
+			pawn->set_tile(tile);
+		}else{
+			if(client->power_rand_vals.size() != 2) {
+				return 0;
+			}
+			
+			int col = client->power_rand_vals[0];
+			int row = client->power_rand_vals[1];
+			
+			Tile *tile = FindTile(client->tiles, col, row);
+			if(!tile || tile->pawn) {
+				std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
+				return 0;
+			}
+			
+			pawn->GetTile()->pawn = NULL;
+			tile->pawn = pawn;
+			pawn->set_tile(tile);
+		}
+		
+		return 1;
 	}
 }

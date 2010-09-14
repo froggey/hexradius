@@ -9,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <vector>
 
 #include "octradius.pb.h"
 #include "octradius.hpp"
@@ -59,6 +60,10 @@ class Server {
 			FreeTiles(tiles);
 		}
 		
+		std::vector<uint32_t> power_rand_vals;
+		
+		Tile::List tiles;
+		
 	private:
 		typedef std::set<Server::Client::ptr,client_compare> client_set;
 		typedef client_set::iterator client_iterator;
@@ -67,7 +72,6 @@ class Server {
 		boost::asio::ip::tcp::acceptor acceptor;
 		
 		client_set clients;
-		Tile::List tiles;
 		
 		Scenario scenario;
 		

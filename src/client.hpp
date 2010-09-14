@@ -27,6 +27,9 @@ class Client {
 		void send_begin();
 		void change_colour(uint16_t id, PlayerColour colour);
 		
+		std::vector<uint32_t> power_rand_vals;
+		Tile::List tiles;
+		
 	private:
 		typedef boost::shared_array<char> wbuf_ptr;
 		
@@ -48,7 +51,6 @@ class Client {
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
 		
-		Tile::List tiles;
 		PlayerColour my_colour;
 		uint16_t my_id, turn;
 		player_set players;

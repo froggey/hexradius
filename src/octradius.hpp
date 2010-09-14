@@ -86,6 +86,8 @@ class Pawn {
 		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0) {}
 		
 		Tile *GetTile(void) { return cur_tile; }
+		void set_tile(Tile *t) { cur_tile = t; }
+		
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
 		
 		bool Move(Tile *new_tile);

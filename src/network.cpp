@@ -447,10 +447,20 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 	}else if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
 		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 		
+		power_rand_vals.clear();
+		
 		if(!tile || !tile->pawn || !tile->pawn->UsePower(msg.pawns(0).use_power(), this, NULL)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
-			WriteAll(msg);
+			protocol::message smsg = msg;
+			
+			smsg.clear_power_rand_vals();
+			
+			for(std::vector<uint32_t>::iterator i = power_rand_vals.begin(); i != power_rand_vals.end(); i++) {
+				smsg.add_power_rand_vals(*i);
+			}
+			
+			WriteAll(smsg);
 			
 			if(tile->pawn && tile->pawn->powers.empty()) {
 				protocol::message update;

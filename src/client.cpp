@@ -378,6 +378,12 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		if(pawn) {
 			int power = msg.pawns(0).use_power();
 			
+			power_rand_vals.clear();
+			
+			for(int i = 0; i < msg.power_rand_vals_size(); i++) {
+				power_rand_vals.push_back(msg.power_rand_vals(i));
+			}
+			
 			if(pawn->powers.size()) {
 				pawn->UsePower(power, NULL, this);
 			}
