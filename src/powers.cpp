@@ -57,16 +57,16 @@ int Powers::RandomPower(void) {
 }
 
 namespace Powers {
-	static int destroy_enemies(Tile::List area, Pawn *pawn) {
+	static bool destroy_enemies(Tile::List area, Pawn *pawn) {
 		Tile::List::iterator i = area.begin();
-		int ret = 0;
+		bool ret = false;
 		
 		while(i != area.end()) {
 			if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
 				delete (*i)->pawn;
 				(*i)->pawn = NULL;
 				
-				ret = 1;
+				ret = true;
 			}
 			
 			i++;
@@ -75,75 +75,75 @@ namespace Powers {
 		return ret;
 	}
 	
-	int destroy_row(Pawn *pawn, Server *server, Client *client) {
+	bool destroy_row(Pawn *pawn, Server *server, Client *client) {
 		return destroy_enemies(pawn->RowTiles(), pawn);
 	}
 	
-	int destroy_radial(Pawn *pawn, Server *server, Client *client) {
+	bool destroy_radial(Pawn *pawn, Server *server, Client *client) {
 		return destroy_enemies(pawn->RadialTiles(), pawn);
 	}
 	
-	int destroy_bs(Pawn *pawn, Server *server, Client *client) {
+	bool destroy_bs(Pawn *pawn, Server *server, Client *client) {
 		return destroy_enemies(pawn->bs_tiles(), pawn);
 	}
 	
-	int destroy_fs(Pawn *pawn, Server *server, Client *client) {
+	bool destroy_fs(Pawn *pawn, Server *server, Client *client) {
 		return destroy_enemies(pawn->fs_tiles(), pawn);
 	}
 	
-	int raise_tile(Pawn *pawn, Server *server, Client *client) {
+	bool raise_tile(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
 			client->current_animator = new TileAnimators::ElevationAnimator(client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
 		return pawn->cur_tile->SetHeight(pawn->cur_tile->height+1);
 	}
 	
-	int lower_tile(Pawn *pawn, Server *server, Client *client) {
+	bool lower_tile(Pawn *pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
 			client->current_animator = new TileAnimators::ElevationAnimator(client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
 		return pawn->cur_tile->SetHeight(pawn->cur_tile->height-1);
 	}
 	
-	int increase_range(Pawn *pawn, Server *server, Client *client) {
-		if (pawn->range < 3) {
+	bool increase_range(Pawn *pawn, Server *server, Client *client) {
+		if(pawn->range < 3) {
 			pawn->range++;
-			return 1;
+			return true;
 		}
-		else return 0;
+		
+		return false;
 	}
 	
-	int hover(Pawn *pawn, Server *server, Client *client) {
+	bool hover(Pawn *pawn, Server *server, Client *client) {
 		if(pawn->flags & PWR_CLIMB) {
-			return 0;
+			return false;
 		}
-		else{
-			pawn->flags |= PWR_CLIMB;
-			return 1;
-		}
+		
+		pawn->flags |= PWR_CLIMB;
+		return true;
 	}
 	
-	static int elevate_tiles(Tile::List &tiles) {
+	static bool elevate_tiles(Tile::List &tiles) {
 		Tile::List::iterator i = tiles.begin();
-		int ret = 0;
+		bool ret = false;
 		
 		for(; i != tiles.end(); i++) {
-			ret |= (*i)->SetHeight(2);
+			ret = (ret || (*i)->SetHeight(2));
 		}
 		
 		return ret;
 	}
 	
-	static int dig_tiles(Tile::List &tiles) {
+	static bool dig_tiles(Tile::List &tiles) {
 		Tile::List::iterator i = tiles.begin();
-		int ret = 0;
+		bool ret = false;
 		
 		for(; i != tiles.end(); i++) {
-			ret |= (*i)->SetHeight(-2);
+			ret = (ret || (*i)->SetHeight(-2));
 		}
 		
 		return ret;
 	}
 	
-	int elevate_row(Pawn *pawn, Server *server, Client *client) {
+	bool elevate_row(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->RowTiles();
 		
 		if (client && !client->current_animator)
@@ -152,7 +152,7 @@ namespace Powers {
 		return elevate_tiles(tiles);
 	}
 	
-	int elevate_radial(Pawn *pawn, Server *server, Client *client) {
+	bool elevate_radial(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->RadialTiles();
 		
 		if (client && !client->current_animator)
@@ -161,7 +161,7 @@ namespace Powers {
 		return elevate_tiles(tiles);
 	}
 	
-	int elevate_bs(Pawn *pawn, Server *server, Client *client) {
+	bool elevate_bs(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->bs_tiles();
 		
 		if (client && !client->current_animator)
@@ -170,7 +170,7 @@ namespace Powers {
 		return elevate_tiles(tiles);
 	}
 	
-	int elevate_fs(Pawn *pawn, Server *server, Client *client) {
+	bool elevate_fs(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->fs_tiles();
 		
 		if (client && !client->current_animator)
@@ -179,7 +179,7 @@ namespace Powers {
 		return elevate_tiles(tiles);
 	}
 	
-	int dig_row(Pawn *pawn, Server *server, Client *client) {
+	bool dig_row(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->RowTiles();
 		
 		if (client && !client->current_animator)
@@ -188,7 +188,7 @@ namespace Powers {
 		return dig_tiles(tiles);
 	}
 	
-	int dig_radial(Pawn *pawn, Server *server, Client *client) {
+	bool dig_radial(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->RadialTiles();
 		
 		if (client && !client->current_animator)
@@ -197,7 +197,7 @@ namespace Powers {
 		return dig_tiles(tiles);
 	}
 	
-	int dig_bs(Pawn *pawn, Server *server, Client *client) {
+	bool dig_bs(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->bs_tiles();
 		
 		if (client && !client->current_animator)
@@ -206,7 +206,7 @@ namespace Powers {
 		return dig_tiles(tiles);
 	}
 	
-	int dig_fs(Pawn *pawn, Server *server, Client *client) {
+	bool dig_fs(Pawn *pawn, Server *server, Client *client) {
 		Tile::List tiles = pawn->fs_tiles();
 		
 		if (client && !client->current_animator)
@@ -215,47 +215,48 @@ namespace Powers {
 		return dig_tiles(tiles);
 	}
 	
-	int shield(Pawn *pawn, Server *server, Client *client) {
+	bool shield(Pawn *pawn, Server *server, Client *client) {
 		if(pawn->flags & PWR_SHIELD) {
-			return 0;
+			return false;
 		}
 		
 		pawn->flags |= PWR_SHIELD;
-		return 1;
+		return true;
 	}
 	
-	static int purify(Tile::List tiles, Pawn *pawn) {
+	static bool purify(Tile::List tiles, Pawn *pawn) {
 		Tile::List::iterator i = tiles.begin();
-		int ret = 0;
+		bool ret = false;
 		
 		for(; i != tiles.end(); i++) {
 			if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 				(*i)->pawn->flags &= ~PWR_GOOD;
 				(*i)->pawn->range = 0;
-				ret = 1;
+				
+				ret = true;
 			}
 		}
 		
 		return ret;
 	}
 	
-	int purify_row(Pawn *pawn, Server *server, Client *client) {
+	bool purify_row(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->RowTiles(), pawn);
 	}
 	
-	int purify_radial(Pawn *pawn, Server *server, Client *client) {
+	bool purify_radial(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->RadialTiles(), pawn);
 	}
 	
-	int purify_bs(Pawn *pawn, Server *server, Client *client) {
+	bool purify_bs(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->bs_tiles(), pawn);
 	}
 	
-	int purify_fs(Pawn *pawn, Server *server, Client *client) {
+	bool purify_fs(Pawn *pawn, Server *server, Client *client) {
 		return purify(pawn->fs_tiles(), pawn);
 	}
 	
-	int teleport(Pawn *pawn, Server *server, Client *client) {
+	bool teleport(Pawn *pawn, Server *server, Client *client) {
 		if(server) {
 			Tile::List tlist;
 			Tile *tile;
@@ -273,7 +274,7 @@ namespace Powers {
 			pawn->cur_tile = tile;
 		}else{
 			if(client->power_rand_vals.size() != 2) {
-				return 0;
+				return false;
 			}
 			
 			int col = client->power_rand_vals[0];
@@ -282,7 +283,7 @@ namespace Powers {
 			Tile *tile = FindTile(client->tiles, col, row);
 			if(!tile || tile->pawn) {
 				std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
-				return 0;
+				return false;
 			}
 			
 			pawn->cur_tile->pawn = NULL;
@@ -290,6 +291,6 @@ namespace Powers {
 			pawn->cur_tile = tile;
 		}
 		
-		return 1;
+		return true;
 	}
 }
