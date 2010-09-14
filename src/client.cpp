@@ -497,6 +497,8 @@ void Client::DrawScreen() {
 	SDL_GetMouseState(&mouse_x, &mouse_y);
 	Tile *htile = TileAtXY(tiles, mouse_x, mouse_y);
 	
+	int bs_col, fs_col, diag_row = -1;
+	
 	for(; ti != tiles.end(); ti++) {
 		SDL_Rect rect;
 		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
@@ -520,37 +522,12 @@ void Client::DrawScreen() {
 		if(htile == *ti) {
 			tile_img = tint_tile;
 		}else if(htile) {
-			int bs_col = htile->col;
-			int fs_col = htile->col;
-			
-			for(int row = htile->row-1; row >= (*ti)->row; row--) {
-				if(row % 2) {
-					bs_col--;
-				}else{
-					fs_col++;
-				}
-				
-				if(row == (*ti)->row && (bs_col == (*ti)->col || fs_col == (*ti)->col)) {
-					tile_img = line_tile;
-				}
+			if(diag_row != (*ti)->row) {
+				diag_cols(htile, (*ti)->row, bs_col, fs_col);
+				diag_row = (*ti)->row;
 			}
 			
-			bs_col = htile->col;
-			fs_col = htile->col;
-			
-			for(int row = htile->row+1; row <= (*ti)->row; row++) {
-				if(row % 2) {
-					fs_col--;
-				}else{
-					bs_col++;
-				}
-				
-				if(row == (*ti)->row && (bs_col == (*ti)->col || fs_col == (*ti)->col)) {
-					tile_img = line_tile;
-				}
-			}
-			
-			if(htile->row == (*ti)->row) {
+			if((*ti)->col == bs_col || (*ti)->col == fs_col) {
 				tile_img = line_tile;
 			}
 		}
@@ -720,4 +697,40 @@ void Client::change_colour(uint16_t id, PlayerColour colour) {
 	msg.mutable_players(0)->set_colour((protocol::colour)colour);
 	
 	WriteProto(msg);
+}
+
+void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
+	bs_col = htile->col;
+	fs_col = htile->col;
+	
+	if(htile->row == row) {
+		return;
+	}
+	
+	for(int r = htile->row-1; r >= row; r--) {
+		if(r % 2) {
+			bs_col--;
+		}else{
+			fs_col++;
+		}
+		
+		if(r == row) {
+			return;
+		}
+	}
+	
+	bs_col = htile->col;
+	fs_col = htile->col;
+	
+	for(int r = htile->row+1; r <= row; r++) {
+		if(r % 2) {
+			fs_col--;
+		}else{
+			bs_col++;
+		}
+		
+		if(r == row) {
+			return;
+		}
+	}
 }

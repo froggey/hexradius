@@ -91,6 +91,7 @@ class Client {
 		
 		void DrawScreen(void);
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset);
+		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
 		
 		void lobby_regen();
 		
