@@ -57,6 +57,11 @@ namespace Powers {
 	bool purify_radial(Pawn *pawn, Server *server, Client *client);
 	bool purify_bs(Pawn *pawn, Server *server, Client *client);
 	bool purify_fs(Pawn *pawn, Server *server, Client *client);
+	
+	bool annihilate_row(Pawn *pawn, Server *server, Client *client);
+	bool annihilate_radial(Pawn *pawn, Server *server, Client *client);
+	bool annihilate_bs(Pawn *pawn, Server *server, Client *client);
+	bool annihilate_fs(Pawn *pawn, Server *server, Client *client);
 }
 
 #endif /* !OR_POWERS_HPP */

@@ -33,7 +33,12 @@ Powers::Power Powers::powers[] = {
 	{"Purify Row", &Powers::purify_row, 50, true},
 	{"Purify Radial", &Powers::purify_radial, 50, true},
 	{"Purify NW-SE", &Powers::purify_bs, 50, true},
-	{"Purify NE-SW", &Powers::purify_fs, 50, true}
+	{"Purify NE-SW", &Powers::purify_fs, 50, true},
+	
+	{"Annihilate Row", &Powers::annihilate_row, 50, false},
+	{"Annihilate Radial", &Powers::annihilate_radial, 50, false},
+	{"Annihilate NW-SE", &Powers::annihilate_bs, 50, false},
+	{"Annihilate NE-SW", &Powers::annihilate_fs, 50, false}
 };
 
 const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
@@ -292,5 +297,36 @@ namespace Powers {
 		}
 		
 		return true;
+	}
+	
+	static bool annihilate(Tile::List tiles) {
+		bool ret = false;
+		
+		for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
+			if((*tile)->pawn) {
+				delete (*tile)->pawn;
+				(*tile)->pawn = NULL;
+				
+				ret = true;
+			}
+		}
+		
+		return ret;
+	}
+	
+	bool annihilate_row(Pawn *pawn, Server *server, Client *client) {
+		return annihilate(pawn->RowTiles());
+	}
+	
+	bool annihilate_radial(Pawn *pawn, Server *server, Client *client) {
+		return annihilate(pawn->RadialTiles());
+	}
+	
+	bool annihilate_bs(Pawn *pawn, Server *server, Client *client) {
+		return annihilate(pawn->bs_tiles());
+	}
+	
+	bool annihilate_fs(Pawn *pawn, Server *server, Client *client) {
+		return annihilate(pawn->fs_tiles());
 	}
 }
