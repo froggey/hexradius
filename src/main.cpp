@@ -10,7 +10,11 @@
 #include <math.h>
 
 #ifdef _WIN32
-#include <windows.h>
+/* Including windows.h here makes it error when ASIO includes winsock.h since
+ * windows is Retarded.
+*/
+
+// #include <windows.h>
 #endif
 
 #include "loadimage.hpp"
