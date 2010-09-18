@@ -521,7 +521,7 @@ void Client::DrawScreen() {
 		
 		if(htile == *ti) {
 			tile_img = tint_tile;
-		}else if(htile) {
+		}else if(htile && options.show_lines) {
 			if(diag_row != (*ti)->row) {
 				diag_cols(htile, (*ti)->row, bs_col, fs_col);
 				diag_row = (*ti)->row;

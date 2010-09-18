@@ -131,4 +131,16 @@ struct Scenario {
 };
 void LoadScenario(std::string filename, Scenario &sc);
 
+struct options {
+	std::string username;
+	bool show_lines;
+	
+	options();
+	
+	void load(std::string filename);
+	void save(std::string filename);
+};
+
+extern struct options options;
+
 #endif

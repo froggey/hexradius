@@ -52,9 +52,7 @@ static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 		return;
 	}
 	
-	const char* username = getenv("USER");
-	
-	Client client(host, port, username? username : "Someone who lost the game");
+	Client client(host, port, options.username);
 	
 	while(client.DoStuff()) {
 		SDL_Delay(5);
@@ -170,8 +168,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	
 	Server server(port, scn);
 	
-	const char* username = getenv("USER");
-	Client client("127.0.0.1", port, username? username : "Someone who lost the game");
+	Client client("127.0.0.1", port, options.username);
 	
 	do {
 		server.DoStuff();
