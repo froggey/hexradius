@@ -582,13 +582,10 @@ void Client::DrawScreen() {
 		SDL_Color colour = {255,0,0};
 		
 		for(i = mpawn->powers.begin(); i != mpawn->powers.end(); i++) {
-			char ns[4];
-			sprintf(ns, "%d", i->second);
-			
 			pmenu_entry foobar = {rect, i->first};
 			pmenu.push_back(foobar);
 			
-			FontStuff::BlitText(screen, rect, font, colour, ns);
+			FontStuff::BlitText(screen, rect, font, colour, to_string(i->second));
 			
 			rect.x += 30;
 			
