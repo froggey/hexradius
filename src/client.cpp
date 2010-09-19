@@ -47,7 +47,7 @@ static Uint32 redraw_callback(Uint32 interval, void *param) {
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), screen_set(true), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -138,11 +138,11 @@ void Client::run() {
 			return;
 		}
 		
-		if(!screen_set) {
-			screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
-			assert(screen != NULL);
+		while(!recv_queue.empty()) {
+			protocol::message message = recv_queue.front();
+			recv_queue.pop();
 			
-			screen_set = true;
+			handle_message(message);
 		}
 		
 		if(state == CONNECTING || state == LOBBY) {
@@ -286,6 +286,12 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		throw std::runtime_error("Invalid protobuf recieved from server");
 	}
 	
+	recv_queue.push(msg);
+	
+	ReadSize();
+}
+
+void Client::handle_message(const protocol::message &msg) {
 	if(msg.msg() == protocol::BEGIN) {
 		if(state == GAME) {
 			throw std::runtime_error("Recieved BEGIN message during game");
@@ -328,7 +334,9 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		
 		screen_w = board.w;
 		screen_h = board.h+bskip;
-		screen_set = false;
+		
+		screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
+		assert(screen != NULL);
 	}
 	if(msg.msg() == protocol::GINFO) {
 		state = LOBBY;
@@ -477,9 +485,8 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		state = LOBBY;
 		FreeTiles(tiles);
 		
-		screen_w = MENU_WIDTH;
-		screen_h = MENU_HEIGHT;
-		screen_set = false;
+		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
+		assert(screen != NULL);
 	}
 	if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		Player *p = get_player(msg.players(0).id());
@@ -489,8 +496,6 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 			lobby_regen();
 		}
 	}
-	
-	ReadSize();
 }
 
 void Client::DrawScreen() {

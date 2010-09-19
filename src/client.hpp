@@ -9,6 +9,7 @@
 #include <boost/shared_array.hpp>
 #include <set>
 #include <boost/thread.hpp>
+#include <queue>
 
 #include "octradius.hpp"
 #include "tile_anims.hpp"
@@ -56,6 +57,8 @@ class Client {
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
 		
+		std::queue<protocol::message> recv_queue;
+		
 		PlayerColour my_colour;
 		uint16_t my_id, turn;
 		player_set players;
@@ -95,6 +98,8 @@ class Client {
 		void ReadSize(void);
 		void ReadMessage(const boost::system::error_code& error);
 		void ReadFinish(const boost::system::error_code& error);
+		
+		void handle_message(const protocol::message &msg);
 		
 		void DrawScreen(void);
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset);
