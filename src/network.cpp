@@ -134,16 +134,12 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 }
 
 void Server::Client::Write(const protocol::message &msg, write_cb callback) {
-	std::string pb;
-	msg.SerializeToString(&pb);
+	send_queue.push(server_send_buf(msg));
+	send_queue.back().callback = callback;
 	
-	uint32_t psize = htonl(pb.size());
-	wbuf_ptr wb(new char[pb.size()+sizeof(psize)]);
-	
-	memcpy(wb.get(), &psize, sizeof(psize));
-	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
-	
-	async_write(socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(callback, this, boost::asio::placeholders::error, wb, shared_from_this()));
+	if(send_queue.size() == 1) {
+		async_write(socket, boost::asio::buffer(send_queue.front().buf.get(), send_queue.front().size), boost::bind(send_queue.front().callback, this, boost::asio::placeholders::error, shared_from_this()));
+	}
 }
 
 void Server::Client::WriteBasic(protocol::msgtype type) {
@@ -153,7 +149,9 @@ void Server::Client::WriteBasic(protocol::msgtype type) {
 	Write(msg);
 }
 
-void Server::Client::FinishWrite(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr) {
+void Server::Client::FinishWrite(const boost::system::error_code& error, ptr cptr) {
+	send_queue.pop();
+	
 	if(qcalled) {
 		return;
 	}
@@ -161,6 +159,10 @@ void Server::Client::FinishWrite(const boost::system::error_code& error, wbuf_pt
 	if(error) {
 		Quit("Write error: " + error.message(), false);
 		return;
+	}
+	
+	if(!send_queue.empty()) {
+		async_write(socket, boost::asio::buffer(send_queue.front().buf.get(), send_queue.front().size), boost::bind(send_queue.front().callback, this, boost::asio::placeholders::error, shared_from_this()));
 	}
 }
 
@@ -245,7 +247,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	server.clients.erase(shared_from_this());
 }
 
-void Server::Client::FinishQuit(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr) {}
+void Server::Client::FinishQuit(const boost::system::error_code& error, ptr cptr) {}
 
 void Server::NextTurn(void) {
 	client_set::iterator last = turn;

@@ -18,8 +18,13 @@
 class Server {
 	struct Client : public boost::enable_shared_from_this<Server::Client> {
 		typedef boost::shared_ptr<Server::Client> ptr;
-		typedef boost::shared_array<char> wbuf_ptr;
-		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, wbuf_ptr, ptr);
+		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, ptr);
+		
+		struct server_send_buf : send_buf {
+			write_cb callback;
+			
+			server_send_buf(const protocol::message &msg) : send_buf(msg) {}
+		};
 		
 		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(NOINIT), qcalled(false) {}
 		
@@ -28,6 +33,8 @@ class Server {
 		
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
+		
+		std::queue<server_send_buf> send_queue;
 		
 		uint16_t id;
 		std::string playername;
@@ -39,12 +46,12 @@ class Server {
 		void BeginRead2(const boost::system::error_code& error, ptr cptr);
 		void FinishRead(const boost::system::error_code& error, ptr cptr);
 		
-		void FinishWrite(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr);
+		void FinishWrite(const boost::system::error_code& error, ptr cptr);
 		void Write(const protocol::message &msg, write_cb callback = &Server::Client::FinishWrite);
 		void WriteBasic(protocol::msgtype type);
 		
 		void Quit(const std::string &msg, bool send_to_client = true);
-		void FinishQuit(const boost::system::error_code& error, wbuf_ptr wb, ptr cptr);
+		void FinishQuit(const boost::system::error_code& error, ptr cptr);
 	};
 	
 	struct client_compare {
