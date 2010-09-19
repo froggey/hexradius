@@ -15,6 +15,9 @@
 #include "gui.hpp"
 #include "menu.hpp"
 
+const int EVENT_RDTIMER = 1;	// Redraw timer has fired
+const int EVENT_RETURN = 2;	// Client should return - i.e. leave button pressed
+
 static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
@@ -25,8 +28,12 @@ static void start_cb(const GUI::TextButton &button, const SDL_Event &event, void
 }
 
 static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
-	Client *client = (Client*)arg;
-	client->rfalse = true;
+	SDL_Event l_event;
+	
+	l_event.type = SDL_USEREVENT;
+	l_event.user.code = EVENT_RETURN;
+	
+	SDL_PushEvent(&l_event);
 }
 
 static Uint32 redraw_callback(Uint32 interval, void *param) {
@@ -40,7 +47,7 @@ static Uint32 redraw_callback(Uint32 interval, void *param) {
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -122,7 +129,7 @@ void Client::run() {
 	while(SDL_WaitEvent(&event)) {
 		boost::unique_lock<boost::mutex> lock(the_mutex);
 		
-		if(quit || rfalse) {
+		if(event.type == SDL_USEREVENT && event.user.code == EVENT_RETURN) {
 			return;
 		}
 		

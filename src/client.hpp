@@ -17,7 +17,7 @@
 
 class Client {
 	public:
-		bool quit, rfalse;
+		bool quit;	// Game returned due to application quit
 		
 		Client(std::string host, uint16_t port, std::string name);
 		~Client();
