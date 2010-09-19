@@ -21,6 +21,11 @@ const uint16_t DEFAULT_PORT = 9012;
 const int BOARD_OFFSET = 10;
 const unsigned int TORUS_FRAMES = 11;
 
+const unsigned int FRAME_RATE = 30;
+const unsigned int FRAME_DELAY = 1000 / FRAME_RATE;
+
+const int EVENT_RDTIMER = 1;
+
 const unsigned int TILE_WIDTH = 50;
 const unsigned int TILE_HEIGHT = 51;
 const unsigned int TILE_WOFF = 50;

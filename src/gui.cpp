@@ -33,7 +33,7 @@ void GUI::poll(bool read_events) {
 	SDL_Event event;
 	
 	while(read_events && SDL_PollEvent(&event)) {
-		HandleEvent(event);
+		handle_event(event);
 	}
 	
 	if(bgimg) {
@@ -66,7 +66,7 @@ void GUI::poll(bool read_events) {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-void GUI::HandleEvent(const SDL_Event &event) {
+void GUI::handle_event(const SDL_Event &event) {
 	switch(event.type) {
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:

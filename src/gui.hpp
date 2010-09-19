@@ -207,7 +207,7 @@ class GUI {
 		void set_quit_callback(void_callback callback, void *arg = NULL);
 		
 		void poll(bool read_events);
-		void HandleEvent(const SDL_Event &event);
+		void handle_event(const SDL_Event &event);
 	
 	private:
 		int x, y, w, h;

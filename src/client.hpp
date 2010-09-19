@@ -8,6 +8,7 @@
 #include <vector>
 #include <boost/shared_array.hpp>
 #include <set>
+#include <boost/thread.hpp>
 
 #include "octradius.hpp"
 #include "tile_anims.hpp"
@@ -19,8 +20,9 @@ class Client {
 		bool quit, rfalse;
 		
 		Client(std::string host, uint16_t port, std::string name);
+		~Client();
 		
-		bool DoStuff(void);
+		void run();
 		
 		TileAnimators::Animator* current_animator;
 		
@@ -47,6 +49,9 @@ class Client {
 		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::socket socket;
+		SDL_TimerID redraw_timer;
+		boost::thread network_thread;
+		boost::mutex the_mutex;
 		
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
@@ -80,6 +85,7 @@ class Client {
 		
 		std::string req_name;
 		
+		void net_thread_main();
 		void connect_callback(const boost::system::error_code& error);
 		
 		void WriteProto(const protocol::message &msg);

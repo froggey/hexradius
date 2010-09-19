@@ -145,8 +145,8 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 	}
-
-	assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+	
+	assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0);
 	assert(TTF_Init() == 0);
 	SDL_EnableUNICODE(1);
 	
@@ -165,20 +165,12 @@ int main(int argc, char **argv) {
 		
 		Client client("127.0.0.1", port, options.username);
 		
-		while(client.DoStuff()) {
-			SDL_Delay(5);
-		}
+		client.run();
 	}
 	else if (is_client) {
 		Client client(host, port, options.username);
 
-		while (client.DoStuff()) {
-			uint8_t st = SDL_GetAppState();
-			if (st == SDL_APPACTIVE || !st)
-				SDL_Delay(200);
-			else
-				SDL_Delay(5);
-		}
+		client.run();
 	}
 	else {
 		MainMenu menu;

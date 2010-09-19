@@ -54,9 +54,7 @@ static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 	
 	Client client(host, port, options.username);
 	
-	while(client.DoStuff()) {
-		SDL_Delay(5);
-	}
+	client.run();
 	
 	if(client.quit) {
 		running = false;
@@ -170,9 +168,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	
 	Client client("127.0.0.1", port, options.username);
 	
-	while(client.DoStuff()) {
-		SDL_Delay(5);
-	}
+	client.run();
 	
 	if(client.quit) {
 		running = false;

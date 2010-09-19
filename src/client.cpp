@@ -24,19 +24,24 @@ static void start_cb(const GUI::TextButton &button, const SDL_Event &event, void
 	client->send_begin();
 }
 
-static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
-	Client *client = (Client*)arg;
-	client->quit = true;
-}
-
 static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
 	Client *client = (Client*)arg;
 	client->rfalse = true;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
+static Uint32 redraw_callback(Uint32 interval, void *param) {
+	SDL_Event event;
+	
+	event.type = SDL_USEREVENT;
+	event.user.code = EVENT_RDTIMER;
+	
+	SDL_PushEvent(&event);
+	
+	return interval;
+}
+
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), rfalse(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
-	lobby_gui.set_quit_callback(&app_quit_cb, this);
 	
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
 	lobby_buttons.push_back(cm);
@@ -52,9 +57,31 @@ Client::Client(std::string host, uint16_t port, std::string name) : quit(false),
 	ep.port(port);
 	
 	socket.async_connect(ep, boost::bind(&Client::connect_callback, this, boost::asio::placeholders::error));
+	
+	redraw_timer = SDL_AddTimer(FRAME_DELAY, &redraw_callback, NULL);
+	network_thread = boost::thread(boost::bind(&Client::net_thread_main, this));
+}
+
+Client::~Client() {
+	if(redraw_timer) {
+		SDL_RemoveTimer(redraw_timer);
+	}
+	
+	io_service.stop();
+	
+	std::cout << "Waiting for client network thread to exit..." << std::endl;
+	network_thread.join();
+	
+	FreeTiles(tiles);
+}
+
+void Client::net_thread_main() {
+	io_service.run();
 }
 
 void Client::connect_callback(const boost::system::error_code& error) {
+	boost::unique_lock<boost::mutex> lock(the_mutex);
+	
 	if(error) {
 		throw std::runtime_error("Connection failed: " + error.message());
 	}
@@ -82,34 +109,36 @@ void Client::WriteProto(const protocol::message &msg) {
 }
 
 void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
+	boost::unique_lock<boost::mutex> lock(the_mutex);
+	
 	if(error) {
 		throw std::runtime_error("Write error: " + error.message());
 	}
 }
 
-bool Client::DoStuff(void) {
-	io_service.poll();
-	
-	if(state == CONNECTING || state == LOBBY) {
-		lobby_gui.poll(true);
-	}
-	
-	if(quit || rfalse) {
-		return false;
-	}
-	
-	if(state != GAME) {
-		return true;
-	}
-	
+void Client::run() {
 	SDL_Event event;
 	
-	if(SDL_PollEvent(&event)) {
+	while(SDL_WaitEvent(&event)) {
+		boost::unique_lock<boost::mutex> lock(the_mutex);
+		
+		if(quit || rfalse) {
+			return;
+		}
+		
 		if(event.type == SDL_QUIT) {
 			quit = true;
-			return false;
+			return;
 		}
-		else if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
+		
+		if(state == CONNECTING || state == LOBBY) {
+			lobby_gui.handle_event(event);
+			lobby_gui.poll(false);
+			
+			continue;
+		}
+		
+		if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
 			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
 			
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -200,15 +229,12 @@ bool Client::DoStuff(void) {
 				}
 			}
 		}
+		
+		if(SDL_GetTicks() >= last_redraw + FRAME_DELAY) {
+			DrawScreen();
+			last_redraw = SDL_GetTicks();
+		}
 	}
-	
-	// force a redraw if it's been too long (for animations)
-	if(SDL_GetTicks() >= last_redraw + 25) {
-		DrawScreen();
-		last_redraw = SDL_GetTicks();
-	}
-	
-	return true;
 }
 
 void Client::ReadSize(void) {
@@ -216,6 +242,8 @@ void Client::ReadSize(void) {
 }
 
 void Client::ReadMessage(const boost::system::error_code& error) {
+	boost::unique_lock<boost::mutex> lock(the_mutex);
+	
 	if(error) {
 		throw std::runtime_error("Read error: " + error.message());
 	}
@@ -231,6 +259,8 @@ void Client::ReadMessage(const boost::system::error_code& error) {
 }
 
 void Client::ReadFinish(const boost::system::error_code& error) {
+	boost::unique_lock<boost::mutex> lock(the_mutex);
+	
 	if(error) {
 		throw std::runtime_error("Read error: " + error.message());
 	}
