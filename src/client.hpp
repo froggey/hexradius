@@ -62,6 +62,7 @@ class Client {
 		enum { CONNECTING, LOBBY, GAME } state;
 		
 		int screen_w, screen_h;
+		bool screen_set;
 		unsigned int last_redraw;
 		int xd, yd;
 		SDL_Rect board;

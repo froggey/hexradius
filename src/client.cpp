@@ -47,7 +47,7 @@ static Uint32 redraw_callback(Uint32 interval, void *param) {
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
+Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), screen_set(true), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -136,6 +136,13 @@ void Client::run() {
 		if(event.type == SDL_QUIT) {
 			quit = true;
 			return;
+		}
+		
+		if(!screen_set) {
+			screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
+			assert(screen != NULL);
+			
+			screen_set = true;
 		}
 		
 		if(state == CONNECTING || state == LOBBY) {
@@ -321,9 +328,7 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		
 		screen_w = board.w;
 		screen_h = board.h+bskip;
-		
-		screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
-		assert(screen != NULL);
+		screen_set = false;
 	}
 	if(msg.msg() == protocol::GINFO) {
 		state = LOBBY;
@@ -472,8 +477,9 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 		state = LOBBY;
 		FreeTiles(tiles);
 		
-		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
-		assert(screen != NULL);
+		screen_w = MENU_WIDTH;
+		screen_h = MENU_HEIGHT;
+		screen_set = false;
 	}
 	if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		Player *p = get_player(msg.players(0).id());
