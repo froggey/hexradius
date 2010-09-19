@@ -242,3 +242,14 @@ void options::save(std::string filename) {
 	file << "username=" << username << std::endl;
 	file << "show_lines=" << (show_lines ? "true" : "false") << std::endl;
 }
+
+send_buf::send_buf(const protocol::message &message) : buf(NULL) {
+	std::string pb;
+	message.SerializeToString(&pb);
+	
+	uint32_t psize = htonl(pb.size());
+	buf = buf_ptr(new char[size = (pb.size()+sizeof(psize))]);
+	
+	memcpy(buf.get(), &psize, sizeof(psize));
+	memcpy(buf.get()+sizeof(psize), pb.data(), pb.size());
+}

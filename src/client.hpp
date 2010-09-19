@@ -34,8 +34,6 @@ class Client {
 		Tile::List tiles;
 		
 	private:
-		typedef boost::shared_array<char> wbuf_ptr;
-		
 		struct Player {
 			std::string name;
 			PlayerColour colour;
@@ -58,6 +56,7 @@ class Client {
 		std::vector<char> msgbuf;
 		
 		std::queue<protocol::message> recv_queue;
+		std::queue<send_buf> send_queue;
 		
 		PlayerColour my_colour;
 		uint16_t my_id, turn;
@@ -93,7 +92,7 @@ class Client {
 		void connect_callback(const boost::system::error_code& error);
 		
 		void WriteProto(const protocol::message &msg);
-		void WriteFinish(const boost::system::error_code& error, wbuf_ptr wb);
+		void WriteFinish(const boost::system::error_code& error);
 		
 		void ReadSize(void);
 		void ReadMessage(const boost::system::error_code& error);

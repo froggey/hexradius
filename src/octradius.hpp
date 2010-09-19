@@ -12,6 +12,7 @@
 #include <set>
 #include <SDL/SDL_ttf.h>
 #include <sstream>
+#include <boost/shared_array.hpp>
 
 #include "octradius.pb.h"
 
@@ -145,5 +146,14 @@ struct options {
 };
 
 extern struct options options;
+
+struct send_buf {
+	typedef boost::shared_array<char> buf_ptr;
+	
+	buf_ptr buf;
+	uint32_t size;
+	
+	send_buf(const protocol::message &message);
+};
 
 #endif

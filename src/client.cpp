@@ -103,23 +103,24 @@ void Client::connect_callback(const boost::system::error_code& error) {
 }
 
 void Client::WriteProto(const protocol::message &msg) {
-	std::string pb;
-	msg.SerializeToString(&pb);
+	send_queue.push(send_buf(msg));
 	
-	uint32_t psize = htonl(pb.size());
-	wbuf_ptr wb(new char[pb.size()+sizeof(psize)]);
-	
-	memcpy(wb.get(), &psize, sizeof(psize));
-	memcpy(wb.get()+sizeof(psize), pb.data(), pb.size());
-	
-	async_write(socket, boost::asio::buffer(wb.get(), pb.size()+sizeof(psize)), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error, wb));
+	if(send_queue.size() == 1) {
+		async_write(socket, boost::asio::buffer(send_queue.front().buf.get(), send_queue.front().size), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error));
+	}
 }
 
-void Client::WriteFinish(const boost::system::error_code& error, wbuf_ptr wb) {
+void Client::WriteFinish(const boost::system::error_code& error) {
 	boost::unique_lock<boost::mutex> lock(the_mutex);
+	
+	send_queue.pop();
 	
 	if(error) {
 		throw std::runtime_error("Write error: " + error.message());
+	}
+	
+	if(!send_queue.empty()) {
+		async_write(socket, boost::asio::buffer(send_queue.front().buf.get(), send_queue.front().size), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error));
 	}
 }
 
