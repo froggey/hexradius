@@ -100,6 +100,8 @@ class Client {
 		void ReadFinish(const boost::system::error_code& error);
 		
 		void handle_message(const protocol::message &msg);
+		void handle_message_lobby(const protocol::message &msg);
+		void handle_message_game(const protocol::message &msg);
 		
 		void DrawScreen(void);
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset);

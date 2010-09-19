@@ -292,11 +292,38 @@ void Client::ReadFinish(const boost::system::error_code& error) {
 }
 
 void Client::handle_message(const protocol::message &msg) {
-	if(msg.msg() == protocol::BEGIN) {
-		if(state == GAME) {
-			throw std::runtime_error("Recieved BEGIN message during game");
+	if(msg.msg() == protocol::PQUIT) {
+		if(msg.players_size() == 1) {
+			PlayerColour c = (PlayerColour)msg.players(0).colour();
+			
+			std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
+			DestroyTeamPawns(tiles, c);
+			
+			for(player_set::iterator p = players.begin(); p != players.end(); p++) {
+				if((*p).colour == c) {
+					players.erase(p);
+					break;
+				}
+			}
+			
+			lobby_regen();
+		}else{
+			std::cerr << "PQUIT message recieved with " << msg.players_size() << " players, ignoring" << std::endl;
 		}
-		
+	}else if(msg.msg() == protocol::QUIT) {
+		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
+		abort();
+	}else{
+		if(state == GAME) {
+			handle_message_game(msg);
+		}else{
+			handle_message_lobby(msg);
+		}
+	}
+}
+
+void Client::handle_message_lobby(const protocol::message &msg) {
+	if(msg.msg() == protocol::BEGIN) {
 		for(int i = 0; i < msg.tiles_size(); i++) {
 			tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
 		}
@@ -337,8 +364,7 @@ void Client::handle_message(const protocol::message &msg) {
 		
 		screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
 		assert(screen != NULL);
-	}
-	if(msg.msg() == protocol::GINFO) {
+	}else if(msg.msg() == protocol::GINFO) {
 		state = LOBBY;
 		
 		my_id = msg.player_id();
@@ -377,20 +403,52 @@ void Client::handle_message(const protocol::message &msg) {
 		lobby_buttons.push_back(lg);
 		
 		lobby_regen();
+	}else if(msg.msg() == protocol::PJOIN) {
+		if(msg.players_size() == 1) {
+			Player p;
+			
+			p.name = msg.players(0).name();
+			p.colour = (PlayerColour)msg.players(0).colour();
+			p.id = msg.players(0).id();
+			
+			players.insert(p);
+			
+			lobby_regen();
+		}else{
+			std::cerr << "PJOIN message recieved with " << msg.players_size() << " players, ignoring" << std::endl;
+		}
+	}else if(msg.msg() == protocol::CCOLOUR) {
+		if(msg.players_size() == 1) {
+			Player *p = get_player(msg.players(0).id());
+			
+			if(p) {
+				p->colour = (PlayerColour)msg.players(0).colour();
+				lobby_regen();
+			}
+		}else{
+			std::cerr << "CCOLOUR message recieved with " << msg.players_size() << " players, ignoring" << std::endl;
+		}
+	}else{
+		std::cerr << "Message " << msg.msg() << " recieved in LOBBY, ignoring" << std::endl;
 	}
+}
+
+void Client::handle_message_game(const protocol::message &msg) {
 	if(msg.msg() == protocol::TURN) {
 		turn = msg.player_id();
 		std::cout << "Turn for player " << turn << std::endl;
-	}
-	if(msg.msg() == protocol::MOVE && msg.pawns_size() == 1) {
-		Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
-		Tile *tile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
-		
-		if(!(pawn && tile && pawn->Move(tile))) {
-			std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
+	}else if(msg.msg() == protocol::MOVE) {
+		if(msg.pawns_size() == 1) {
+			Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+			Tile *tile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
+			
+			if(!(pawn && tile && pawn->Move(tile))) {
+				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
+			}
+		}else{
+			std::cerr << "Recieved MOVE message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
 		}
-	}
-	if(msg.msg() == protocol::UPDATE) {
+	}else if(msg.msg() == protocol::UPDATE) {
 		for(int i = 0; i < msg.tiles_size(); i++) {
 			Tile *tile = FindTile(tiles, msg.tiles(i).col(), msg.tiles(i).row());
 			if(!tile) {
@@ -421,58 +479,29 @@ void Client::handle_message(const protocol::message &msg) {
 				pawn->powers.insert(std::make_pair(index, num));
 			}
 		}
-	}
-	if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
-		Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
-		
-		if(pawn) {
-			int power = msg.pawns(0).use_power();
+	}else if(msg.msg() == protocol::USE) {
+		if(msg.pawns_size() == 1) {
+			Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 			
-			power_rand_vals.clear();
-			
-			for(int i = 0; i < msg.power_rand_vals_size(); i++) {
-				power_rand_vals.push_back(msg.power_rand_vals(i));
+			if(pawn) {
+				int power = msg.pawns(0).use_power();
+				
+				power_rand_vals.clear();
+				
+				for(int i = 0; i < msg.power_rand_vals_size(); i++) {
+					power_rand_vals.push_back(msg.power_rand_vals(i));
+				}
+				
+				if(pawn->powers.size()) {
+					pawn->UsePower(power, NULL, this);
+				}else if(power >= 0 && power < Powers::num_powers) {
+					Powers::powers[power].func(pawn, NULL, this);
+				}
 			}
-			
-			if(pawn->powers.size()) {
-				pawn->UsePower(power, NULL, this);
-			}
-			else if(power >= 0 && power < Powers::num_powers) {
-				Powers::powers[power].func(pawn, NULL, this);
-			}
+		}else{
+			std::cerr << "Recieved USE message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
 		}
-	}
-	if(msg.msg() == protocol::PQUIT && msg.players_size() == 1) {
-		PlayerColour c = (PlayerColour)msg.players(0).colour();
-		
-		std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
-		DestroyTeamPawns(tiles, c);
-		
-		for(player_set::iterator p = players.begin(); p != players.end(); p++) {
-			if((*p).colour == c) {
-				players.erase(p);
-				break;
-			}
-		}
-		
-		lobby_regen();
-	}
-	if(msg.msg() == protocol::PJOIN && msg.players_size() == 1) {
-		Player p;
-		
-		p.name = msg.players(0).name();
-		p.colour = (PlayerColour)msg.players(0).colour();
-		p.id = msg.players(0).id();
-		
-		players.insert(p);
-		
-		lobby_regen();
-	}
-	if(msg.msg() == protocol::QUIT) {
-		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
-		abort();
-	}
-	if(msg.msg() == protocol::GOVER) {
+	}else if(msg.msg() == protocol::GOVER) {
 		if(msg.is_draw()) {
 			std::cout << "Game draw" << std::endl;
 		}else{
@@ -487,14 +516,8 @@ void Client::handle_message(const protocol::message &msg) {
 		
 		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
 		assert(screen != NULL);
-	}
-	if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
-		Player *p = get_player(msg.players(0).id());
-		
-		if(p) {
-			p->colour = (PlayerColour)msg.players(0).colour();
-			lobby_regen();
-		}
+	}else{
+		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}
 }
 
