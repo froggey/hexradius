@@ -599,7 +599,7 @@ void Client::DrawScreen() {
 				diag_row = (*ti)->row;
 			}
 			
-			if((*ti)->col == bs_col || (*ti)->col == fs_col) {
+			if((*ti)->col == bs_col || (*ti)->col == fs_col || (*ti)->row == htile->row) {
 				tile_img = line_tile;
 			}
 		}
