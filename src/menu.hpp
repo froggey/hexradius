@@ -10,7 +10,7 @@
 
 const int MENU_WIDTH = 800;
 const int MENU_HEIGHT = 600;
-const int MENU_DELAY = 100;
+const int MENU_DELAY = 50;
 
 struct MainMenu {
 	GUI gui;
