@@ -170,10 +170,9 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	
 	Client client("127.0.0.1", port, options.username);
 	
-	do {
-		server.DoStuff();
+	while(client.DoStuff()) {
 		SDL_Delay(5);
-	} while(client.DoStuff());
+	}
 	
 	if(client.quit) {
 		running = false;

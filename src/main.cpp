@@ -165,10 +165,9 @@ int main(int argc, char **argv) {
 		
 		Client client("127.0.0.1", port, options.username);
 		
-		do {
-			server.DoStuff();
+		while(client.DoStuff()) {
 			SDL_Delay(5);
-		} while(client.DoStuff());
+		}
 	}
 	else if (is_client) {
 		Client client(host, port, options.username);

@@ -21,6 +21,21 @@ Server::Server(uint16_t port, Scenario &s)
 	acceptor.listen();
 	
 	StartAccept();
+	
+	worker = boost::thread(boost::bind(&Server::worker_main, this));
+}
+
+Server::~Server() {
+	io_service.stop();
+	
+	std::cout << "Waiting for server thread to exit..." << std::endl;
+	worker.join();
+	
+	FreeTiles(tiles);
+}
+
+void Server::worker_main() {
+	io_service.run();
 }
 
 void Server::StartAccept(void) {
@@ -184,10 +199,6 @@ void Server::StartGame(void) {
 	state = GAME;
 	
 	NextTurn();
-}
-
-void Server::DoStuff(void) {
-	io_service.poll();
 }
 
 void Server::WriteAll(const protocol::message &msg, Server::Client *exempt) {

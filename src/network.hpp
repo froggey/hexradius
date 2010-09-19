@@ -10,6 +10,7 @@
 #include <boost/shared_array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <vector>
+#include <boost/thread.hpp>
 
 #include "octradius.pb.h"
 #include "octradius.hpp"
@@ -54,11 +55,7 @@ class Server {
 	
 	public:
 		Server(uint16_t port, Scenario &s);
-		void DoStuff(void);
-		
-		~Server() {
-			FreeTiles(tiles);
-		}
+		~Server();
 		
 		std::vector<uint32_t> power_rand_vals;
 		
@@ -70,6 +67,7 @@ class Server {
 		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::acceptor acceptor;
+		boost::thread worker;
 		
 		client_set clients;
 		
@@ -80,6 +78,8 @@ class Server {
 		
 		int pspawn_turns;
 		int pspawn_num;
+		
+		void worker_main();
 		
 		void StartAccept(void);
 		void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
