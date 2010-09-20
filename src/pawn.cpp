@@ -59,17 +59,21 @@ bool Pawn::UsePower(int power, Server *server, Client *client) {
 		return false;
 	}
 	
+	Tile *tile = cur_tile;
+	
 	if(!Powers::powers[power].func(this, server, client)) {
 		return false;
 	}
 	
-	if(p->second > 1) {
-		p->second--;
-	}else{
-		powers.erase(p);
-		
-		if(powers.empty()) {
-			flags &= ~HAS_POWER;
+	if(Powers::powers[power].pawn_survive || tile->pawn) {
+		if(p->second > 1) {
+			p->second--;
+		}else{
+			powers.erase(p);
+			
+			if(powers.empty()) {
+				flags &= ~HAS_POWER;
+			}
 		}
 	}
 	
