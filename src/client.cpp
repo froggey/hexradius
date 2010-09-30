@@ -80,6 +80,10 @@ Client::~Client() {
 	network_thread.join();
 	
 	FreeTiles(tiles);
+	
+	for(anim_set::iterator anim = animators.begin(); anim != animators.end(); anim++) {
+		(*anim)->free();
+	}
 }
 
 void Client::net_thread_main() {
@@ -443,7 +447,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 			Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 			Tile *tile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
 			
-			if(!(pawn && tile && pawn->Move(tile))) {
+			if(!(pawn && tile && pawn->Move(tile, NULL, this))) {
 				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
 			}
 		}else{
@@ -615,6 +619,14 @@ void Client::DrawScreen() {
 		}
 	}
 	
+	for(anim_set::iterator ait = animators.begin(); ait != animators.end();) {
+		anim_set::iterator anim = ait++;
+		
+		if(!(*anim)->render()) {
+			animators.erase(anim);
+		}
+	}
+	
 	if(dpawn) {
 		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0};
 		DrawPawn(dpawn, rect, torus_frame, climb_offset);
@@ -766,6 +778,10 @@ void Client::change_colour(uint16_t id, PlayerColour colour) {
 	msg.mutable_players(0)->set_colour((protocol::colour)colour);
 	
 	WriteProto(msg);
+}
+
+void Client::add_animator(Animators::Generic* anim) {
+	animators.insert(anim);
 }
 
 void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {

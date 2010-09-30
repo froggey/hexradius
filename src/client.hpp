@@ -15,6 +15,7 @@
 #include "tile_anims.hpp"
 #include "octradius.pb.h"
 #include "gui.hpp"
+#include "animator.hpp"
 
 class Client {
 	public:
@@ -29,6 +30,7 @@ class Client {
 		
 		void send_begin();
 		void change_colour(uint16_t id, PlayerColour colour);
+		void add_animator(Animators::Generic* anim);
 		
 		std::vector<uint32_t> power_rand_vals;
 		Tile::List tiles;
@@ -45,6 +47,7 @@ class Client {
 		};
 		
 		typedef std::set<Player,Player> player_set;
+		typedef std::set<Animators::Generic*> anim_set;
 		
 		boost::asio::io_service io_service;
 		boost::asio::ip::tcp::socket socket;
@@ -68,6 +71,7 @@ class Client {
 		unsigned int last_redraw;
 		int xd, yd;
 		SDL_Rect board;
+		anim_set animators;
 		
 		Pawn *dpawn;
 		Pawn *mpawn;

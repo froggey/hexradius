@@ -3,8 +3,9 @@
 #include "octradius.hpp"
 #include "powers.hpp"
 #include "octradius.pb.h"
+#include "client.hpp"
 
-bool Pawn::Move(Tile *tile) {
+bool Pawn::Move(Tile *tile, Server *server, Client *client) {
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
 		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) && (tile->col == cur_tile->col + (cur_tile->row % 2) || tile->col+1 == cur_tile->col + (cur_tile->row % 2)))
@@ -22,6 +23,10 @@ bool Pawn::Move(Tile *tile) {
 		}else if(tile->pawn->flags & PWR_SHIELD) {
 			return false;
 		}else{
+			if(client) {
+				client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
+			}
+			
 			delete tile->pawn;
 		}
 	}

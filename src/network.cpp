@@ -440,7 +440,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		
 		bool hp = tile->has_power;
 		
-		if(pawn->Move(tile)) {
+		if(pawn->Move(tile, this, NULL)) {
 			WriteAll(msg);
 			
 			if(hp) {

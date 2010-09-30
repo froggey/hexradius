@@ -92,7 +92,7 @@ class Pawn {
 		
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
 		
-		bool Move(Tile *new_tile);
+		bool Move(Tile *new_tile, Server *server, Client *client);
 		
 		void AddPower(int power);
 		bool UsePower(int power, Server *server, Client *client);
