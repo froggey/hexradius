@@ -52,7 +52,7 @@ static void join_cb(const GUI::ImgButton &button, const SDL_Event &event, void *
 		return;
 	}
 	
-	Client client(host, port, options.username);
+	Client client(host, port);
 	
 	client.run();
 	
@@ -166,7 +166,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	
 	Server server(port, scn);
 	
-	Client client("127.0.0.1", port, options.username);
+	Client client("127.0.0.1", port);
 	
 	client.run();
 	

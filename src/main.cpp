@@ -163,12 +163,12 @@ int main(int argc, char **argv) {
 		LoadScenario(scenario_name, scn);
 		Server server(port, scn);
 		
-		Client client("127.0.0.1", port, options.username);
+		Client client("127.0.0.1", port);
 		
 		client.run();
 	}
 	else if (is_client) {
-		Client client(host, port, options.username);
+		Client client(host, port);
 
 		client.run();
 	}

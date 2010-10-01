@@ -21,7 +21,7 @@ class Client {
 	public:
 		bool quit;	// Game returned due to application quit
 		
-		Client(std::string host, uint16_t port, std::string name);
+		Client(std::string host, uint16_t port);
 		~Client();
 		
 		void run();
@@ -91,8 +91,6 @@ class Client {
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_players;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_buttons;
 		std::vector<boost::shared_ptr<GUI::DropDown> > lobby_drops;
-		
-		std::string req_name;
 		
 		void net_thread_main();
 		void connect_callback(const boost::system::error_code& error);

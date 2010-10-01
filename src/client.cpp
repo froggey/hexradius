@@ -47,7 +47,7 @@ static Uint32 redraw_callback(Uint32 interval, void *param) {
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port, std::string name) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600), req_name(name) {
+Client::Client(std::string host, uint16_t port) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -99,7 +99,7 @@ void Client::connect_callback(const boost::system::error_code& error) {
 	
 	protocol::message msg;
 	msg.set_msg(protocol::INIT);
-	msg.set_player_name(req_name);
+	msg.set_player_name(options.username);
 	
 	WriteProto(msg);
 	
