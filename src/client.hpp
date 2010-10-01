@@ -72,6 +72,8 @@ class Client {
 		int xd, yd;
 		SDL_Rect board;
 		anim_set animators;
+		unsigned int torus_frame;
+		double climb_offset;
 		
 		Pawn *dpawn;
 		Pawn *mpawn;
@@ -107,7 +109,8 @@ class Client {
 		void handle_message_game(const protocol::message &msg);
 		
 		void DrawScreen(void);
-		void DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset);
+		void DrawPawn(Pawn *pawn, SDL_Rect rect, SDL_Rect base);
+		void draw_pawn_tile(Pawn *pawn, Tile *tile);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
 		
 		void lobby_regen();

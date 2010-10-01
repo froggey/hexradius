@@ -65,8 +65,9 @@ struct Tile {
 	int final_elevation;
 	
 	int screen_x, screen_y;
+	Pawn *render_pawn;
 	
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0), animating(false) {}
+	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0), render_pawn(NULL), animating(false) {}
 	~Tile();
 	
 	bool SetHeight(int h);

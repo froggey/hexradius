@@ -527,11 +527,11 @@ void Client::handle_message_game(const protocol::message &msg) {
 }
 
 void Client::DrawScreen() {
-	unsigned int torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
+	torus_frame = SDL_GetTicks() / 100 % (TORUS_FRAMES * 2);
 	if (torus_frame >= TORUS_FRAMES)
 		torus_frame = 2 * TORUS_FRAMES - torus_frame - 1;
 	
-	double climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
+	climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 	
 	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
 	SDL_Surface *tint_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
@@ -614,8 +614,10 @@ void Client::DrawScreen() {
 			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
 		}
 		
-		if((*ti)->pawn && (*ti)->pawn != dpawn) {
-			DrawPawn((*ti)->pawn, rect, torus_frame, climb_offset);
+		if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
+			draw_pawn_tile((*ti)->render_pawn, *ti);
+		}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
+			draw_pawn_tile((*ti)->pawn, *ti);
 		}
 	}
 	
@@ -628,8 +630,8 @@ void Client::DrawScreen() {
 	}
 	
 	if(dpawn) {
-		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0};
-		DrawPawn(dpawn, rect, torus_frame, climb_offset);
+		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0}, base = {0,0,50,50};
+		DrawPawn(dpawn, rect, base);
 	}
 	
 	pmenu.clear();
@@ -683,77 +685,67 @@ void Client::DrawScreen() {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, double climb_offset) {
+void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, SDL_Rect base) {
 	SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
 	SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
 	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
 	SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png");
 	
-	int teleport_y = 0;
-	SDL_Rect old_rect, old_sr = {0,0,50,50}, base_sr = {0,0,50,50};
-	bool render_teleport = false;
+	unsigned int frame = torus_frame;
 	
-	if(pawn->last_tile && pawn->teleport_time+1500 > SDL_GetTicks()) {
-		teleport_y = (SDL_GetTicks() - pawn->teleport_time) / 30;
-		
-		old_rect.x = pawn->last_tile->screen_x;
-		old_rect.y = pawn->last_tile->screen_y + teleport_y;
-		
-		old_sr.y = teleport_y;
-		old_sr.h -= teleport_y;
-		base_sr.h = teleport_y;
-		
-		render_teleport = true;
-	}
-	
-	assert(SDL_BlitSurface(shadow, &base_sr, screen, &rect) == 0);
-	
-	if(render_teleport) {
-		assert(SDL_BlitSurface(shadow, &old_sr, screen, &old_rect) == 0);
-	}
+	assert(SDL_BlitSurface(shadow, &base, screen, &rect) == 0);
 	
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 		rect.x -= climb_offset;
 		rect.y -= climb_offset;
-		
-		old_rect.x -= climb_offset;
-		old_rect.y -= climb_offset;
 	}
 	
 	if(pawn == hpawn && pawn->colour == my_colour) {
-		torus_frame = 10;
+		frame = 10;
 	}
 	else if(!(pawn->flags & HAS_POWER)) {
-		torus_frame = 0;
+		frame = 0;
 	}
 	
-	SDL_Rect srect = { torus_frame * 50, pawn->colour * 50, 50, base_sr.h };
+	SDL_Rect srect = { frame * 50, (pawn->colour * 50) + base.y, 50, base.h };
 	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 	
 	srect.x = pawn->range * 50;
-	srect.y = pawn->colour * 50;
+	srect.y = (pawn->colour * 50) + base.y;
 	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
 	
-	if(render_teleport) {
-		srect.x = torus_frame * 50;
-		srect.y = (pawn->colour * 50) + old_sr.y;
-		srect.h = old_sr.h;
-		
-		assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &old_rect) == 0);
-		
-		srect.x = pawn->range * 50;
-		srect.y = (pawn->colour * 50) + old_sr.y;
-		
-		assert(SDL_BlitSurface(range_overlay, &srect, screen, &old_rect) == 0);
-	}
-	
 	if(pawn->flags & PWR_SHIELD) {
-		assert(SDL_BlitSurface(shield, &base_sr, screen, &rect) == 0);
-		
-		if(render_teleport) {
-			assert(SDL_BlitSurface(shield, &old_sr, screen, &old_rect) == 0);
+		assert(SDL_BlitSurface(shield, &base, screen, &rect) == 0);
+	}
+}
+
+void Client::draw_pawn_tile(Pawn *pawn, Tile *tile) {
+	int teleport_y = 0;
+	SDL_Rect rect = {tile->screen_x, tile->screen_y, 0, 0}, base = {0,0,50,50};
+	
+	if(pawn->last_tile) {
+		if(pawn->teleport_time+1500 > SDL_GetTicks()) {
+			teleport_y = (SDL_GetTicks() - pawn->teleport_time) / 30;
+			
+			if(pawn->last_tile == tile) {
+				rect.y += teleport_y;
+				
+				base.y += teleport_y;
+				base.h -= teleport_y;
+			}else{
+				base.h = teleport_y;
+			}
+		}else{
+			pawn->last_tile->render_pawn = NULL;
+			pawn->last_tile = NULL;
 		}
 	}
+	
+	if(pawn->cur_tile != tile && pawn->last_tile != tile) {
+		return;
+	}
+	
+	DrawPawn(pawn, rect, base);
 }
 
 static bool ccolour_callback(const GUI::DropDown &dropdown, const GUI::DropDown::Item &item, void *arg) {
