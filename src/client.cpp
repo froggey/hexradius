@@ -689,11 +689,35 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, doubl
 	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
 	SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png");
 	
-	assert(SDL_BlitSurface(shadow, NULL, screen, &rect) == 0);
+	int teleport_y = 0;
+	SDL_Rect old_rect, old_sr = {0,0,50,50}, base_sr = {0,0,50,50};
+	bool render_teleport = false;
+	
+	if(pawn->last_tile && pawn->teleport_time+1500 > SDL_GetTicks()) {
+		teleport_y = (SDL_GetTicks() - pawn->teleport_time) / 30;
+		
+		old_rect.x = pawn->last_tile->screen_x;
+		old_rect.y = pawn->last_tile->screen_y + teleport_y;
+		
+		old_sr.y = teleport_y;
+		old_sr.h -= teleport_y;
+		base_sr.h = teleport_y;
+		
+		render_teleport = true;
+	}
+	
+	assert(SDL_BlitSurface(shadow, &base_sr, screen, &rect) == 0);
+	
+	if(render_teleport) {
+		assert(SDL_BlitSurface(shadow, &old_sr, screen, &old_rect) == 0);
+	}
 	
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 		rect.x -= climb_offset;
 		rect.y -= climb_offset;
+		
+		old_rect.x -= climb_offset;
+		old_rect.y -= climb_offset;
 	}
 	
 	if(pawn == hpawn && pawn->colour == my_colour) {
@@ -703,20 +727,32 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, unsigned int torus_frame, doubl
 		torus_frame = 0;
 	}
 	
-	SDL_Rect srect = { torus_frame * 50, pawn->colour * 50, 50, 50 };
+	SDL_Rect srect = { torus_frame * 50, pawn->colour * 50, 50, base_sr.h };
 	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
 	
 	srect.x = pawn->range * 50;
 	srect.y = pawn->colour * 50;
 	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
 	
-	if(pawn->flags & PWR_SHIELD) {
-		assert(SDL_BlitSurface(shield, NULL, screen, &rect) == 0);
+	if(render_teleport) {
+		srect.x = torus_frame * 50;
+		srect.y = (pawn->colour * 50) + old_sr.y;
+		srect.h = old_sr.h;
+		
+		assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &old_rect) == 0);
+		
+		srect.x = pawn->range * 50;
+		srect.y = (pawn->colour * 50) + old_sr.y;
+		
+		assert(SDL_BlitSurface(range_overlay, &srect, screen, &old_rect) == 0);
 	}
 	
-	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
-		rect.x += climb_offset;
-		rect.y += climb_offset;
+	if(pawn->flags & PWR_SHIELD) {
+		assert(SDL_BlitSurface(shield, &base_sr, screen, &rect) == 0);
+		
+		if(render_teleport) {
+			assert(SDL_BlitSurface(shield, &old_sr, screen, &old_rect) == 0);
+		}
 	}
 }
 

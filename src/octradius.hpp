@@ -88,7 +88,10 @@ class Pawn {
 		int range;
 		uint32_t flags;
 		
-		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0) {}
+		Tile *last_tile;
+		Uint32 teleport_time;
+		
+		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0), last_tile(NULL) {}
 		
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
 		

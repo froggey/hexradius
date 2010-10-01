@@ -291,6 +291,9 @@ namespace Powers {
 				return false;
 			}
 			
+			pawn->last_tile = pawn->cur_tile;
+			pawn->teleport_time = SDL_GetTicks();
+			
 			pawn->cur_tile->pawn = NULL;
 			tile->pawn = pawn;
 			pawn->cur_tile = tile;
