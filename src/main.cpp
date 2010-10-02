@@ -150,6 +150,8 @@ int main(int argc, char **argv) {
 	assert(TTF_Init() == 0);
 	SDL_EnableUNICODE(1);
 	
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+	
 	atexit(SDL_Quit);
 	atexit(FontStuff::FreeFonts);
 	atexit(ImgStuff::FreeImages);
