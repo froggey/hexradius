@@ -208,6 +208,8 @@ GUI::TextBox::TextBox(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g) {
 	h = ah;
 	tab_order = to;
 	
+	insert_offset = 0;
+	
 	enter_callback = NULL;
 	enter_callback_arg = NULL;
 	
@@ -221,25 +223,51 @@ GUI::TextBox::~TextBox() {
 	gui.del_thing(this);
 }
 
+void GUI::TextBox::set_text(const std::string &new_text) {
+	text = new_text;
+	insert_offset = text.length();
+}
+
 void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 	if(event.type == SDL_KEYDOWN) {
 		if(event.key.keysym.sym == SDLK_BACKSPACE) {
-			if(!text.empty()) {
-				text.erase(text.size()-1);
+			if(insert_offset > 0) {
+				text.erase(--insert_offset, 1);
 			}
 		}else if(event.key.keysym.sym == SDLK_RETURN) {
 			if(enter_callback) {
 				enter_callback(*this, event, enter_callback_arg);
 			}
+		}else if(event.key.keysym.sym == SDLK_LEFT) {
+			if(insert_offset > 0) {
+				insert_offset--;
+			}
+		}else if(event.key.keysym.sym == SDLK_RIGHT) {
+			if(insert_offset < text.length()) {
+				insert_offset++;
+			}
+		}else if(event.key.keysym.sym == SDLK_HOME) {
+			insert_offset = 0;
+		}else if(event.key.keysym.sym == SDLK_END) {
+			insert_offset = text.length();
 		}else if(isprint(event.key.keysym.sym)) {
 			if(input_callback) {
 				if(input_callback(*this, event, input_callback_arg)) {
-					text.append(1, event.key.keysym.sym);
+					text.insert(insert_offset++, 1, event.key.keysym.sym);
 				}else{
 					std::cerr << "Illegal character" << std::endl;
 				}
 			}else{
-				text.append(1, event.key.keysym.sym);
+				text.insert(insert_offset++, 1, event.key.keysym.sym);
+			}
+		}
+	}else if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
+		int fw = FontStuff::TextWidth(font, "A");
+		
+		if(event.button.y > y && event.button.y < y+h-1) {
+			for(insert_offset = 0; event.button.x > x + 2 + fw * (insert_offset+1) && insert_offset < text.length();) {
+				insert_offset++;
 			}
 		}
 	}
@@ -261,9 +289,22 @@ void GUI::TextBox::Draw() {
 	rect.y += 1;
 	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
-	SDL_Colour fc = {0,0,0,0};
 	
-	FontStuff::BlitText(screen, rect, font, fc, text);
+	FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(0,0,0), text);
+	
+	if(has_focus()) {
+		int fw = FontStuff::TextWidth(font, "A");
+		
+		rect.x += insert_offset*fw;
+		rect.w = fw;
+		rect.h = TTF_FontHeight(font);
+		
+		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+		
+		if(insert_offset < text.length()) {
+			FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(255,255,255), text.substr(insert_offset, 1));
+		}
+	}
 }
 
 GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, int to, std::string txt) : gui(g) {

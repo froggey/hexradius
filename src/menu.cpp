@@ -121,7 +121,7 @@ JoinMenu::JoinMenu() : gui(0, 0, MENU_WIDTH, MENU_HEIGHT) {
 	port_input->enter_callback = &join_textbox_enter;
 	port_input->enter_callback_arg = this;
 	port_input->input_callback = &port_input_filter;
-	port_input->text = to_string(DEFAULT_PORT);
+	port_input->set_text(to_string(DEFAULT_PORT));
 	
 	join_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/join_game.png"), 350, 350, 3, &join_cb, this);
 	back_btn = new GUI::ImgButton(gui, ImgStuff::GetImage("graphics/menu/back.png"), 0, 570, 4, &back_cb);
@@ -195,10 +195,10 @@ HostMenu::HostMenu() :
 	gui.set_quit_callback(&app_quit_cb);
 	
 	port_label.align(GUI::RIGHT);
-	port_input.text = to_string(DEFAULT_PORT);
+	port_input.set_text(to_string(DEFAULT_PORT));
 	
 	scenario_label.align(GUI::RIGHT);
-	scenario_input.text = "scenario/hex_2p.txt";
+	scenario_input.set_text("scenario/hex_2p.txt");
 }
 
 void HostMenu::run() {

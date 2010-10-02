@@ -76,6 +76,7 @@ class GUI {
 		GUI &gui;
 		
 		std::string text;
+		unsigned int insert_offset;
 		
 		void_callback enter_callback;
 		void *enter_callback_arg;
@@ -85,6 +86,8 @@ class GUI {
 		
 		TextBox(GUI &g, int ax, int ay, int aw, int ah, int to);
 		~TextBox();
+		
+		void set_text(const std::string &new_text);
 		
 		void HandleEvent(const SDL_Event &event);
 		void Draw();
