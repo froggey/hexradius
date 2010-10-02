@@ -21,12 +21,24 @@ class GUI {
 		virtual void HandleEvent(const SDL_Event &event) {};
 		virtual void Draw() {};
 		
+		GUI &gui;
+		
 		int x, y, w, h;
 		int tab_order;
 		bool enabled;
 		
-		Thing() : enabled(true) {}
+		Thing(GUI &g) : gui(g), enabled(true) {}
 		
+		void enable(bool enable) {
+			enabled = enable;
+		}
+		
+		bool has_focus() {
+			return gui.v_focus && *(gui.focus) == this;
+		}
+	};
+	
+	struct thing_compare {
 		bool operator()(const Thing *left, const Thing *right) {
 			if(left->tab_order == 0 && right->tab_order == 0) {
 				return left < right;
@@ -34,22 +46,10 @@ class GUI {
 			
 			return left->tab_order < right->tab_order;
 		}
-		
-		void enable(bool enable) {
-			enabled = enable;
-		}
-		
-		virtual bool has_focus() { return false; };
-		
-		bool r_has_focus(GUI &gui) {
-			return gui.v_focus && *(gui.focus) == this;
-		}
 	};
 	
 	struct ImgButton : Thing {
 		typedef void (*callback_f)(const ImgButton &button, const SDL_Event &event, void *arg);
-		
-		GUI &gui;
 		
 		callback_f callback;
 		void *callback_arg;
@@ -63,17 +63,11 @@ class GUI {
 		
 		void HandleEvent(const SDL_Event &event);
 		void Draw();
-		
-		bool has_focus() {
-			return r_has_focus(gui);
-		}
 	};
 	
 	struct TextBox : Thing {
 		typedef bool (*bool_callback)(const TextBox &tbox, const SDL_Event &event, void *arg);
 		typedef void (*void_callback)(const TextBox &tbox, const SDL_Event &event, void *arg);
-		
-		GUI &gui;
 		
 		std::string text;
 		unsigned int insert_offset;
@@ -91,15 +85,9 @@ class GUI {
 		
 		void HandleEvent(const SDL_Event &event);
 		void Draw();
-		
-		bool has_focus() {
-			return r_has_focus(gui);
-		}
 	};
 	
 	struct TextDisplay : Thing {
-		GUI &gui;
-		
 		std::string text;
 		TTF_Font *font;
 		SDL_Colour colour;
@@ -112,8 +100,6 @@ class GUI {
 	
 	struct TextButton : Thing {
 		typedef void (*void_callback)(const TextButton &button, const SDL_Event &event, void *arg);
-		
-		GUI &gui;
 		
 		std::string m_text;
 		TTF_Font *m_font;
@@ -152,10 +138,6 @@ class GUI {
 		
 		void Draw();
 		void HandleEvent(const SDL_Event &event);
-		
-		bool has_focus() {
-			return r_has_focus(gui);
-		}
 	};
 	
 	struct DropDown : Thing {
@@ -171,8 +153,6 @@ class GUI {
 		typedef bool (*bool_callback)(const GUI::DropDown &drop, const Item &item, void *arg);
 		
 		typedef std::vector<Item> item_list;
-		
-		GUI &gui;
 		
 		TextButton button;
 		
@@ -191,13 +171,9 @@ class GUI {
 		void HandleEvent(const SDL_Event &event);
 		
 		void select(item_list::iterator item);
-		
-		bool has_focus() {
-			return r_has_focus(gui);
-		}
 	};
 	
-	typedef std::set<Thing*,Thing> thing_set;
+	typedef std::set<Thing*,thing_compare> thing_set;
 	
 	public:
 		typedef void (*void_callback)(const GUI &gui, const SDL_Event &event, void *arg);

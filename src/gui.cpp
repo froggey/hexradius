@@ -163,7 +163,7 @@ void GUI::focus_next() {
 	}
 }
 
-GUI::ImgButton::ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_f cb, void *arg) : gui(_gui), callback(cb), callback_arg(arg), image(img) {
+GUI::ImgButton::ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_f cb, void *arg) : Thing(_gui), callback(cb), callback_arg(arg), image(img) {
 	x = ax;
 	y = ay;
 	w = image->w;
@@ -201,7 +201,7 @@ void GUI::ImgButton::Draw() {
 	assert(SDL_BlitSurface(image, NULL, screen, &rect) == 0);
 }
 
-GUI::TextBox::TextBox(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g) {
+GUI::TextBox::TextBox(GUI &g, int ax, int ay, int aw, int ah, int to) : Thing(g) {
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = aw;
@@ -307,7 +307,7 @@ void GUI::TextBox::Draw() {
 	}
 }
 
-GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, int to, std::string txt) : gui(g) {
+GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, int to, std::string txt) : Thing(g) {
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = h = 0;
@@ -330,7 +330,7 @@ void GUI::TextDisplay::Draw() {
 	FontStuff::BlitText(screen, rect, font, colour, text);
 }
 
-GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback, void *callback_arg) : gui(g) {
+GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback, void *callback_arg) : Thing(g) {
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = aw;
@@ -407,7 +407,7 @@ void GUI::TextButton::HandleEvent(const SDL_Event &event) {
 	}
 }
 
-GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : gui(g), button(g, ax, ay, aw-ah, ah, 0, "UNSET") {
+GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : Thing(g), button(g, ax, ay, aw-ah, ah, 0, "UNSET") {
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = aw;
