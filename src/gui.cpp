@@ -250,6 +250,10 @@ void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 			insert_offset = 0;
 		}else if(event.key.keysym.sym == SDLK_END) {
 			insert_offset = text.length();
+		}else if(event.key.keysym.sym == SDLK_DELETE) {
+			if(insert_offset < text.length()) {
+				text.erase(insert_offset, 1);
+			}
 		}else if(isprint(event.key.keysym.sym)) {
 			if(input_callback) {
 				if(input_callback(*this, event, input_callback_arg)) {
