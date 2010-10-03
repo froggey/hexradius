@@ -108,6 +108,9 @@ class GUI {
 		SDL_Colour m_bgc;
 		bool m_borders;
 		
+		uint8_t m_opacity;
+		SDL_Surface *m_bgs;
+		
 		void_callback m_callback;
 		void *m_arg;
 		
@@ -130,10 +133,12 @@ class GUI {
 		
 		void set_bg_colour(int r, int g, int b) {
 			m_bgc = ImgStuff::Colour(r, g, b);
+			assert(SDL_FillRect(m_bgs, NULL, ImgStuff::MapColour(m_bgc)) == 0);
 		}
 		
 		void set_bg_colour(const SDL_Colour &colour) {
 			m_bgc = colour;
+			assert(SDL_FillRect(m_bgs, NULL, ImgStuff::MapColour(m_bgc)) == 0);
 		}
 		
 		void Draw();

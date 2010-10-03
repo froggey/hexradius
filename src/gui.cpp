@@ -342,6 +342,11 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	m_fgc = ImgStuff::Colour(255, 255, 255);
 	m_bgc = ImgStuff::Colour(0, 0, 0);
 	m_borders = true;
+	m_opacity = 178;
+	
+	assert((m_bgs = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, screen->format->BitsPerPixel, 0, 0, 0, 0)));
+	assert(SDL_SetAlpha(m_bgs, SDL_SRCALPHA, m_opacity) == 0);
+	assert(SDL_FillRect(m_bgs, NULL, ImgStuff::MapColour(m_bgc)) == 0);
 	
 	m_text = text;
 	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 18);
@@ -353,12 +358,13 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 
 GUI::TextButton::~TextButton() {
 	gui.del_thing(this);
+	SDL_FreeSurface(m_bgs);
 }
 
 void GUI::TextButton::Draw() {
 	SDL_Rect rect = {x, y, w, h};
 	
-	assert(SDL_FillRect(screen, &rect, ImgStuff::MapColour(m_bgc)) == 0);
+	assert(SDL_BlitSurface(m_bgs, NULL, screen, &rect) == 0);
 	
 	if(m_borders) {
 		Uint32 bcolour = has_focus() ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
