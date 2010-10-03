@@ -152,10 +152,6 @@ int main(int argc, char **argv) {
 	
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 	
-	atexit(SDL_Quit);
-	atexit(FontStuff::FreeFonts);
-	atexit(ImgStuff::FreeImages);
-	
 	SDL_WM_SetCaption("OctRadius", "OctRadius");
 	
 	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
@@ -178,6 +174,10 @@ int main(int argc, char **argv) {
 		MainMenu menu;
 		menu.run();
 	}
+	
+	ImgStuff::FreeImages();
+	FontStuff::FreeFonts();
+	SDL_Quit();
 	
 	return 0;
 }
