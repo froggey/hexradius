@@ -285,10 +285,11 @@ void GUI::TextBox::Draw() {
 	
 	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 255, 255, 255)) == 0);
 	
-	rect.x += 1;
-	rect.y += 1;
-	
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
+	int fh = TTF_FontHeight(font);
+	
+	rect.x = x + (h - fh) / 2;
+	rect.y = y + (h - fh) / 2;
 	
 	FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(0,0,0), text);
 	
@@ -297,7 +298,7 @@ void GUI::TextBox::Draw() {
 		
 		rect.x += insert_offset*fw;
 		rect.w = fw;
-		rect.h = TTF_FontHeight(font);
+		rect.h = fh;
 		
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
 		
