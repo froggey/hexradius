@@ -8,6 +8,7 @@
 #include <map>
 #include <SDL/SDL_ttf.h>
 #include <math.h>
+#include <boost/program_options.hpp>
 
 #ifdef _WIN32
 /* Including windows.h here makes it error when ASIO includes winsock.h since
@@ -25,6 +26,8 @@
 #include "client.hpp"
 #include "menu.hpp"
 #include "gui.hpp"
+
+namespace po = boost::program_options;
 
 const char *team_names[] = { "Blue", "Red", "Green", "Yellow", "Purple", "Orange", "Spectator" };
 const SDL_Colour team_colours[] = { {0,0,255}, {255,0,0}, {0,255,0}, {255,255,0}, {160,32,240}, {255,165,0}, {190,190,190} };
@@ -122,28 +125,31 @@ int main(int argc, char **argv) {
 	options.save("options.txt");
 	
 	Scenario scn;
-	const char* scenario_name = "scenario/default.txt";
-	const char* host;
-	int port;
-	bool is_server = false;
-	bool is_client = false;
+	uint16_t port;
+	std::string hostname, scenario;
 	
-	for(int i = 1; i < argc; i++) {
-		if(strcmp(argv[i], "-s") == 0) {
-			host = "127.0.0.1";
-			port = atoi(argv[++i]);
-			scenario_name = argv[++i];
-			is_server = true;
-		}
-		else if(strcmp(argv[i], "-c") == 0) {
-			host = argv[++i];
-			port = atoi(argv[++i]);
-			is_client = true;
-		}
-		else {
-			std::cerr << "Unrecognized option " << argv[i] << ", learn to type kthx" << std::endl;
-			return 1;
-		}
+	po::options_description desc("Command line options");
+	desc.add_options()
+			("help", "Display this message")
+			("connect,c", po::value<std::string>(&hostname), "Connect to server")
+			("host,h", po::value<std::string>(&scenario), "Host game with supplied scenario")
+			("port,p", po::value<uint16_t>(&port)->default_value(DEFAULT_PORT), std::string("Set TCP port (default is " + to_string(DEFAULT_PORT) + ")").c_str())
+	;
+	
+	po::variables_map vm;
+	
+	try {
+		po::store(po::parse_command_line(argc, argv, desc), vm);
+		po::notify(vm);
+	} catch(po::error e) {
+		std::cerr << e.what() << std::endl;
+		std::cerr << "Run " << argv[0] << " --help for usage" << std::endl;
+		return 1;
+	}
+	
+	if(vm.count("help")) {
+		std::cout << desc << std::endl;
+		return 0;
 	}
 	
 	assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0);
@@ -157,20 +163,18 @@ int main(int argc, char **argv) {
 	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
 	assert(screen != NULL);
 	
-	if (is_server) {
-		LoadScenario(scenario_name, scn);
+	if(vm.count("host")) {
+		LoadScenario(scenario, scn);
 		Server server(port, scn);
 		
 		Client client("127.0.0.1", port);
 		
 		client.run();
-	}
-	else if (is_client) {
-		Client client(host, port);
-
+	}else if(vm.count("connect")) {
+		Client client(hostname, port);
+		
 		client.run();
-	}
-	else {
+	}else{
 		MainMenu menu;
 		menu.run();
 	}
@@ -220,8 +224,6 @@ void options::load(std::string filename) {
 		
 		std::string name(buf, len);
 		std::string val(eq+1);
-		
-		std::cout << "Option '" << name << "' = '" << val << "'" << std::endl;
 		
 		if(name == "username") {
 			username = val;
