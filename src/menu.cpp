@@ -10,6 +10,7 @@
 #include "loadimage.hpp"
 #include "network.hpp"
 #include "gui.hpp"
+#include "scenario.hpp"
 
 static bool running, submenu;
 
@@ -161,8 +162,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	}
 	
 	Scenario scn;
-	
-	LoadScenario(scenario, scn);
+	scn.load_file(scenario);
 	
 	Server server(port, scn);
 	

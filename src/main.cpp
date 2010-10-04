@@ -26,6 +26,7 @@
 #include "client.hpp"
 #include "menu.hpp"
 #include "gui.hpp"
+#include "scenario.hpp"
 
 namespace po = boost::program_options;
 
@@ -34,97 +35,12 @@ const SDL_Colour team_colours[] = { {0,0,255}, {255,0,0}, {0,255,0}, {255,255,0}
 
 struct options options;
 
-static char *next_value(char *str) {
-	char *r = str+strcspn(str, "\t ");
-	
-	if(r[0]) {
-		r[0] = '\0';
-		r += strspn(r+1, "\t ")+1;
-	}
-	
-	return r;
-}
-
-void LoadScenario(std::string filename, Scenario &sc) {
-	std::fstream file(filename.c_str(), std::fstream::in);
-	assert(file.is_open());
-	
-	char buf[1024], *bp;
-	
-	while(file.good()) {
-		file.getline(buf, sizeof(buf));
-		buf[strcspn(buf, "\n")] = '\0';
-		
-		bp = next_value(buf);
-		std::string name = buf;
-		
-		if(name == "GRID") {
-			int cols = atoi(bp);
-			int rows = atoi(next_value(bp));
-			
-			assert(cols > 0 && rows > 0);
-			
-			for(int r = 0; r < rows; r++) {
-				for(int c = 0; c < cols; c++) {
-					sc.tiles.push_back(new Tile(c, r, 0));
-				}
-			}
-		}
-		else if(name == "SPAWN") {
-			/* SPAWN x y c */
-			
-			int x = atoi(bp);
-			int y = atoi((bp = next_value(bp)));
-			int c = atoi((bp = next_value(bp)));
-			
-			Tile *tile = FindTile(sc.tiles, x, y);
-			assert(tile);
-			
-			tile->pawn = new Pawn((PlayerColour)c, sc.tiles, tile);
-		}
-		else if(name == "HOLE") {
-			int x = atoi(bp);
-			int y = atoi(next_value(bp));
-			
-			Tile::List::iterator i = sc.tiles.begin();
-			
-			while(i != sc.tiles.end()) {
-				if((*i)->col == x && (*i)->row == y) {
-					delete *i;
-					sc.tiles.erase(i);
-					
-					break;
-				}
-				
-				i++;
-			}
-		}
-		else if(name == "POWER") {
-			int i = atoi(bp);
-			int p = atoi(next_value(bp));
-			assert(i < Powers::num_powers);
-			Powers::powers[i].spawn_rate = p;
-		}
-		else if(name == "HEIGHT") {
-			int x = atoi(bp);
-			int y = atoi((bp = next_value(bp)));
-			int h = atoi((bp = next_value(bp)));
-			
-			Tile *tile = FindTile(sc.tiles, x, y);
-			assert(tile);
-			
-			tile->height = h >= -2 && h <= 2? h : 0;
-		}
-	}
-}
-
 int main(int argc, char **argv) {
 	srand(time(NULL));
 	
 	options.load("options.txt");
 	options.save("options.txt");
 	
-	Scenario scn;
 	uint16_t port;
 	std::string hostname, scenario;
 	
@@ -164,7 +80,9 @@ int main(int argc, char **argv) {
 	assert(screen != NULL);
 	
 	if(vm.count("host")) {
-		LoadScenario(scenario, scn);
+		Scenario scn;
+		scn.load_file(scenario);
+		
 		Server server(port, scn);
 		
 		Client client("127.0.0.1", port);

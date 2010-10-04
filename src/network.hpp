@@ -14,6 +14,7 @@
 
 #include "octradius.pb.h"
 #include "octradius.hpp"
+#include "scenario.hpp"
 
 class Server {
 	struct Client : public boost::enable_shared_from_this<Server::Client> {

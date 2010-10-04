@@ -116,29 +116,6 @@ void FreeTiles(Tile::List &tiles);
 void CopyTiles(Tile::List &dest, const Tile::List &src);
 void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
-struct Scenario {
-	Tile::List tiles;
-	
-	Scenario() {}
-	
-	~Scenario() {
-		FreeTiles(tiles);
-	}
-	
-	Scenario &operator=(const Scenario &s) {
-		if(this != &s) {
-			CopyTiles(tiles, s.tiles);
-		}
-		
-		return *this;
-	}
-	
-	Scenario(const Scenario &s) {
-		CopyTiles(tiles, s.tiles);
-	}
-};
-void LoadScenario(std::string filename, Scenario &sc);
-
 struct options {
 	std::string username;
 	bool show_lines;
