@@ -53,6 +53,7 @@ struct HostMenu {
 	GUI::TextBox scenario_input;
 	
 	GUI::TextButton host_btn;
+	GUI::TextButton back_btn;
 	
 	HostMenu();
 	

@@ -180,6 +180,10 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	submenu = false;
 }
 
+static void host_back_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+	submenu = false;
+}
+
 HostMenu::HostMenu() :
 		gui(0, 0, MENU_WIDTH, MENU_HEIGHT),
 		
@@ -189,7 +193,8 @@ HostMenu::HostMenu() :
 		scenario_label(gui, 245, 277, 100, 25, 0, "Scenario:"),
 		scenario_input(gui, 355, 277, 200, 25, 2),
 		
-		host_btn(gui, 332, 322, 135, 35, 3, "Host Game", &host_cb, this)
+		host_btn(gui, 332, 322, 135, 35, 3, "Host Game", &host_cb, this),
+		back_btn(gui, 20, 545, 135, 35, 4, "Back", &host_back_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);

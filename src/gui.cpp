@@ -352,7 +352,7 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	assert(SDL_FillRect(m_bgs, NULL, ImgStuff::MapColour(m_bgc)) == 0);
 	
 	m_text = text;
-	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 18);
+	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 16);
 	m_callback = callback;
 	m_arg = callback_arg;
 	
