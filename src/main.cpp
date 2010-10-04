@@ -76,8 +76,7 @@ int main(int argc, char **argv) {
 	
 	SDL_WM_SetCaption("HexRadius", "HexRadius");
 	
-	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
-	assert(screen != NULL);
+	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 	
 	if(vm.count("host")) {
 		Scenario scn;

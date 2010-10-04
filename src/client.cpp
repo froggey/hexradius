@@ -367,8 +367,7 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		screen_w = board.w;
 		screen_h = board.h+bskip;
 		
-		screen = SDL_SetVideoMode(screen_w, screen_h, 0, SDL_SWSURFACE);
-		assert(screen != NULL);
+		ImgStuff::set_mode(screen_w, screen_h);
 	}else if(msg.msg() == protocol::GINFO) {
 		state = LOBBY;
 		
@@ -519,8 +518,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		state = LOBBY;
 		FreeTiles(tiles);
 		
-		screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
-		assert(screen != NULL);
+		ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}

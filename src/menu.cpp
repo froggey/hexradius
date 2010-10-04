@@ -89,8 +89,7 @@ static void join_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 		running = false;
 	}
 	
-	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
-	assert(screen != NULL);
+	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 	
 	submenu = false;
 }
@@ -157,8 +156,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 		running = false;
 	}
 	
-	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
-	assert(screen != NULL);
+	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 	
 	submenu = false;
 }

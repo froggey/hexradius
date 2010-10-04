@@ -9,6 +9,7 @@
 #include "loadimage.hpp"
 
 SDL_Surface *screen = NULL;
+int screen_w = -1, screen_h = -1;
 
 struct image_cache_key {
 	std::string filename;
@@ -203,4 +204,14 @@ void ImgStuff::draw_rect(SDL_Rect rect, const SDL_Colour &colour, uint8_t alpha)
 	assert(SDL_BlitSurface(s, NULL, screen, &rect) == 0);
 	
 	SDL_FreeSurface(s);
+}
+
+void ImgStuff::set_mode(int w, int h) {
+	if(w != screen_w || h != screen_h) {
+		screen = SDL_SetVideoMode(w, h, 0, SDL_SWSURFACE);
+		assert(screen != NULL);
+		
+		screen_w = w;
+		screen_h = h;
+	}
 }
