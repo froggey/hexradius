@@ -14,12 +14,11 @@ const int MENU_DELAY = 50;
 
 struct MainMenu {
 	GUI gui;
-	GUI::ImgButton *join_btn;
-	GUI::ImgButton *host_btn;
-	GUI::ImgButton *quit_btn;
+	GUI::TextButton join_btn;
+	GUI::TextButton host_btn;
+	GUI::TextButton quit_btn;
 	
 	MainMenu();
-	~MainMenu();
 	
 	void run();
 };
@@ -27,18 +26,16 @@ struct MainMenu {
 struct JoinMenu {
 	GUI gui;
 	
-	GUI::ImgButton *host_label;
-	GUI::TextBox *host_input;
+	GUI::TextButton host_label;
+	GUI::TextBox host_input;
 	
-	GUI::ImgButton *port_label;
-	GUI::TextBox *port_input;
+	GUI::TextButton port_label;
+	GUI::TextBox port_input;
 	
-	GUI::ImgButton *join_btn;
-	GUI::ImgButton *back_btn;
-	GUI::ImgButton *quit_btn;
+	GUI::TextButton join_btn;
+	GUI::TextButton back_btn;
 	
 	JoinMenu();
-	~JoinMenu();
 	
 	void run();
 };
