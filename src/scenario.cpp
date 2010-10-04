@@ -130,11 +130,11 @@ void Scenario::load_file(std::string filename) {
 void Scenario::store_proto(protocol::message &msg) {
 	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
 		msg.add_tiles();
-		(*t)->CopyToProto(msg.mutable_tiles(msg.tiles_size()));
+		(*t)->CopyToProto(msg.mutable_tiles(msg.tiles_size()-1));
 		
 		if((*t)->pawn) {
 			msg.add_pawns();
-			(*t)->pawn->CopyToProto(msg.mutable_pawns(msg.pawns_size()), false);
+			(*t)->pawn->CopyToProto(msg.mutable_pawns(msg.pawns_size()-1), false);
 		}
 	}
 }

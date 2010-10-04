@@ -393,6 +393,8 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 			ginfo.mutable_players(i)->set_id((*c)->id);
 		}
 		
+		scenario.store_proto(ginfo);
+		
 		client->Write(ginfo);
 		
 		protocol::message pjoin;

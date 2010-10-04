@@ -16,6 +16,7 @@
 #include "octradius.pb.h"
 #include "gui.hpp"
 #include "animator.hpp"
+#include "scenario.hpp"
 
 class Client {
 	public:
@@ -65,6 +66,7 @@ class Client {
 		uint16_t my_id, turn;
 		player_set players;
 		enum { CONNECTING, LOBBY, GAME } state;
+		Scenario scenario;
 		
 		int screen_w, screen_h;
 		bool screen_set;

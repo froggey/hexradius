@@ -374,7 +374,7 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		
 		my_id = msg.player_id();
 		
-		std::cout << "My ID = " << my_id << std::endl;
+		scenario.load_proto(msg);
 		
 		for(int i = 0; i < msg.players_size(); i++) {
 			Player p;
@@ -770,10 +770,15 @@ void Client::lobby_regen() {
 			boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
 			
 			for(int i = 0; i < 7; i++) {
-				pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i], p->id, i));
+				if(i == SPECTATE || scenario.colours.find((PlayerColour)i) != scenario.colours.end()) {
+					pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i], p->id, i));
+					
+					if(p->colour == i) {
+						pc->select(pc->items.end()-1);
+					}
+				}
 			}
 			
-			pc->select(pc->items.begin()+p->colour);
 			pc->callback = &ccolour_callback;
 			pc->callback_arg = this;
 			
