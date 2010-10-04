@@ -116,14 +116,12 @@ JoinMenu::JoinMenu() :
 	gui.set_quit_callback(&app_quit_cb);
 	
 	host_label.align(GUI::RIGHT);
-	host_input.enter_callback = &join_textbox_enter;
-	host_input.enter_callback_arg = this;
+	host_input.set_enter_callback(&join_textbox_enter, this);
 	
 	port_label.align(GUI::RIGHT);
 	port_input.set_text(to_string(DEFAULT_PORT));
-	port_input.enter_callback = &join_textbox_enter;
-	port_input.enter_callback_arg = this;
-	port_input.input_callback = &port_input_filter;
+	port_input.set_enter_callback(&join_textbox_enter, this);
+	port_input.set_input_callback(&port_input_filter);
 }
 
 void JoinMenu::run() {
@@ -187,14 +185,12 @@ HostMenu::HostMenu() :
 	
 	port_label.align(GUI::RIGHT);
 	port_input.set_text(to_string(DEFAULT_PORT));
-	port_input.enter_callback = &host_textbox_enter;
-	port_input.enter_callback_arg = this;
-	port_input.input_callback = &port_input_filter;
+	port_input.set_enter_callback(&host_textbox_enter, this);
+	port_input.set_input_callback(&port_input_filter);
 	
 	scenario_label.align(GUI::RIGHT);
 	scenario_input.set_text("scenario/hex_2p.txt");
-	scenario_input.enter_callback = &host_textbox_enter;
-	scenario_input.enter_callback_arg = this;
+	scenario_input.set_enter_callback(&host_textbox_enter, this);
 }
 
 void HostMenu::run() {

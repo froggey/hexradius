@@ -81,6 +81,16 @@ class GUI {
 		
 		void set_text(const std::string &new_text);
 		
+		void set_enter_callback(void_callback callback, void *arg = NULL) {
+			enter_callback = callback;
+			enter_callback_arg = arg;
+		}
+		
+		void set_input_callback(bool_callback callback, void *arg = NULL) {
+			input_callback = callback;
+			input_callback_arg = arg;
+		}
+		
 		void HandleEvent(const SDL_Event &event);
 		void Draw();
 	};
