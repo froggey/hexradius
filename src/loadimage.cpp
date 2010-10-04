@@ -8,7 +8,7 @@
 
 #include "loadimage.hpp"
 
-extern SDL_Surface *screen;
+SDL_Surface *screen = NULL;
 
 struct image_cache_key {
 	std::string filename;
@@ -191,4 +191,16 @@ void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
 
 Uint32 ImgStuff::MapColour(SDL_Colour &colour) {
 	return SDL_MapRGB(screen->format, colour.r, colour.g, colour.b);
+}
+
+void ImgStuff::draw_rect(SDL_Rect rect, const SDL_Colour &colour, uint8_t alpha) {
+	SDL_Surface *s = SDL_CreateRGBSurface(SDL_SWSURFACE, rect.w, rect.h, screen->format->BitsPerPixel, 0, 0, 0, 0);
+	assert(s);
+	
+	assert(SDL_FillRect(s, NULL, SDL_MapRGB(s->format, colour.r, colour.g, colour.b)) == 0);
+	assert(SDL_SetAlpha(s, SDL_SRCALPHA, alpha) == 0);
+	
+	assert(SDL_BlitSurface(s, NULL, screen, &rect) == 0);
+	
+	SDL_FreeSurface(s);
 }

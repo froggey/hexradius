@@ -9,8 +9,6 @@
 #include "fontstuff.hpp"
 #include "loadimage.hpp"
 
-SDL_Surface *screen = NULL;
-
 GUI::GUI(int ax, int ay, int aw, int ah) : x(ax), y(ay), w(aw), h(ah), v_focus(false), quit_callback(NULL) {
 	set_bg_colour(0, 0, 0);
 }

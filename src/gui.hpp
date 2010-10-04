@@ -10,8 +10,6 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-extern SDL_Surface *screen;
-
 class GUI {
 	public:
 	

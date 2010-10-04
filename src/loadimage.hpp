@@ -3,6 +3,8 @@
 
 #include <SDL/SDL.h>
 
+extern SDL_Surface *screen;
+
 namespace ImgStuff {
 	struct TintValues {
 		int r, g, b, a;
@@ -43,6 +45,8 @@ namespace ImgStuff {
 	void SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 	void TintSurface(SDL_Surface *surface, const TintValues &tint);
 	Uint32 MapColour(SDL_Colour &colour);
+	
+	void draw_rect(SDL_Rect rect, const SDL_Colour &colour, uint8_t alpha = 255);
 }
 
 #endif /* !OR_LOADIMAGE_HPP */
