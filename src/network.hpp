@@ -78,6 +78,7 @@ class Server {
 		boost::thread worker;
 		
 		client_set clients;
+		uint16_t idcounter;
 		
 		Scenario scenario;
 		

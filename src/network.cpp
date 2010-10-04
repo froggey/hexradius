@@ -9,11 +9,19 @@
 #include "octradius.pb.h"
 #include "powers.hpp"
 
-Server::Server(uint16_t port, Scenario &s)
-	: acceptor(io_service), scenario(s), turn(clients.end()), state(LOBBY), pspawn_turns(1), pspawn_num(1) {
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
-	
+Server::Server(uint16_t port, Scenario &s) : acceptor(io_service) {
+	scenario = s;
 	CopyTiles(tiles, scenario.tiles);
+	
+	idcounter = 0;
+	
+	turn = clients.end();
+	state = LOBBY;
+	
+	pspawn_turns = 1;
+	pspawn_num = 1;
+	
+	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	
 	acceptor.open(endpoint.protocol());
 	acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
@@ -64,8 +72,6 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 		
 		return;
 	}
-	
-	static uint16_t idcounter = 0;
 	
 	std::pair<client_set::iterator,bool> ir;
 	
