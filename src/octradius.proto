@@ -17,6 +17,8 @@ enum msgtype {
 			// unless is_draw is true. Return to lobby.
 	CCOLOUR = 11;	// Change a single player's colour, can be used by host
 			// or the target player.
+	CHAT = 12;	// Chat message - Message text is in message and player_id
+			// will be set by server when redistributing the message.
 	
 	MOVE = 21;	// Move a single pawn
 	USE = 22;	// Use a power
@@ -92,4 +94,5 @@ message message {
 	optional string quit_msg = 11;
 	optional bool is_draw = 12;
 	repeated uint32 power_rand_vals = 13;
+	optional string msgtext = 14;
 }

@@ -132,6 +132,16 @@ void Server::Client::FinishRead(const boost::system::error_code& error, ptr cptr
 }
 
 bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &msg) {
+	if(msg.msg() == protocol::CHAT) {
+		protocol::message chat;
+		chat.set_msgtext(msg.msgtext());
+		chat.set_player_id(client->id);
+		
+		WriteAll(chat);
+		
+		return true;
+	}
+	
 	if(state == LOBBY) {
 		return handle_msg_lobby(client, msg);
 	}else{
