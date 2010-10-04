@@ -413,6 +413,10 @@ void GUI::TextButton::HandleEvent(const SDL_Event &event) {
 		if(event.button.x == x_down && event.button.y == y_down && m_callback) {
 			m_callback(*this, event, m_arg);
 		}
+	}else if(event.type == SDL_KEYDOWN) {
+		if((event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_SPACE) && m_callback) {
+			m_callback(*this, event, m_arg);
+		}
 	}
 }
 
