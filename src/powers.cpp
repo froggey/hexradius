@@ -131,7 +131,7 @@ namespace Powers {
 		bool ret = false;
 		
 		for(; i != tiles.end(); i++) {
-			ret = (ret || (*i)->SetHeight(2));
+			ret = ((*i)->SetHeight(2) || ret);
 		}
 		
 		return ret;
@@ -142,7 +142,7 @@ namespace Powers {
 		bool ret = false;
 		
 		for(; i != tiles.end(); i++) {
-			ret = (ret || (*i)->SetHeight(-2));
+			ret = ((*i)->SetHeight(-2) || ret);
 		}
 		
 		return ret;
