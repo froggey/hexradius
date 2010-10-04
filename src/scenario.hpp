@@ -2,6 +2,7 @@
 #define OR_SCENARIO_HPP
 
 #include "octradius.hpp"
+#include "octradius.pb.h"
 
 struct Scenario {
 	Tile::List tiles;
@@ -22,6 +23,9 @@ struct Scenario {
 	}
 	
 	void load_file(std::string filename);
+	
+	void store_proto(protocol::message &msg);
+	void load_proto(const protocol::message &msg);
 	
 	Scenario(const Scenario &s) {
 		CopyTiles(tiles, s.tiles);

@@ -126,3 +126,48 @@ void Scenario::load_file(std::string filename) {
 		throw std::runtime_error(filename + ": No GRID directive used");
 	}
 }
+
+void Scenario::store_proto(protocol::message &msg) {
+	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
+		msg.add_tiles();
+		(*t)->CopyToProto(msg.mutable_tiles(msg.tiles_size()));
+		
+		if((*t)->pawn) {
+			msg.add_pawns();
+			(*t)->pawn->CopyToProto(msg.mutable_pawns(msg.pawns_size()), false);
+		}
+	}
+}
+
+void Scenario::load_proto(const protocol::message &msg) {
+	FreeTiles(tiles);
+	colours.clear();
+	
+	for(int i = 0; i < msg.tiles_size(); i++) {
+		tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
+	}
+	
+	for(int i = 0; i < msg.pawns_size(); i++) {
+		PlayerColour c = (PlayerColour)msg.pawns(i).colour();
+		
+		if(c < BLUE || c > ORANGE) {
+			std::cerr << "Recieved pawn with invalid colour, ignoring" << std::endl;
+			continue;
+		}
+		
+		Tile *tile = FindTile(tiles, msg.pawns(i).col(), msg.pawns(i).row());
+		
+		if(!tile) {
+			std::cerr << "Recieved pawn with invalid location, ignoring" << std::endl;
+			continue;
+		}
+		
+		if(tile->pawn) {
+			std::cerr << "Recieved multiple pawns on a tile, ignoring" << std::endl;
+			continue;
+		}
+		
+		tile->pawn = new Pawn(c, tiles, tile);
+		colours.insert(c);
+	}
+}
