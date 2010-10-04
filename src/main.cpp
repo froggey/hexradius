@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 	
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 	
-	SDL_WM_SetCaption("OctRadius", "OctRadius");
+	SDL_WM_SetCaption("HexRadius", "HexRadius");
 	
 	screen = SDL_SetVideoMode(MENU_WIDTH, MENU_HEIGHT, 0, SDL_SWSURFACE);
 	assert(screen != NULL);

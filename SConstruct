@@ -4,4 +4,4 @@ env = Environment(
 )
 env.Command(['src/octradius.pb.cc', 'src/octradius.pb.h'], 'src/octradius.proto',
 	['protoc --cpp_out=. $SOURCE', '''sed -e 's:#include "src/octradius.pb.h":#include "octradius.pb.h":' -i $TARGET'''])
-env.Program('octradius', Glob('src/*.cpp') + Glob('src/*.cc'))
+env.Program('hexradius', Glob('src/*.cpp') + Glob('src/*.cc'))
