@@ -517,3 +517,69 @@ void GUI::DropDown::select(item_list::iterator item) {
 		selected = item;
 	}
 }
+
+GUI::Checkbox::Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state) : Thing(g) {
+	x = gui.x + ax;
+	y = gui.y + ay;
+	w = aw;
+	h = ah;
+	tab_order = to;
+	
+	state = default_state;
+	x_down = -1;
+	y_down = -1;
+	
+	gui.add_thing(this);
+}
+
+GUI::Checkbox::~Checkbox() {
+	gui.del_thing(this);
+}
+
+void GUI::Checkbox::set_callback(void_callback callback, void *arg) {
+	toggle_callback = callback;
+	toggle_callback_arg = arg;
+}
+
+void GUI::Checkbox::Draw() {
+	SDL_Rect rect = {x+1,y+1,w-2,h-2};
+	
+	SDL_Colour black = ImgStuff::Colour(0,0,0);
+	SDL_Colour white = ImgStuff::Colour(255,255,255);
+	
+	SDL_Colour bc = has_focus() ? ImgStuff::Colour(255,255,0) : white;
+	SDL_Rect bt = {x,y,w,1}, bb = {x,y+h,w,1}, bl = {x,y,1,h}, br = {x+w,y,1,h};
+	
+	ImgStuff::draw_rect(bt, bc, 255);
+	ImgStuff::draw_rect(bb, bc, 255);
+	ImgStuff::draw_rect(bl, bc, 255);
+	ImgStuff::draw_rect(br, bc, 255);
+	
+	ImgStuff::draw_rect(rect, black, 178);
+	
+	if(state) {
+		TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 18);
+		int fh = TTF_FontHeight(font);
+		int fw = FontStuff::TextWidth(font, "X");
+		
+		rect.x = x + (w - fw) / 2;
+		rect.y = y + (h - fh) / 2;
+		
+		FontStuff::BlitText(screen, rect, font, white, "X");
+	}
+}
+
+void GUI::Checkbox::HandleEvent(const SDL_Event &event) {
+	if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		x_down = event.button.x;
+		y_down = event.button.y;
+	}else if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+		if(event.button.x == x_down && event.button.y == y_down) {
+			state = !state;
+		}
+	}else if(event.type == SDL_KEYDOWN) {
+		if(event.key.keysym.sym == SDLK_SPACE) {
+			state = !state;
+		}
+	}
+}

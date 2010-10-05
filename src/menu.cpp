@@ -205,8 +205,11 @@ void HostMenu::run() {
 
 struct options_inputs {
 	GUI::TextBox username;
+	GUI::Checkbox show_lines;
 	
-	options_inputs(GUI &gui) : username(gui, 355, 200, 200, 25, 1) {}
+	options_inputs(GUI &gui) :
+		username(gui, 385, 200, 200, 25, 1),
+		show_lines(gui, 385, 235, 25, 25, 2, options.show_lines) {}
 };
 
 static void save_options(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
@@ -218,8 +221,9 @@ static void save_options(const GUI::TextButton &button, const SDL_Event &event, 
 	}
 	
 	options.username = inputs->username.text;
-	
+	options.show_lines = inputs->show_lines.state;
 	options.save("options.txt");
+	
 	submenu = false;
 }
 
@@ -231,8 +235,12 @@ static void options_main(const GUI::TextButton &button, const SDL_Event &event, 
 	
 	options_inputs inputs(gui);
 	
-	GUI::TextButton username_label(gui, 245, 200, 100, 25, 0, "Username:");
+	GUI::TextButton username_label(gui, 215, 200, 160, 25, 0, "Username:");
+	username_label.align(GUI::RIGHT);
 	inputs.username.set_text(options.username);
+	
+	GUI::TextButton lines_label(gui, 215, 235, 160, 25, 0, "Show grid paths:");
+	lines_label.align(GUI::RIGHT);
 	
 	GUI::TextButton back_btn(gui, 20, 545, 135, 35, 21, "Back", &back_cb);
 	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", &save_options, &inputs);

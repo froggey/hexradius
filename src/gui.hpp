@@ -186,6 +186,25 @@ class GUI {
 		void select(item_list::iterator item);
 	};
 	
+	struct Checkbox : Thing {
+		typedef void (*void_callback)(const GUI::Checkbox &checkbox, void *arg);
+		
+		bool state;
+		
+		int x_down, y_down;
+		
+		void_callback toggle_callback;
+		void *toggle_callback_arg;
+		
+		Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state = false);
+		~Checkbox();
+		
+		void set_callback(void_callback callback, void *arg = NULL);
+		
+		void Draw();
+		void HandleEvent(const SDL_Event &event);
+	};
+	
 	typedef std::set<Thing*,thing_compare> thing_set;
 	
 	public:
