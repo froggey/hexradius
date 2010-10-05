@@ -16,6 +16,7 @@ struct MainMenu {
 	GUI gui;
 	GUI::TextButton join_btn;
 	GUI::TextButton host_btn;
+	GUI::TextButton options_btn;
 	GUI::TextButton quit_btn;
 	
 	MainMenu();

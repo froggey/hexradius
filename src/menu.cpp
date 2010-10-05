@@ -14,6 +14,8 @@
 
 static bool running, submenu;
 
+static void options_main(const GUI::TextButton &button, const SDL_Event &event, void *arg);
+
 static void main_join_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	JoinMenu jmenu;
 	jmenu.run();
@@ -45,7 +47,8 @@ MainMenu::MainMenu() :
 	
 	join_btn(gui, 332, 235, 135, 35, 1, "Join game", &main_join_cb),
 	host_btn(gui, 332, 280, 135, 35, 2, "Host game", &main_host_cb),
-	quit_btn(gui, 332, 325, 135, 35, 3, "Quit", &quit_cb)
+	options_btn(gui, 332, 325, 135, 35, 3, "Options", &options_main),
+	quit_btn(gui, 332, 370, 135, 35, 4, "Quit", &quit_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
@@ -195,6 +198,26 @@ void HostMenu::run() {
 	submenu = true;
 	
 	while(running && submenu) {
+		gui.poll(true);
+		SDL_Delay(MENU_DELAY);
+	}
+}
+
+static void save_options(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+	options.save("options.txt");
+	submenu = false;
+}
+
+static void options_main(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+	GUI gui(0, 0, MENU_WIDTH, MENU_HEIGHT);
+	
+	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
+	gui.set_quit_callback(&app_quit_cb);
+	
+	GUI::TextButton back_btn(gui, 20, 545, 135, 35, 21, "Back", &back_cb);
+	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", &save_options);
+	
+	for(submenu = true; submenu;) {
 		gui.poll(true);
 		SDL_Delay(MENU_DELAY);
 	}
