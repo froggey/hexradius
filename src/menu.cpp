@@ -203,7 +203,22 @@ void HostMenu::run() {
 	}
 }
 
+struct options_inputs {
+	GUI::TextBox username;
+	
+	options_inputs(GUI &gui) : username(gui, 355, 200, 200, 25, 1) {}
+};
+
 static void save_options(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+	struct options_inputs *inputs = (options_inputs*)arg;
+	
+	if(inputs->username.text.empty()) {
+		std::cerr << "Username field is empty" << std::endl;
+		return;
+	}
+	
+	options.username = inputs->username.text;
+	
 	options.save("options.txt");
 	submenu = false;
 }
@@ -214,10 +229,15 @@ static void options_main(const GUI::TextButton &button, const SDL_Event &event, 
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
 	
-	GUI::TextButton back_btn(gui, 20, 545, 135, 35, 21, "Back", &back_cb);
-	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", &save_options);
+	options_inputs inputs(gui);
 	
-	for(submenu = true; submenu;) {
+	GUI::TextButton username_label(gui, 245, 200, 100, 25, 0, "Username:");
+	inputs.username.set_text(options.username);
+	
+	GUI::TextButton back_btn(gui, 20, 545, 135, 35, 21, "Back", &back_cb);
+	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", &save_options, &inputs);
+	
+	for(submenu = true; submenu && running;) {
 		gui.poll(true);
 		SDL_Delay(MENU_DELAY);
 	}
