@@ -310,11 +310,11 @@ void GUI::TextBox::Draw() {
 	}
 }
 
-GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, int to, std::string txt) : Thing(g) {
+GUI::TextDisplay::TextDisplay(GUI &g, int ax, int ay, std::string txt) : Thing(g) {
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = h = 0;
-	tab_order = to;
+	tab_order = 0;
 	enabled = false;
 	
 	text = txt;

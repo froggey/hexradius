@@ -2,6 +2,7 @@
 #define OR_GUI_HPP
 
 #include "loadimage.hpp"
+#include "fontstuff.hpp"
 
 #include <string>
 #include <SDL/SDL.h>
@@ -100,8 +101,12 @@ class GUI {
 		TTF_Font *font;
 		SDL_Colour colour;
 		
-		TextDisplay(GUI &g, int ax, int ay, int to, std::string txt = "");
+		TextDisplay(GUI &g, int ax, int ay, std::string txt = "");
 		~TextDisplay();
+		
+		void set_font(std::string name, int size) {
+			font = FontStuff::LoadFont(name, size);
+		}
 		
 		void Draw();
 	};
