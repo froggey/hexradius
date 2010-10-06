@@ -658,16 +658,20 @@ void Client::DrawScreen() {
 			rect.y = mpawn->cur_tile->screen_y-rect.h;
 		}
 		
-		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
+		ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178);
 		
 		pmenu_area = rect;
 		rect.h = fh;
 		
-		SDL_Color colour = {255,0,0};
+		SDL_Color colour = {0,255,0};
 		
 		for(i = mpawn->powers.begin(); i != mpawn->powers.end(); i++) {
 			pmenu_entry foobar = {rect, i->first};
 			pmenu.push_back(foobar);
+			
+			if(mouse_x >= rect.x && mouse_x < rect.x+rect.w && mouse_y >= rect.y && mouse_y < rect.y+rect.h) {
+				ImgStuff::draw_rect(rect, ImgStuff::Colour(90,90,0), 178);
+			}
 			
 			FontStuff::BlitText(screen, rect, font, colour, to_string(i->second));
 			
