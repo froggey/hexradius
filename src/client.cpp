@@ -637,51 +637,7 @@ void Client::DrawScreen() {
 	pmenu_area.h = 0;
 	
 	if(mpawn) {
-		int fh = TTF_FontLineSkip(font), fw = 0;
-		
-		Pawn::PowerList::iterator i = mpawn->powers.begin();
-		
-		for(; i != mpawn->powers.end(); i++) {
-			int w = FontStuff::TextWidth(font, Powers::powers[i->first].name);
-			
-			if(w > fw) {
-				fw = w;
-			}
-		}
-		
-		SDL_Rect rect = { mpawn->cur_tile->screen_x+TILE_WIDTH, mpawn->cur_tile->screen_y, fw+30, mpawn->powers.size() * fh };
-		
-		if(rect.x+rect.w > screen_w) {
-			rect.x = mpawn->cur_tile->screen_x-rect.w;
-		}
-		if(rect.y+rect.h > screen_h) {
-			rect.y = mpawn->cur_tile->screen_y-rect.h;
-		}
-		
-		ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178);
-		
-		pmenu_area = rect;
-		rect.h = fh;
-		
-		SDL_Color colour = {0,255,0};
-		
-		for(i = mpawn->powers.begin(); i != mpawn->powers.end(); i++) {
-			pmenu_entry foobar = {rect, i->first};
-			pmenu.push_back(foobar);
-			
-			if(mouse_x >= rect.x && mouse_x < rect.x+rect.w && mouse_y >= rect.y && mouse_y < rect.y+rect.h) {
-				ImgStuff::draw_rect(rect, ImgStuff::Colour(90,90,0), 178);
-			}
-			
-			FontStuff::BlitText(screen, rect, font, colour, to_string(i->second));
-			
-			rect.x += 30;
-			
-			FontStuff::BlitText(screen, rect, font, colour, Powers::powers[i->first].name);
-			
-			rect.x -= 30;
-			rect.y += fh;
-		}
+		draw_pmenu(mpawn, true);
 	}
 	
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
@@ -852,5 +808,66 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 		if(r == row) {
 			return;
 		}
+	}
+}
+
+void Client::draw_pmenu(Pawn *pawn, bool set_pmenu) {
+	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
+	
+	int fh = TTF_FontLineSkip(font);
+	int fw = FontStuff::TextWidth(font, "0");
+	
+	int mouse_x, mouse_y;
+	SDL_GetMouseState(&mouse_x, &mouse_y);
+	
+	SDL_Rect rect = {
+		pawn->cur_tile->screen_x+TILE_WIDTH,
+		pawn->cur_tile->screen_y,
+		0,
+		pawn->powers.size() * fh
+	};
+	
+	Pawn::PowerList::iterator i = pawn->powers.begin();
+	
+	for(; i != pawn->powers.end(); i++) {
+		int w = FontStuff::TextWidth(font, Powers::powers[i->first].name);
+		
+		if(w > rect.w) {
+			rect.w = w;
+		}
+	}
+	
+	rect.w += fw*3;
+	
+	if(rect.x+rect.w > screen_w) {
+		rect.x = pawn->cur_tile->screen_x-rect.w;
+	}
+	if(rect.y+rect.h > screen_h) {
+		rect.y = pawn->cur_tile->screen_y-rect.h;
+	}
+	
+	ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178);
+	
+	pmenu_area = rect;
+	rect.h = fh;
+	
+	SDL_Color font_colour = {0,255,0};
+	
+	for(i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
+		pmenu_entry foobar = {rect, i->first};
+		pmenu.push_back(foobar);
+		
+		if(mouse_x >= rect.x && mouse_x < rect.x+rect.w && mouse_y >= rect.y && mouse_y < rect.y+rect.h) {
+			ImgStuff::draw_rect(rect, ImgStuff::Colour(90,90,0), 178);
+		}
+		
+		FontStuff::BlitText(screen, rect, font, font_colour, to_string(i->second));
+		
+		rect.x += fw*3;
+		
+		FontStuff::BlitText(screen, rect, font, font_colour, Powers::powers[i->first].name);
+		
+		rect.x -= fw*3;
+		rect.y += fh;
 	}
 }

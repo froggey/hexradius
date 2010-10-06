@@ -112,6 +112,7 @@ class Client {
 		void DrawPawn(Pawn *pawn, SDL_Rect rect, SDL_Rect base);
 		void draw_pawn_tile(Pawn *pawn, Tile *tile);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
+		void draw_pmenu(Pawn *pawn, bool set_pmenu);
 		
 		void lobby_regen();
 		
