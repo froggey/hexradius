@@ -83,6 +83,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List &all_tiles;
 		
 	public:
+		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE };
 		typedef std::map<int,int> PowerList;
 		
 		Tile *cur_tile;
@@ -91,11 +92,15 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		PowerList powers;
 		int range;
 		uint32_t flags;
+		destroy_type destroyed_by;
 		
 		Tile *last_tile;
 		Uint32 teleport_time;
 		
 		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0), last_tile(NULL) {}
+		
+		void destroy(destroy_type dt);
+		bool destroyed();
 		
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
 		

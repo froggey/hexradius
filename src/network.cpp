@@ -479,7 +479,6 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		pawn_ptr pawn = tile ? tile->pawn : pawn_ptr();
 		
 		int power = msg.pawns(0).use_power();
-		bool pawn_ok = Powers::powers[power].pawn_survive;
 		
 		power_rand_vals.clear();
 		
@@ -496,7 +495,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			
 			WriteAll(smsg);
 			
-			if((pawn_ok || tile->pawn) && pawn->powers.empty()) {
+			if(!pawn->destroyed()) {
 				protocol::message update;
 				update.set_msg(protocol::UPDATE);
 				

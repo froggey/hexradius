@@ -68,7 +68,7 @@ namespace Powers {
 		
 		while(i != area.end()) {
 			if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
-				(*i)->pawn.reset();
+				(*i)->pawn->destroy(Pawn::PWR_DESTROY);
 				ret = true;
 			}
 			
@@ -304,7 +304,7 @@ namespace Powers {
 		
 		for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
 			if((*tile)->pawn) {
-				(*tile)->pawn.reset();
+				(*tile)->pawn->destroy(Pawn::PWR_ANNIHILATE);
 				ret = true;
 			}
 		}

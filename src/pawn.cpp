@@ -5,6 +5,21 @@
 #include "octradius.pb.h"
 #include "client.hpp"
 
+void Pawn::destroy(destroy_type dt) {
+	destroyed_by = dt;
+	
+	if(last_tile) {
+		last_tile->render_pawn.reset();
+	}
+	
+	cur_tile->pawn.reset();
+	cur_tile = NULL;
+}
+
+bool Pawn::destroyed() {
+	return destroyed_by != OK;
+}
+
 bool Pawn::Move(Tile *tile, Server *server, Client *client) {
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
@@ -27,7 +42,7 @@ bool Pawn::Move(Tile *tile, Server *server, Client *client) {
 				client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
 			}
 			
-			tile->pawn.reset();
+			tile->pawn->destroy(STOMP);
 		}
 	}
 	
@@ -62,21 +77,17 @@ bool Pawn::UsePower(int power, Server *server, Client *client) {
 		return false;
 	}
 	
-	Tile *tile = cur_tile;
-	
 	if(!Powers::powers[power].func(shared_from_this(), server, client)) {
 		return false;
 	}
 	
-	if(Powers::powers[power].pawn_survive || tile->pawn) {
-		if(p->second > 1) {
-			p->second--;
-		}else{
-			powers.erase(p);
-			
-			if(powers.empty()) {
-				flags &= ~HAS_POWER;
-			}
+	if(p->second > 1) {
+		p->second--;
+	}else{
+		powers.erase(p);
+		
+		if(powers.empty()) {
+			flags &= ~HAS_POWER;
 		}
 	}
 	
