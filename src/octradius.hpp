@@ -13,6 +13,8 @@
 #include <SDL/SDL_ttf.h>
 #include <sstream>
 #include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "octradius.pb.h"
 
@@ -49,6 +51,8 @@ class Pawn;
 class Server;
 class Client;
 
+typedef boost::shared_ptr<Pawn> pawn_ptr;
+
 struct Tile {
 	typedef std::vector<Tile*> List;
 	
@@ -56,7 +60,7 @@ struct Tile {
 	int height;
 	int power;
 	bool has_power;
-	Pawn *pawn;
+	pawn_ptr pawn;
 	
 	bool animating;
 	float anim_height;
@@ -65,17 +69,16 @@ struct Tile {
 	int final_elevation;
 	
 	int screen_x, screen_y;
-	Pawn *render_pawn;
+	pawn_ptr render_pawn;
 	
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(NULL), screen_x(0), screen_y(0), render_pawn(NULL), animating(false) {}
-	~Tile();
+	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(pawn_ptr()), screen_x(0), screen_y(0), render_pawn(pawn_ptr()), animating(false) {}
 	
 	bool SetHeight(int h);
 	
 	void CopyToProto(protocol::tile *t);
 };
 
-class Pawn {
+class Pawn : public boost::enable_shared_from_this<Pawn> {
 	private:
 		Tile::List &all_tiles;
 		
@@ -108,10 +111,10 @@ class Pawn {
 };
 
 Tile *FindTile(Tile::List &list, int c, int r);
-Pawn *FindPawn(Tile::List &list, int c, int r);
+pawn_ptr FindPawn(Tile::List &list, int c, int r);
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
 Tile *TileAtXY(Tile::List &tiles, int x, int y);
-Pawn *PawnAtXY(Tile::List &tiles, int x, int y);
+pawn_ptr PawnAtXY(Tile::List &tiles, int x, int y);
 void FreeTiles(Tile::List &tiles);
 void CopyTiles(Tile::List &dest, const Tile::List &src);
 void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);

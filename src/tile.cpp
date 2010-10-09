@@ -18,10 +18,6 @@ void Tile::CopyToProto(protocol::tile *t) {
 	t->set_power(power >= 0 ? true : false);
 }
 
-Tile::~Tile() {
-	delete pawn;
-}
-
 Tile *FindTile(Tile::List &list, int c, int r) {
 	Tile::List::iterator i = list.begin();
 	
@@ -36,9 +32,9 @@ Tile *FindTile(Tile::List &list, int c, int r) {
 	return NULL;
 }
 
-Pawn *FindPawn(Tile::List &list, int c, int r) {
+pawn_ptr FindPawn(Tile::List &list, int c, int r) {
 	Tile *tile = FindTile(list, c, r);
-	return (tile && tile->pawn ? tile->pawn : NULL);
+	return tile ? tile->pawn : pawn_ptr();
 }
 
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
@@ -94,9 +90,9 @@ Tile *TileAtXY(Tile::List &tiles, int x, int y) {
 }
 
 /* As above, but for the respective pawn */
-Pawn *PawnAtXY(Tile::List &tiles, int x, int y) {
+pawn_ptr PawnAtXY(Tile::List &tiles, int x, int y) {
 	Tile *tile = TileAtXY(tiles, x, y);
-	return (tile && tile->pawn ? tile->pawn : NULL);
+	return tile ? tile->pawn : pawn_ptr();
 }
 
 void FreeTiles(Tile::List &tiles) {
@@ -118,12 +114,10 @@ void CopyTiles(Tile::List &dest, const Tile::List &src) {
 		Tile *t = new Tile(**i);
 		
 		if(t->pawn) {
-			Pawn *p = new Pawn(t->pawn->colour, dest, t);
-			p->powers = t->pawn->powers;
-			p->range = t->pawn->range;
-			p->flags = t->pawn->flags;
-			
-			t->pawn = p;
+			t->pawn = pawn_ptr(new Pawn(t->pawn->colour, dest, t));
+			t->pawn->powers = t->pawn->powers;
+			t->pawn->range = t->pawn->range;
+			t->pawn->flags = t->pawn->flags;
 		}
 		
 		dest.push_back(t);
@@ -133,8 +127,7 @@ void CopyTiles(Tile::List &dest, const Tile::List &src) {
 void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour) {
 	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
 		if((*t)->pawn && (*t)->pawn->colour == colour) {
-			delete (*t)->pawn;
-			(*t)->pawn = NULL;
+			(*t)->pawn.reset();
 		}
 	}
 }

@@ -27,14 +27,12 @@ bool Pawn::Move(Tile *tile, Server *server, Client *client) {
 				client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
 			}
 			
-			delete tile->pawn;
+			tile->pawn.reset();
 		}
 	}
 	
-	cur_tile->pawn = NULL;
+	tile->pawn.swap(cur_tile->pawn);
 	cur_tile = tile;
-	
-	tile->pawn = this;
 	
 	if(tile->has_power) {
 		if(tile->power >= 0) {
@@ -66,7 +64,7 @@ bool Pawn::UsePower(int power, Server *server, Client *client) {
 	
 	Tile *tile = cur_tile;
 	
-	if(!Powers::powers[power].func(this, server, client)) {
+	if(!Powers::powers[power].func(shared_from_this(), server, client)) {
 		return false;
 	}
 	

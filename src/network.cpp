@@ -206,8 +206,7 @@ void Server::StartGame(void) {
 				begin.add_pawns();
 				(*i)->pawn->CopyToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
 			}else{
-				delete (*i)->pawn;
-				(*i)->pawn = NULL;
+				(*i)->pawn.reset();
 			}
 		}
 	}
@@ -449,7 +448,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		
 		const protocol::pawn &p_pawn = msg.pawns(0);
 		
-		Pawn *pawn = FindPawn(tiles, p_pawn.col(), p_pawn.row());
+		pawn_ptr pawn = FindPawn(tiles, p_pawn.col(), p_pawn.row());
 		Tile *tile = FindTile(tiles, p_pawn.new_col(), p_pawn.new_row());
 		
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
@@ -477,7 +476,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		}
 	}else if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
 		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
-		Pawn *pawn = tile ? tile->pawn : NULL;
+		pawn_ptr pawn = tile ? tile->pawn : pawn_ptr();
 		
 		int power = msg.pawns(0).use_power();
 		bool pawn_ok = Powers::powers[power].pawn_survive;

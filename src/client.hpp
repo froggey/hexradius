@@ -77,9 +77,9 @@ class Client {
 		unsigned int torus_frame;
 		double climb_offset;
 		
-		Pawn *dpawn;
-		Pawn *mpawn;
-		Pawn *hpawn;
+		pawn_ptr dpawn;
+		pawn_ptr mpawn;
+		pawn_ptr hpawn;
 		
 		struct pmenu_entry {
 			SDL_Rect rect;
@@ -109,10 +109,10 @@ class Client {
 		void handle_message_game(const protocol::message &msg);
 		
 		void DrawScreen(void);
-		void DrawPawn(Pawn *pawn, SDL_Rect rect, SDL_Rect base);
-		void draw_pawn_tile(Pawn *pawn, Tile *tile);
+		void DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base);
+		void draw_pawn_tile(pawn_ptr pawn, Tile *tile);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
-		void draw_pmenu(Pawn *pawn, bool set_pmenu);
+		void draw_pmenu(pawn_ptr pawn, bool set_pmenu);
 		
 		void lobby_regen();
 		

@@ -16,7 +16,7 @@ const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB);
 namespace Powers {
 	struct Power {
 		const char *name;
-		bool (*func)(Pawn*, Server*, Client*);
+		bool (*func)(pawn_ptr, Server*, Client*);
 		int spawn_rate;
 		
 		/* Executing pawn is guarenteed to not be destroyed by power.
@@ -31,37 +31,37 @@ namespace Powers {
 	
 	int RandomPower(void);
 	
-	bool destroy_row(Pawn *pawn, Server *server, Client *client);
-	bool destroy_radial(Pawn *pawn, Server *server, Client *client);
-	bool destroy_bs(Pawn *pawn, Server *server, Client *client);
-	bool destroy_fs(Pawn *pawn, Server *server, Client *client);
+	bool destroy_row(pawn_ptr pawn, Server *server, Client *client);
+	bool destroy_radial(pawn_ptr pawn, Server *server, Client *client);
+	bool destroy_bs(pawn_ptr pawn, Server *server, Client *client);
+	bool destroy_fs(pawn_ptr pawn, Server *server, Client *client);
 	
-	bool raise_tile(Pawn *pawn, Server *server, Client *client);
-	bool lower_tile(Pawn *pawn, Server *server, Client *client);
-	bool increase_range(Pawn *pawn, Server *server, Client *client);
-	bool hover(Pawn *pawn, Server *server, Client *client);
-	bool shield(Pawn *pawn, Server *server, Client *client);
-	bool teleport(Pawn *pawn, Server *server, Client *client);
+	bool raise_tile(pawn_ptr pawn, Server *server, Client *client);
+	bool lower_tile(pawn_ptr pawn, Server *server, Client *client);
+	bool increase_range(pawn_ptr pawn, Server *server, Client *client);
+	bool hover(pawn_ptr pawn, Server *server, Client *client);
+	bool shield(pawn_ptr pawn, Server *server, Client *client);
+	bool teleport(pawn_ptr pawn, Server *server, Client *client);
 	
-	bool elevate_row(Pawn *pawn, Server *server, Client *client);
-	bool elevate_radial(Pawn *pawn, Server *server, Client *client);
-	bool elevate_bs(Pawn *pawn, Server *server, Client *client);
-	bool elevate_fs(Pawn *pawn, Server *server, Client *client);
+	bool elevate_row(pawn_ptr pawn, Server *server, Client *client);
+	bool elevate_radial(pawn_ptr pawn, Server *server, Client *client);
+	bool elevate_bs(pawn_ptr pawn, Server *server, Client *client);
+	bool elevate_fs(pawn_ptr pawn, Server *server, Client *client);
 	
-	bool dig_row(Pawn *pawn, Server *server, Client *client);
-	bool dig_radial(Pawn *pawn, Server *server, Client *client);
-	bool dig_bs(Pawn *pawn, Server *server, Client *client);
-	bool dig_fs(Pawn *pawn, Server *server, Client *client);
+	bool dig_row(pawn_ptr pawn, Server *server, Client *client);
+	bool dig_radial(pawn_ptr pawn, Server *server, Client *client);
+	bool dig_bs(pawn_ptr pawn, Server *server, Client *client);
+	bool dig_fs(pawn_ptr pawn, Server *server, Client *client);
 	
-	bool purify_row(Pawn *pawn, Server *server, Client *client);
-	bool purify_radial(Pawn *pawn, Server *server, Client *client);
-	bool purify_bs(Pawn *pawn, Server *server, Client *client);
-	bool purify_fs(Pawn *pawn, Server *server, Client *client);
+	bool purify_row(pawn_ptr pawn, Server *server, Client *client);
+	bool purify_radial(pawn_ptr pawn, Server *server, Client *client);
+	bool purify_bs(pawn_ptr pawn, Server *server, Client *client);
+	bool purify_fs(pawn_ptr pawn, Server *server, Client *client);
 	
-	bool annihilate_row(Pawn *pawn, Server *server, Client *client);
-	bool annihilate_radial(Pawn *pawn, Server *server, Client *client);
-	bool annihilate_bs(Pawn *pawn, Server *server, Client *client);
-	bool annihilate_fs(Pawn *pawn, Server *server, Client *client);
+	bool annihilate_row(pawn_ptr pawn, Server *server, Client *client);
+	bool annihilate_radial(pawn_ptr pawn, Server *server, Client *client);
+	bool annihilate_bs(pawn_ptr pawn, Server *server, Client *client);
+	bool annihilate_fs(pawn_ptr pawn, Server *server, Client *client);
 }
 
 #endif /* !OR_POWERS_HPP */

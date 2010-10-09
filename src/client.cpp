@@ -47,7 +47,7 @@ static Uint32 redraw_callback(Uint32 interval, void *param) {
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(NULL), mpawn(NULL), hpawn(NULL), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
+Client::Client(std::string host, uint16_t port) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -192,11 +192,11 @@ void Client::run() {
 						i++;
 					}
 					
-					dpawn = NULL;
+					dpawn.reset();
 				}
 			}
 			
-			mpawn = NULL;
+			mpawn.reset();
 			
 			if(event.button.button == SDL_BUTTON_LEFT && dpawn) {
 				if(xd == event.button.x && yd == event.button.y) {
@@ -216,7 +216,7 @@ void Client::run() {
 					WriteProto(msg);
 				}
 				
-				dpawn = NULL;
+				dpawn.reset();
 			}
 		}
 		else if(event.type == SDL_MOUSEMOTION) {
@@ -232,7 +232,7 @@ void Client::run() {
 				}
 			}
 			else{
-				hpawn = NULL;
+				hpawn.reset();
 			}
 		}
 		else if(event.type == SDL_KEYDOWN) {
@@ -339,7 +339,8 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 				continue;
 			}
 			
-			tile->pawn = new Pawn((PlayerColour)msg.pawns(i).colour(), tiles, tile);
+			pawn_ptr nptr(new Pawn((PlayerColour)msg.pawns(i).colour(), tiles, tile));
+			tile->pawn.swap(nptr);
 		}
 		
 		state = GAME;
@@ -443,7 +444,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		std::cout << "Turn for player " << turn << std::endl;
 	}else if(msg.msg() == protocol::MOVE) {
 		if(msg.pawns_size() == 1) {
-			Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+			pawn_ptr pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 			Tile *tile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
 			
 			if(!(pawn && tile && pawn->Move(tile, NULL, this))) {
@@ -464,7 +465,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 		
 		for(int i = 0; i < msg.pawns_size(); i++) {
-			Pawn *pawn = FindPawn(tiles, msg.pawns(i).col(), msg.pawns(i).row());
+			pawn_ptr pawn = FindPawn(tiles, msg.pawns(i).col(), msg.pawns(i).row());
 			if(!pawn) {
 				continue;
 			}
@@ -485,7 +486,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 	}else if(msg.msg() == protocol::USE) {
 		if(msg.pawns_size() == 1) {
-			Pawn *pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+			pawn_ptr pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
 			
 			if(pawn) {
 				int power = msg.pawns(0).use_power();
@@ -643,7 +644,7 @@ void Client::DrawScreen() {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, SDL_Rect base) {
+void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 	SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
 	SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
 	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
@@ -677,7 +678,7 @@ void Client::DrawPawn(Pawn *pawn, SDL_Rect rect, SDL_Rect base) {
 	}
 }
 
-void Client::draw_pawn_tile(Pawn *pawn, Tile *tile) {
+void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
 	int teleport_y = 0;
 	SDL_Rect rect = {tile->screen_x, tile->screen_y, 0, 0}, base = {0,0,50,50};
 	
@@ -694,7 +695,7 @@ void Client::draw_pawn_tile(Pawn *pawn, Tile *tile) {
 				base.h = teleport_y;
 			}
 		}else{
-			pawn->last_tile->render_pawn = NULL;
+			pawn->last_tile->render_pawn.reset();
 			pawn->last_tile = NULL;
 		}
 	}
@@ -811,7 +812,7 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 	}
 }
 
-void Client::draw_pmenu(Pawn *pawn, bool set_pmenu) {
+void Client::draw_pmenu(pawn_ptr pawn, bool set_pmenu) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	
 	int fh = TTF_FontLineSkip(font);

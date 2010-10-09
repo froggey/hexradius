@@ -75,7 +75,7 @@ void Scenario::load_file(std::string filename) {
 				LINE_ERR("Invalid pawn colour");
 			}
 			
-			tile->pawn = new Pawn((PlayerColour)c, tiles, tile);
+			tile->pawn = pawn_ptr(new Pawn((PlayerColour)c, tiles, tile));
 			colours.insert((PlayerColour)c);
 		}else if(name == "HOLE") {
 			int x = atoi(bp);
@@ -167,7 +167,7 @@ void Scenario::load_proto(const protocol::message &msg) {
 			continue;
 		}
 		
-		tile->pawn = new Pawn(c, tiles, tile);
+		tile->pawn = pawn_ptr(new Pawn(c, tiles, tile));
 		colours.insert(c);
 	}
 }
