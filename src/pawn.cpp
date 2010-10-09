@@ -73,7 +73,7 @@ void Pawn::AddPower(int power) {
 
 bool Pawn::UsePower(int power, Server *server, Client *client) {
 	PowerList::iterator p = powers.find(power);
-	if(p == powers.end()) {
+	if(server && p == powers.end()) {
 		return false;
 	}
 	
@@ -81,9 +81,7 @@ bool Pawn::UsePower(int power, Server *server, Client *client) {
 		return false;
 	}
 	
-	if(p->second > 1) {
-		p->second--;
-	}else{
+	if(p != powers.end() && --p->second == 0) {
 		powers.erase(p);
 		
 		if(powers.empty()) {

@@ -497,11 +497,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 					power_rand_vals.push_back(msg.power_rand_vals(i));
 				}
 				
-				if(pawn->powers.size()) {
-					pawn->UsePower(power, NULL, this);
-				}else if(power >= 0 && power < Powers::num_powers) {
-					Powers::powers[power].func(pawn, NULL, this);
-				}
+				pawn->UsePower(power, NULL, this);
 			}
 		}else{
 			std::cerr << "Recieved USE message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
