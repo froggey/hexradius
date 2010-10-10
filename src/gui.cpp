@@ -296,10 +296,8 @@ void GUI::TextBox::Draw() {
 	FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(0,0,0), text);
 	
 	if(has_focus()) {
-		int fw = FontStuff::TextWidth(font, "A");
-		
-		rect.x += insert_offset*fw;
-		rect.w = fw;
+		rect.x += FontStuff::TextWidth(font, text.substr(0, insert_offset));
+		rect.w = FontStuff::TextWidth(font, insert_offset < text.length() ? text.substr(insert_offset, 1) : "A");
 		rect.h = fh;
 		
 		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
