@@ -1,3 +1,5 @@
+#include <boost/foreach.hpp>
+
 #include "octradius.hpp"
 #include "loadimage.hpp"
 
@@ -108,16 +110,11 @@ void FreeTiles(Tile::List &tiles) {
 void CopyTiles(Tile::List &dest, const Tile::List &src) {
 	FreeTiles(dest);
 	
-	Tile::List::const_iterator i = src.begin();
-	
-	for(; i != src.end(); i++) {
-		Tile *t = new Tile(**i);
+	BOOST_FOREACH(Tile *s, src) {
+		Tile *t = new Tile(*s);
 		
 		if(t->pawn) {
-			t->pawn = pawn_ptr(new Pawn(t->pawn->colour, dest, t));
-			t->pawn->powers = t->pawn->powers;
-			t->pawn->range = t->pawn->range;
-			t->pawn->flags = t->pawn->flags;
+			t->pawn = pawn_ptr(new Pawn(s->pawn, dest, t));
 		}
 		
 		dest.push_back(t);

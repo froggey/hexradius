@@ -97,7 +97,26 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile *last_tile;
 		Uint32 teleport_time;
 		
-		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : cur_tile(ct), all_tiles(at), colour(c), range(0), flags(0), last_tile(NULL) {}
+		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : all_tiles(at) {
+			cur_tile = ct;
+			
+			colour = c;
+			range = 0;
+			flags = 0;
+			
+			last_tile = NULL;
+		}
+		
+		Pawn(pawn_ptr pawn, Tile::List &at, Tile *ct) : all_tiles(at) {
+			cur_tile = ct;
+			
+			colour = pawn->colour;
+			powers = pawn->powers;
+			range = pawn->range;
+			flags = pawn->flags;
+			
+			last_tile = NULL;
+		}
 		
 		void destroy(destroy_type dt);
 		bool destroyed();
