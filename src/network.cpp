@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/foreach.hpp>
 
 #include "network.hpp"
 #include "octradius.pb.h"
@@ -11,7 +12,6 @@
 
 Server::Server(uint16_t port, Scenario &s) : acceptor(io_service) {
 	scenario = s;
-	CopyTiles(tiles, scenario.tiles);
 	
 	idcounter = 0;
 	
@@ -185,10 +185,8 @@ void Server::Client::FinishWrite(const boost::system::error_code& error, ptr cpt
 void Server::StartGame(void) {
 	std::set<PlayerColour> colours;
 	
-	for(client_iterator c = clients.begin(); c != clients.end(); c++) {
-		if((*c)->colour < SPECTATE) {
-			colours.insert((*c)->colour);
-		}
+	BOOST_FOREACH(Client::ptr c, clients) {
+		colours.insert(c->colour);
 	}
 	
 	tiles = scenario.init_game(colours);
@@ -261,7 +259,6 @@ void Server::NextTurn(void) {
 		}
 		
 		if(turn == last) {
-			CopyTiles(tiles, scenario.tiles);
 			state = LOBBY;
 			
 			turn = clients.end();
@@ -292,7 +289,6 @@ void Server::NextTurn(void) {
 	}
 	
 	if(turn == last) {
-		CopyTiles(tiles, scenario.tiles);
 		state = LOBBY;
 		
 		protocol::message gover;

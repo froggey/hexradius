@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
 #include <stdexcept>
+#include <boost/foreach.hpp>
 
 #include "octradius.hpp"
 #include "octradius.pb.h"
@@ -331,10 +332,8 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 	if(msg.msg() == protocol::BEGIN) {
 		std::set<PlayerColour> colours;
 		
-		for(player_set::iterator p = players.begin(); p != players.end(); p++) {
-			if(p->colour < SPECTATE) {
-				colours.insert(p->colour);
-			}
+		BOOST_FOREACH(const Player &p, players) {
+			colours.insert(p.colour);
 		}
 		
 		tiles = scenario.init_game(colours);
