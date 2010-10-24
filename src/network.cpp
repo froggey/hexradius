@@ -183,34 +183,18 @@ void Server::Client::FinishWrite(const boost::system::error_code& error, ptr cpt
 }
 
 void Server::StartGame(void) {
-	protocol::message begin;
-	Tile::List::iterator i = tiles.begin();
+	std::set<PlayerColour> colours;
 	
-	begin.set_msg(protocol::BEGIN);
-	
-	for(; i != tiles.end(); i++) {
-		begin.add_tiles();
-		(*i)->CopyToProto(begin.mutable_tiles(begin.tiles_size()-1));
-		
-		if((*i)->pawn) {
-			int cm = 0;
-			
-			for(client_set::iterator c = clients.begin(); c != clients.end(); c++) {
-				if((*i)->pawn->colour == (*c)->colour) {
-					cm = 1;
-					break;
-				}
-			}
-			
-			if(cm) {
-				begin.add_pawns();
-				(*i)->pawn->CopyToProto(begin.mutable_pawns(begin.pawns_size()-1), false);
-			}else{
-				(*i)->pawn.reset();
-			}
+	for(client_iterator c = clients.begin(); c != clients.end(); c++) {
+		if((*c)->colour < SPECTATE) {
+			colours.insert((*c)->colour);
 		}
 	}
 	
+	tiles = scenario.init_game(colours);
+	
+	protocol::message begin;
+	begin.set_msg(protocol::BEGIN);
 	WriteAll(begin);
 	
 	state = GAME;

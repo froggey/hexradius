@@ -329,19 +329,15 @@ void Client::handle_message(const protocol::message &msg) {
 
 void Client::handle_message_lobby(const protocol::message &msg) {
 	if(msg.msg() == protocol::BEGIN) {
-		for(int i = 0; i < msg.tiles_size(); i++) {
-			tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
+		std::set<PlayerColour> colours;
+		
+		for(player_set::iterator p = players.begin(); p != players.end(); p++) {
+			if(p->colour < SPECTATE) {
+				colours.insert(p->colour);
+			}
 		}
 		
-		for(int i = 0; i < msg.pawns_size(); i++) {
-			Tile *tile = FindTile(tiles, msg.pawns(i).col(), msg.pawns(i).row());
-			if(!tile) {
-				continue;
-			}
-			
-			pawn_ptr nptr(new Pawn((PlayerColour)msg.pawns(i).colour(), tiles, tile));
-			tile->pawn.swap(nptr);
-		}
+		tiles = scenario.init_game(colours);
 		
 		state = GAME;
 		

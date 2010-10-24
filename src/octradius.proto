@@ -2,7 +2,7 @@ package protocol;
 
 enum msgtype {
 	INIT = 1;	// Sent by client after connect, supply player_name
-	BEGIN = 2;	// Sent by server once game begins, supply tiles, starting pawns and grid size
+	BEGIN = 2;	// Begin game
 	TURN = 3;	// Set current turn to message.colour
 	OK = 4;		// OK for player to move, client should wait for this
 			// or BADMOVE after sending a move to the server before
