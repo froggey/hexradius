@@ -164,7 +164,7 @@ void options::save(std::string filename) {
 	file << "show_lines=" << (show_lines ? "true" : "false") << std::endl;
 }
 
-send_buf::send_buf(const protocol::message &message) : buf(NULL) {
+send_buf::send_buf(const protocol::message &message) : buf() {
 	std::string pb;
 	message.SerializeToString(&pb);
 	
