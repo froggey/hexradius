@@ -1,0 +1,6 @@
+*.o
+/.sconsign*
+/hexradius
+/options.txt
+/src/octradius.pb.cc
+/src/octradius.pb.h
