@@ -24,7 +24,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-static void start_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void start_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	Client *client = (Client*)arg;
 	client->send_begin();
 }
@@ -38,16 +38,22 @@ static void push_sdl_event(int code) {
 	SDL_PushEvent(&l_event);
 }
 
-static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
+static void leave_cb(const GUI::TextButton &, const SDL_Event &, void *) {
 	push_sdl_event(EVENT_RETURN);
 }
 
-static Uint32 redraw_callback(Uint32 interval, void *param) {
+static Uint32 redraw_callback(Uint32 interval, void *) {
 	push_sdl_event(EVENT_RDTIMER);
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port) : quit(false), game_state(0), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
+Client::Client(std::string host, uint16_t port) :
+	quit(false), current_animator(NULL), game_state(0),
+	socket(io_service), redraw_timer(NULL), turn(0),
+	state(CONNECTING), last_redraw(0), board(SDL_Rect()),
+	dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()),
+	pmenu_area(SDL_Rect()), lobby_gui(0, 0, 800, 600)
+{
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -639,7 +645,7 @@ void Client::DrawScreen() {
 	pmenu_area.h = 0;
 
 	if(mpawn) {
-		draw_pmenu(mpawn, true);
+		draw_pmenu(mpawn);
 	}
 
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
@@ -708,7 +714,7 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
 	DrawPawn(pawn, rect, base);
 }
 
-static bool ccolour_callback(const GUI::DropDown &dropdown, const GUI::DropDown::Item &item, void *arg) {
+static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &item, void *arg) {
 	Client *client = (Client*)arg;
 	client->change_colour(item.i1, (PlayerColour)item.i2);
 
@@ -813,7 +819,7 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 	}
 }
 
-void Client::draw_pmenu(pawn_ptr pawn, bool set_pmenu) {
+void Client::draw_pmenu(pawn_ptr pawn) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 
 	int fh = TTF_FontLineSkip(font);
@@ -853,7 +859,7 @@ void Client::draw_pmenu(pawn_ptr pawn, bool set_pmenu) {
 	pmenu_area = rect;
 	rect.h = fh;
 
-	SDL_Color font_colour = {0,255,0};
+	SDL_Color font_colour = {0,255,0, 0};
 
 	for(i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
 		pmenu_entry foobar = {rect, i->first};

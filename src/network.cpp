@@ -88,7 +88,7 @@ void Server::Client::BeginRead() {
 	async_read(socket, boost::asio::buffer(&msgsize, sizeof(uint32_t)), boost::bind(&Server::Client::BeginRead2, this, boost::asio::placeholders::error, shared_from_this()));
 }
 
-void Server::Client::BeginRead2(const boost::system::error_code& error, ptr cptr) {
+void Server::Client::BeginRead2(const boost::system::error_code& error, ptr /*cptr*/) {
 	if(qcalled) {
 		return;
 	}
@@ -109,7 +109,7 @@ void Server::Client::BeginRead2(const boost::system::error_code& error, ptr cptr
 	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Server::Client::FinishRead, this, boost::asio::placeholders::error, shared_from_this()));
 }
 
-void Server::Client::FinishRead(const boost::system::error_code& error, ptr cptr) {
+void Server::Client::FinishRead(const boost::system::error_code& error, ptr /*cptr*/) {
 	if(qcalled) {
 		return;
 	}
@@ -166,7 +166,7 @@ void Server::Client::WriteBasic(protocol::msgtype type) {
 	Write(msg);
 }
 
-void Server::Client::FinishWrite(const boost::system::error_code& error, ptr cptr) {
+void Server::Client::FinishWrite(const boost::system::error_code& error, ptr /*cptr*/) {
 	send_queue.pop();
 
 	if(qcalled) {
@@ -245,7 +245,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	server.clients.erase(shared_from_this());
 }
 
-void Server::Client::FinishQuit(const boost::system::error_code& error, ptr cptr) {}
+void Server::Client::FinishQuit(const boost::system::error_code &, ptr /*cptr*/) {}
 
 void Server::NextTurn(void) {
 	client_set::iterator last = turn;

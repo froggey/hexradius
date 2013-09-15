@@ -113,7 +113,7 @@ class Client {
 		void DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base);
 		void draw_pawn_tile(pawn_ptr pawn, Tile *tile);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
-		void draw_pmenu(pawn_ptr pawn, bool set_pmenu);
+		void draw_pmenu(pawn_ptr pawn);
 
 		void lobby_regen();
 

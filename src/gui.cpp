@@ -9,6 +9,15 @@
 #include "fontstuff.hpp"
 #include "loadimage.hpp"
 
+void GUI::Thing::HandleEvent(const SDL_Event &) {
+}
+
+void GUI::Thing::Draw() {
+}
+
+GUI::Thing::~Thing() {
+}
+
 GUI::GUI(int ax, int ay, int aw, int ah) : x(ax), y(ay), w(aw), h(ah), v_focus(false), quit_callback(NULL) {
 	set_bg_colour(0, 0, 0);
 }
@@ -455,7 +464,7 @@ void GUI::DropDown::Draw() {
 	assert(SDL_FillRect(screen, &re, bcolour) == 0);
 }
 
-static void dropdown_set(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void dropdown_set(const GUI::TextButton &button, const SDL_Event &, void *arg) {
 	GUI::DropDown *drop = (GUI::DropDown*)arg;
 
 	for(GUI::DropDown::item_list::iterator i = drop->items.begin(); i != drop->items.end(); i++) {

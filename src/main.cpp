@@ -31,7 +31,15 @@
 namespace po = boost::program_options;
 
 const char *team_names[] = { "Blue", "Red", "Green", "Yellow", "Purple", "Orange", "Spectator" };
-const SDL_Colour team_colours[] = { {0,0,255}, {255,0,0}, {0,255,0}, {255,255,0}, {160,32,240}, {255,165,0}, {190,190,190} };
+const SDL_Colour team_colours[] = {
+	{0,0,255, 0},
+	{255,0,0, 0},
+	{0,255,0, 0},
+	{255,255,0, 0},
+	{160,32,240, 0},
+	{255,165,0, 0},
+	{190,190,190, 0}
+};
 
 struct options options;
 

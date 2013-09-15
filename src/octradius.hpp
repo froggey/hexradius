@@ -71,7 +71,13 @@ struct Tile {
 	int screen_x, screen_y;
 	pawn_ptr render_pawn;
 
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(pawn_ptr()), screen_x(0), screen_y(0), render_pawn(pawn_ptr()), animating(false) {}
+	Tile(int c, int r, int h) :
+		col(c), row(r), height(h),
+		power(-1), has_power(false),
+		pawn(pawn_ptr()),
+		animating(false), screen_x(0), screen_y(0),
+		render_pawn(pawn_ptr())
+	{}
 
 	bool SetHeight(int h);
 
