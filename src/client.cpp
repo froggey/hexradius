@@ -171,7 +171,7 @@ void Client::run() {
 		}
 
 		if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
-			Tile *tile = TileAtXY(game_state->tiles, event.button.x, event.button.y);
+			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			if(event.button.button == SDL_BUTTON_LEFT) {
 				xd = event.button.x;
@@ -183,7 +183,7 @@ void Client::run() {
 			}
 		}
 		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && !current_animator) {
-			Tile *tile = TileAtXY(game_state->tiles, event.button.x, event.button.y);
+			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
 				if(within_rect(pmenu_area, event.button.x, event.button.y)) {
@@ -233,7 +233,7 @@ void Client::run() {
 			}
 		}
 		else if(event.type == SDL_MOUSEMOTION) {
-			Tile *tile = TileAtXY(game_state->tiles, event.motion.x, event.motion.y);
+			Tile *tile = game_state->tile_at_screen(event.motion.x, event.motion.y);
 
 			if(dpawn) {
 				last_redraw = 0;
@@ -253,7 +253,7 @@ void Client::run() {
 				int mouse_x, mouse_y;
 				SDL_GetMouseState(&mouse_x, &mouse_y);
 
-				Tile *tile = TileAtXY(game_state->tiles, mouse_x, mouse_y);
+				Tile *tile = game_state->tile_at_screen(mouse_x, mouse_y);
 				if(tile) {
 					std::cout << "Mouse is over tile " << tile->col << "," << tile->row << std::endl;
 				}else{
@@ -454,8 +454,8 @@ void Client::handle_message_game(const protocol::message &msg) {
 		std::cout << "Turn for player " << turn << std::endl;
 	}else if(msg.msg() == protocol::MOVE) {
 		if(msg.pawns_size() == 1) {
-			pawn_ptr pawn = FindPawn(game_state->tiles, msg.pawns(0).col(), msg.pawns(0).row());
-			Tile *tile = FindTile(game_state->tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+			Tile *tile = game_state->tile_at(msg.pawns(0).new_col(), msg.pawns(0).new_row());
 
 			if(!(pawn && tile && pawn->Move(tile, NULL, this))) {
 				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
@@ -465,7 +465,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 	}else if(msg.msg() == protocol::UPDATE) {
 		for(int i = 0; i < msg.tiles_size(); i++) {
-			Tile *tile = FindTile(game_state->tiles, msg.tiles(i).col(), msg.tiles(i).row());
+			Tile *tile = game_state->tile_at(msg.tiles(i).col(), msg.tiles(i).row());
 			if(!tile) {
 				continue;
 			}
@@ -475,7 +475,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 
 		for(int i = 0; i < msg.pawns_size(); i++) {
-			pawn_ptr pawn = FindPawn(game_state->tiles, msg.pawns(i).col(), msg.pawns(i).row());
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(i).col(), msg.pawns(i).row());
 			if(!pawn) {
 				continue;
 			}
@@ -496,7 +496,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 	}else if(msg.msg() == protocol::USE) {
 		if(msg.pawns_size() == 1) {
-			pawn_ptr pawn = FindPawn(game_state->tiles, msg.pawns(0).col(), msg.pawns(0).row());
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
 
 			if(pawn) {
 				int power = msg.pawns(0).use_power();
@@ -577,7 +577,7 @@ void Client::DrawScreen() {
 
 	int mouse_x, mouse_y;
 	SDL_GetMouseState(&mouse_x, &mouse_y);
-	Tile *htile = TileAtXY(game_state->tiles, mouse_x, mouse_y);
+	Tile *htile = game_state->tile_at_screen(mouse_x, mouse_y);
 
 	int bs_col, fs_col, diag_row = -1;
 

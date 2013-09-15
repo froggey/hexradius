@@ -283,7 +283,7 @@ namespace Powers {
 			int col = client->game_state->power_rand_vals[0];
 			int row = client->game_state->power_rand_vals[1];
 
-			Tile *tile = FindTile(client->game_state->tiles, col, row);
+			Tile *tile = client->game_state->tile_at(col, row);
 			if(!tile || tile->pawn) {
 				std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
 				return false;

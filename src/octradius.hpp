@@ -140,13 +140,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List fs_tiles();
 };
 
-Tile *FindTile(Tile::List &list, int c, int r);
-pawn_ptr FindPawn(Tile::List &list, int c, int r);
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
-Tile *TileAtXY(Tile::List &tiles, int x, int y);
-pawn_ptr PawnAtXY(Tile::List &tiles, int x, int y);
-void FreeTiles(Tile::List &tiles);
-void CopyTiles(Tile::List &dest, const Tile::List &src);
 void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
 struct options {

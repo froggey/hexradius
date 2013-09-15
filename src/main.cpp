@@ -87,10 +87,7 @@ int main(int argc, char **argv) {
 	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 
 	if(vm.count("host")) {
-		Scenario scn;
-		scn.load_file(scenario);
-
-		Server server(port, scn);
+		Server server(port, scenario);
 
 		Client client("127.0.0.1", port);
 

@@ -3,37 +3,31 @@
 
 #include "octradius.hpp"
 #include "octradius.pb.h"
+#include <boost/utility.hpp>
 
 class GameState;
 
-struct Scenario {
-	Tile::List tiles;
+struct Scenario : boost::noncopyable {
+	GameState *game_state;
 	std::set<PlayerColour> colours;
 
-	Scenario() {}
+	Scenario();
+	~Scenario();
 
-	~Scenario() {
-		FreeTiles(tiles);
-	}
-
-	Scenario &operator=(const Scenario &s) {
-		if(this != &s) {
-			CopyTiles(tiles, s.tiles);
-		}
-
-		return *this;
-	}
-
+	/** Load a scenario from the given file.
+	 * Throws an exception if the file doesn't exist. */
 	void load_file(std::string filename);
 
-	void store_proto(protocol::message &msg);
+	/** Load a scenario from a network message. */
 	void load_proto(const protocol::message &msg);
+	/** Serialize the loaded scenerio into a network message */
+	void store_proto(protocol::message &msg);
 
+	/** Return the currently loaded game state, after
+	 * converting pawn colours to their appropriate player colours.
+	 * Caller takes ownership of the GameState and init_game
+	 * cannot be called again until a new scenario is loaded. */
 	GameState *init_game(std::set<PlayerColour> spawn_colours);
-
-	Scenario(const Scenario &s) {
-		CopyTiles(tiles, s.tiles);
-	}
 };
 
 #endif /* !OR_SCENARIO_HPP */

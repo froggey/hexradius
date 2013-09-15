@@ -63,11 +63,11 @@ class Server {
 		}
 	};
 
-	public:
-		Server(uint16_t port, Scenario &s);
-		~Server();
+public:
+	Server(uint16_t port, const std::string &scenario_file);
+	~Server();
 
-		GameState *game_state;
+	GameState *game_state;
 
 	private:
 		typedef std::set<Server::Client::ptr,client_compare> client_set;

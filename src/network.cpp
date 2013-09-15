@@ -11,8 +11,8 @@
 #include "powers.hpp"
 #include "gamestate.hpp"
 
-Server::Server(uint16_t port, Scenario &s) : game_state(0), acceptor(io_service) {
-	scenario = s;
+Server::Server(uint16_t port, const std::string &s) : game_state(0), acceptor(io_service) {
+	scenario.load_file(s);
 
 	idcounter = 0;
 
@@ -429,8 +429,8 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		const protocol::pawn &p_pawn = msg.pawns(0);
 
-		pawn_ptr pawn = FindPawn(game_state->tiles, p_pawn.col(), p_pawn.row());
-		Tile *tile = FindTile(game_state->tiles, p_pawn.new_col(), p_pawn.new_row());
+		pawn_ptr pawn = game_state->pawn_at(p_pawn.col(), p_pawn.row());
+		Tile *tile = game_state->tile_at(p_pawn.new_col(), p_pawn.new_row());
 
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
 			return true;
@@ -456,7 +456,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			client->WriteBasic(protocol::BADMOVE);
 		}
 	}else if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
-		Tile *tile = FindTile(game_state->tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		Tile *tile = game_state->tile_at(msg.pawns(0).col(), msg.pawns(0).row());
 		pawn_ptr pawn = tile ? tile->pawn : pawn_ptr();
 
 		int power = msg.pawns(0).use_power();

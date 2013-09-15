@@ -146,10 +146,7 @@ static void host_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 		return;
 	}
 
-	Scenario scn;
-	scn.load_file(scenario);
-
-	Server server(port, scn);
+	Server server(port, scenario);
 
 	Client client("127.0.0.1", port);
 
