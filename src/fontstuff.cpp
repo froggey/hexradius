@@ -53,9 +53,9 @@ void FontStuff::FreeFonts(void) {
 	font_cache.clear();
 }
 
-void FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SDL_Color colour, std::string text) {
+int FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SDL_Color colour, std::string text) {
 	if(text.empty()) {
-		return;
+		return 0;
 	}
 
 	SDL_Surface *rt = TTF_RenderUTF8_Blended(font, text.c_str(), colour);
@@ -66,8 +66,9 @@ void FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SD
 	if(SDL_BlitSurface(rt, NULL, surface, &rect) == -1) {
 		throw std::runtime_error(std::string("Unable to blit text: ") + SDL_GetError());
 	}
-
+	int width = rt->w;
 	SDL_FreeSurface(rt);
+	return width;
 }
 
 int FontStuff::TextWidth(TTF_Font *font, const std::string &text) {
