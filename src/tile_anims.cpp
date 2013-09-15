@@ -57,7 +57,7 @@ namespace TileAnimators {
 				else if (this_t >= 0) {
 					tile->anim_height = tile->final_elevation
 						+ (tile->initial_elevation - tile->final_elevation)
-						* cos(2 * PI * this_t / 1000.0) / pow(4 * (tile->initial_elevation + 2), this_t / 1000.0);
+						* cos(2 * PI * this_t / 1000.0) / pow(12, this_t / 1000.0);
 				}
 
 				did_stuff = true;
