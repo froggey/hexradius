@@ -819,10 +819,23 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 	}
 }
 
+// These are appened to power names based on the directionality of the power.
+// They must to be seperate from the actual name because they have to be
+// rendered using DejaVu Serif.
+// Save this file with UTF-8 or I'll set you on fire.
+static const char *direction_suffixes[5] = {
+	"", // Undirected
+	" ↔", // Row.    U+2194 LEFT RIGHT ARROW
+	" ⥁", // Radial. U+2941 CLOCKWISE CLOSED CIRCLE ARROW
+	" ⤡", // NW-SE.  U+2921 NORTH WEST AND SOUTH EAST ARROW
+	" ⤢", // NE-SW.  U+2922 NORTH EAST AND SOUTH WEST ARROW
+};
+
 void Client::draw_pmenu(pawn_ptr pawn) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
+	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
 
-	int fh = TTF_FontLineSkip(font);
+	int fh = std::max(TTF_FontLineSkip(font), TTF_FontLineSkip(symbol_font));
 	int fw = FontStuff::TextWidth(font, "0");
 
 	int mouse_x, mouse_y;
@@ -839,7 +852,7 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 
 	for(; i != pawn->powers.end(); i++) {
 		int w = FontStuff::TextWidth(font, Powers::powers[i->first].name);
-
+		w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[i->first].direction]);
 		if(w > rect.w) {
 			rect.w = w;
 		}
@@ -873,7 +886,10 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 
 		rect.x += fw*3;
 
-		FontStuff::BlitText(screen, rect, font, font_colour, Powers::powers[i->first].name);
+		int name_width = FontStuff::BlitText(screen, rect, font, font_colour, Powers::powers[i->first].name);
+		rect.x += name_width;
+		FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_suffixes[Powers::powers[i->first].direction]);
+		rect.x -= name_width;
 
 		rect.x -= fw*3;
 		rect.y += fh;

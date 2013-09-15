@@ -24,6 +24,9 @@ namespace Powers {
 		*/
 
 		bool pawn_survive;
+		enum Directionality {
+			undirected, row, radial, nw_se, ne_sw
+		} direction;
 	};
 
 	extern Power powers[];
