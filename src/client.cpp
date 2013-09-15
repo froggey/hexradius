@@ -28,23 +28,21 @@ static void start_cb(const GUI::TextButton &button, const SDL_Event &event, void
 	client->send_begin();
 }
 
-static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
+static void push_sdl_event(int code) {
 	SDL_Event l_event;
-	
+
 	l_event.type = SDL_USEREVENT;
-	l_event.user.code = EVENT_RETURN;
-	
+	l_event.user.code = code;
+
 	SDL_PushEvent(&l_event);
 }
 
+static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
+	push_sdl_event(EVENT_RETURN);
+}
+
 static Uint32 redraw_callback(Uint32 interval, void *param) {
-	SDL_Event event;
-	
-	event.type = SDL_USEREVENT;
-	event.user.code = EVENT_RDTIMER;
-	
-	SDL_PushEvent(&event);
-	
+	push_sdl_event(EVENT_RDTIMER);
 	return interval;
 }
 
@@ -88,7 +86,14 @@ Client::~Client() {
 }
 
 void Client::net_thread_main() {
-	io_service.run();
+	try {
+		io_service.run();
+	} catch(std::runtime_error e) {
+		protocol::message msg;
+		msg.set_msg(protocol::QUIT);
+		msg.set_quit_msg(std::string("Network error: ") + e.what());
+		recv_queue.push(msg);
+	}
 }
 
 void Client::connect_callback(const boost::system::error_code& error) {
@@ -318,7 +323,7 @@ void Client::handle_message(const protocol::message &msg) {
 		}
 	}else if(msg.msg() == protocol::QUIT) {
 		std::cout << "You have been disconnected by the server (" << msg.quit_msg() << ")" << std::endl;
-		abort();
+		push_sdl_event(EVENT_RETURN);
 	}else{
 		if(state == GAME) {
 			handle_message_game(msg);
