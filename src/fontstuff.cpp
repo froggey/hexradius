@@ -58,7 +58,7 @@ void FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SD
 		return;
 	}
 
-	SDL_Surface *rt = TTF_RenderText_Blended(font, text.c_str(), colour);
+	SDL_Surface *rt = TTF_RenderUTF8_Blended(font, text.c_str(), colour);
 	if(!rt) {
 		throw std::runtime_error(std::string("Unable to render text: ") + TTF_GetError());
 	}
@@ -72,7 +72,7 @@ void FontStuff::BlitText(SDL_Surface *surface, SDL_Rect rect, TTF_Font *font, SD
 
 int FontStuff::TextWidth(TTF_Font *font, const std::string &text) {
 	int width;
-	if(TTF_SizeText(font, text.c_str(), &width, NULL) == -1) {
+	if(TTF_SizeUTF8(font, text.c_str(), &width, NULL) == -1) {
 		throw std::runtime_error("TTF_SizeText() failed on \"" + text + "\"");
 	}
 
