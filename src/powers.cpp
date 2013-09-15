@@ -96,14 +96,16 @@ namespace Powers {
 
 	bool raise_tile(pawn_ptr pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
-		return pawn->cur_tile->SetHeight(pawn->cur_tile->height+1);
+			client->current_animator = new TileAnimators::ElevationAnimator(
+				client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
+		return pawn->cur_tile->SetHeight(pawn->cur_tile->height + 1);
 	}
 
 	bool lower_tile(pawn_ptr pawn, Server *server, Client *client) {
 		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
-		return pawn->cur_tile->SetHeight(pawn->cur_tile->height-1);
+			client->current_animator = new TileAnimators::ElevationAnimator(
+				client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
+		return pawn->cur_tile->SetHeight(pawn->cur_tile->height - 1);
 	}
 
 	bool increase_range(pawn_ptr pawn, Server *server, Client *client) {
