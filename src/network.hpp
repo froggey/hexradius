@@ -16,6 +16,8 @@
 #include "octradius.hpp"
 #include "scenario.hpp"
 
+class GameState;
+
 class Server {
 	struct Client : public boost::enable_shared_from_this<Server::Client> {
 		typedef boost::shared_ptr<Server::Client> ptr;
@@ -65,9 +67,7 @@ class Server {
 		Server(uint16_t port, Scenario &s);
 		~Server();
 
-		std::vector<uint32_t> power_rand_vals;
-
-		Tile::List tiles;
+		GameState *game_state;
 
 	private:
 		typedef std::set<Server::Client::ptr,client_compare> client_set;

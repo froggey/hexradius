@@ -3,6 +3,7 @@
 #include "tile_anims.hpp"
 #include "client.hpp"
 #include "network.hpp"
+#include "gamestate.hpp"
 
 #undef ABSOLUTE
 #undef RELATIVE
@@ -265,24 +266,24 @@ namespace Powers {
 			Tile *tile;
 
 			do {
-				tlist = RandomTiles(server->tiles, 1, false);
+				tlist = RandomTiles(server->game_state->tiles, 1, false);
 				tile = *(tlist.begin());
 			} while(tile->pawn);
 
-			server->power_rand_vals.push_back(tile->col);
-			server->power_rand_vals.push_back(tile->row);
+			server->game_state->power_rand_vals.push_back(tile->col);
+			server->game_state->power_rand_vals.push_back(tile->row);
 
 			tile->pawn.swap(pawn->cur_tile->pawn);
 			pawn->cur_tile = tile;
 		}else{
-			if(client->power_rand_vals.size() != 2) {
+			if(client->game_state->power_rand_vals.size() != 2) {
 				return false;
 			}
 
-			int col = client->power_rand_vals[0];
-			int row = client->power_rand_vals[1];
+			int col = client->game_state->power_rand_vals[0];
+			int row = client->game_state->power_rand_vals[1];
 
-			Tile *tile = FindTile(client->tiles, col, row);
+			Tile *tile = FindTile(client->game_state->tiles, col, row);
 			if(!tile || tile->pawn) {
 				std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
 				return false;

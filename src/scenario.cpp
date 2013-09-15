@@ -4,6 +4,7 @@
 
 #include "scenario.hpp"
 #include "powers.hpp"
+#include "gamestate.hpp"
 
 static char *next_value(char *str) {
 	char *r = str+strcspn(str, "\t ");
@@ -172,12 +173,15 @@ void Scenario::load_proto(const protocol::message &msg) {
 	}
 }
 
-void Scenario::init_game(std::set<PlayerColour> spawn_colours, Tile::List &ret) {
-	CopyTiles(ret, tiles);
+GameState *Scenario::init_game(std::set<PlayerColour> spawn_colours) {
+	GameState *g = new GameState;
+	CopyTiles(g->tiles, tiles);
 
-	for(Tile::List::iterator t = ret.begin(); t != ret.end(); t++) {
+	for(Tile::List::iterator t = g->tiles.begin(); t != g->tiles.end(); t++) {
 		if((*t)->pawn && spawn_colours.find((*t)->pawn->colour) == spawn_colours.end()) {
 			(*t)->pawn.reset();
 		}
 	}
+
+	return g;
 }

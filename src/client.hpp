@@ -18,6 +18,8 @@
 #include "animator.hpp"
 #include "scenario.hpp"
 
+class GameState;
+
 class Client {
 	public:
 		bool quit;	// Game returned due to application quit
@@ -33,8 +35,7 @@ class Client {
 		void change_colour(uint16_t id, PlayerColour colour);
 		void add_animator(Animators::Generic* anim);
 
-		std::vector<uint32_t> power_rand_vals;
-		Tile::List tiles;
+		GameState *game_state;
 
 	private:
 		struct Player {

@@ -4,6 +4,8 @@
 #include "octradius.hpp"
 #include "octradius.pb.h"
 
+class GameState;
+
 struct Scenario {
 	Tile::List tiles;
 	std::set<PlayerColour> colours;
@@ -27,7 +29,7 @@ struct Scenario {
 	void store_proto(protocol::message &msg);
 	void load_proto(const protocol::message &msg);
 
-	void init_game(std::set<PlayerColour> spawn_colours, Tile::List &ret);
+	GameState *init_game(std::set<PlayerColour> spawn_colours);
 
 	Scenario(const Scenario &s) {
 		CopyTiles(tiles, s.tiles);
