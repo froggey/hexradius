@@ -12,9 +12,9 @@ const double E = 2.71828182845904523536;
 
 namespace TileAnimators {
 	Animator* current_animator = NULL;
-	
+
 	Animator::Animator(Client* _client, Tile::List _tiles): client(_client), tiles(_tiles) {}
-	
+
 	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
 		Animator(_client, _tiles) {
 		BOOST_FOREACH(Tile* t, tiles) {
@@ -33,22 +33,22 @@ namespace TileAnimators {
 		}
 		start_time = SDL_GetTicks();
 	}
-	
+
 	void ElevationAnimator::do_stuff() {
 		unsigned int ticks = SDL_GetTicks();
 		unsigned int t = ticks - start_time;
 		//uint dt = ticks - last_time;
 		//last_time = ticks;
-		
+
 		bool did_stuff = false;
-		
+
 		BOOST_FOREACH(Tile* tile, tiles) {
 			if (tile->animating) {
 				if (tile->final_elevation == tile->initial_elevation) {
 					tile->animating = false;
 					continue;
 				}
-				
+
 				int this_t = t - tile->anim_delay;
 				if (this_t > 2000) {
 					tile->animating = false;
@@ -63,11 +63,11 @@ namespace TileAnimators {
 						tile->anim_height = tile->final_elevation - (tile->final_elevation - tile->initial_elevation)*cos(2*PI*this_t / 1000.0)/pow(2*(tile->final_elevation+2), this_t / 1000.0);
 					}
 				}
-				
+
 				did_stuff = true;
 			}
 		}
-		
+
 		if (!did_stuff) {
 			assert(client->current_animator == this);
 			client->current_animator = NULL;

@@ -14,13 +14,13 @@ namespace TileAnimators {
 		unsigned int start_time;
 		unsigned int last_time;
 		Client* client;
-	
+
 		Animator(Client* _client, Tile::List _tiles);
 		virtual void do_stuff() = 0;
 	};
-	
+
 	enum ElevationMode { ABSOLUTE, RELATIVE };
-	
+
 	struct ElevationAnimator: public Animator {
 		ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation);
 		virtual void do_stuff();

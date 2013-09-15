@@ -44,7 +44,7 @@ static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
 
 MainMenu::MainMenu() :
 	gui(0, 0, MENU_WIDTH, MENU_HEIGHT),
-	
+
 	join_btn(gui, 332, 235, 135, 35, 1, "Join game", &main_join_cb),
 	host_btn(gui, 332, 280, 135, 35, 2, "Host game", &main_host_cb),
 	options_btn(gui, 332, 325, 135, 35, 3, "Options", &options_main),
@@ -56,7 +56,7 @@ MainMenu::MainMenu() :
 
 void MainMenu::run() {
 	running = true;
-	
+
 	while(running) {
 		gui.poll(true);
 		SDL_Delay(MENU_DELAY);
@@ -65,35 +65,35 @@ void MainMenu::run() {
 
 static void join_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	JoinMenu *menu = (JoinMenu*)arg;
-	
+
 	if(menu->host_input.text.empty()) {
 		std::cout << "No host" << std::endl;
 		return;
 	}
-	
+
 	if(menu->port_input.text.empty()) {
 		std::cout << "No port" << std::endl;
 		return;
 	}
-	
+
 	std::string host = menu->host_input.text;
 	int port = atoi(menu->port_input.text.c_str());
-	
+
 	if(port < 1 || port > 65535) {
 		std::cout << "Invalid port number" << std::endl;
 		return;
 	}
-	
+
 	Client client(host, port);
-	
+
 	client.run();
-	
+
 	if(client.quit) {
 		running = false;
 	}
-	
+
 	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
-	
+
 	submenu = false;
 }
 
@@ -104,22 +104,22 @@ static void join_textbox_enter(const GUI::TextBox &tbox, const SDL_Event &event,
 
 JoinMenu::JoinMenu() :
 	gui(0, 0, MENU_WIDTH, MENU_HEIGHT),
-	
+
 	host_label(gui, 245, 232, 100, 25, 0, "Host:"),
 	host_input(gui, 355, 232, 200, 25, 1),
-	
+
 	port_label(gui, 245, 277, 100, 25, 0, "Port:"),
 	port_input(gui, 355, 277, 200, 25, 2),
-	
+
 	join_btn(gui, 332, 322, 135, 35, 3, "Join Game", &join_cb, this),
 	back_btn(gui, 20, 545, 135, 35, 4, "Back", &back_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
-	
+
 	host_label.align(GUI::RIGHT);
 	host_input.set_enter_callback(&join_textbox_enter, this);
-	
+
 	port_label.align(GUI::RIGHT);
 	port_input.set_text(to_string(DEFAULT_PORT));
 	port_input.set_enter_callback(&join_textbox_enter, this);
@@ -128,7 +128,7 @@ JoinMenu::JoinMenu() :
 
 void JoinMenu::run() {
 	submenu = true;
-	
+
 	while(running && submenu) {
 		gui.poll(true);
 		SDL_Delay(MENU_DELAY);
@@ -137,30 +137,30 @@ void JoinMenu::run() {
 
 static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	HostMenu *menu = (HostMenu*)arg;
-	
+
 	int port = atoi(menu->port_input.text.c_str());
 	std::string scenario = menu->scenario_input.text;
-	
+
 	if(port < 1 || port > 65535) {
 		std::cerr << "Invalid port number" << std::endl;
 		return;
 	}
-	
+
 	Scenario scn;
 	scn.load_file(scenario);
-	
+
 	Server server(port, scn);
-	
+
 	Client client("127.0.0.1", port);
-	
+
 	client.run();
-	
+
 	if(client.quit) {
 		running = false;
 	}
-	
+
 	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
-	
+
 	submenu = false;
 }
 
@@ -171,24 +171,24 @@ static void host_textbox_enter(const GUI::TextBox &tbox, const SDL_Event &event,
 
 HostMenu::HostMenu() :
 	gui(0, 0, MENU_WIDTH, MENU_HEIGHT),
-	
+
 	port_label(gui, 245, 232, 100, 25, 0, "Port:"),
 	port_input(gui, 355, 232, 200, 25, 1),
-	
+
 	scenario_label(gui, 245, 277, 100, 25, 0, "Scenario:"),
 	scenario_input(gui, 355, 277, 200, 25, 2),
-	
+
 	host_btn(gui, 332, 322, 135, 35, 3, "Host Game", &host_cb, this),
 	back_btn(gui, 20, 545, 135, 35, 4, "Back", &back_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
-	
+
 	port_label.align(GUI::RIGHT);
 	port_input.set_text(to_string(DEFAULT_PORT));
 	port_input.set_enter_callback(&host_textbox_enter, this);
 	port_input.set_input_callback(&port_input_filter);
-	
+
 	scenario_label.align(GUI::RIGHT);
 	scenario_input.set_text("scenario/hex_2p.txt");
 	scenario_input.set_enter_callback(&host_textbox_enter, this);
@@ -196,7 +196,7 @@ HostMenu::HostMenu() :
 
 void HostMenu::run() {
 	submenu = true;
-	
+
 	while(running && submenu) {
 		gui.poll(true);
 		SDL_Delay(MENU_DELAY);
@@ -206,7 +206,7 @@ void HostMenu::run() {
 struct options_inputs {
 	GUI::TextBox username;
 	GUI::Checkbox show_lines;
-	
+
 	options_inputs(GUI &gui) :
 		username(gui, 385, 200, 200, 25, 1),
 		show_lines(gui, 385, 235, 25, 25, 2, options.show_lines) {}
@@ -214,37 +214,37 @@ struct options_inputs {
 
 static void save_options(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	struct options_inputs *inputs = (options_inputs*)arg;
-	
+
 	if(inputs->username.text.empty()) {
 		std::cerr << "Username field is empty" << std::endl;
 		return;
 	}
-	
+
 	options.username = inputs->username.text;
 	options.show_lines = inputs->show_lines.state;
 	options.save("options.txt");
-	
+
 	submenu = false;
 }
 
 static void options_main(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
 	GUI gui(0, 0, MENU_WIDTH, MENU_HEIGHT);
-	
+
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
-	
+
 	options_inputs inputs(gui);
-	
+
 	GUI::TextButton username_label(gui, 215, 200, 160, 25, 0, "Username:");
 	username_label.align(GUI::RIGHT);
 	inputs.username.set_text(options.username);
-	
+
 	GUI::TextButton lines_label(gui, 215, 235, 160, 25, 0, "Show grid paths:");
 	lines_label.align(GUI::RIGHT);
-	
+
 	GUI::TextButton back_btn(gui, 20, 545, 135, 35, 21, "Back", &back_cb);
 	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", &save_options, &inputs);
-	
+
 	for(submenu = true; submenu && running;) {
 		gui.poll(true);
 		SDL_Delay(MENU_DELAY);

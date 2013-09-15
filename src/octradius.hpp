@@ -55,79 +55,79 @@ typedef boost::shared_ptr<Pawn> pawn_ptr;
 
 struct Tile {
 	typedef std::vector<Tile*> List;
-	
+
 	int col, row;
 	int height;
 	int power;
 	bool has_power;
 	pawn_ptr pawn;
-	
+
 	bool animating;
 	float anim_height;
 	int anim_delay;
 	int initial_elevation;
 	int final_elevation;
-	
+
 	int screen_x, screen_y;
 	pawn_ptr render_pawn;
-	
+
 	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(pawn_ptr()), screen_x(0), screen_y(0), render_pawn(pawn_ptr()), animating(false) {}
-	
+
 	bool SetHeight(int h);
-	
+
 	void CopyToProto(protocol::tile *t);
 };
 
 class Pawn : public boost::enable_shared_from_this<Pawn> {
 	private:
 		Tile::List &all_tiles;
-		
+
 	public:
 		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE };
 		typedef std::map<int,int> PowerList;
-		
+
 		Tile *cur_tile;
-		
+
 		PlayerColour colour;
 		PowerList powers;
 		int range;
 		uint32_t flags;
 		destroy_type destroyed_by;
-		
+
 		Tile *last_tile;
 		Uint32 teleport_time;
-		
+
 		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : all_tiles(at) {
 			cur_tile = ct;
-			
+
 			colour = c;
 			range = 0;
 			flags = 0;
-			
+
 			last_tile = NULL;
 		}
-		
+
 		Pawn(pawn_ptr pawn, Tile::List &at, Tile *ct) : all_tiles(at) {
 			cur_tile = ct;
-			
+
 			colour = pawn->colour;
 			powers = pawn->powers;
 			range = pawn->range;
 			flags = pawn->flags;
-			
+
 			last_tile = NULL;
 		}
-		
+
 		void destroy(destroy_type dt);
 		bool destroyed();
-		
+
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
-		
+
 		bool Move(Tile *new_tile, Server *server, Client *client);
-		
+
 		void AddPower(int power);
 		bool UsePower(int power, Server *server, Client *client);
-		
+
 		Tile::List RowTiles(void);
 		Tile::List RadialTiles(void);
 		Tile::List bs_tiles();
@@ -146,9 +146,9 @@ void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 struct options {
 	std::string username;
 	bool show_lines;
-	
+
 	options();
-	
+
 	void load(std::string filename);
 	void save(std::string filename);
 };
@@ -157,10 +157,10 @@ extern struct options options;
 
 struct send_buf {
 	typedef boost::shared_array<char> buf_ptr;
-	
+
 	buf_ptr buf;
 	uint32_t size;
-	
+
 	send_buf(const protocol::message &message);
 };
 

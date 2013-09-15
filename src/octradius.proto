@@ -19,7 +19,7 @@ enum msgtype {
 			// or the target player.
 	CHAT = 12;	// Chat message - Message text is in message and player_id
 			// will be set by server when redistributing the message.
-	
+
 	MOVE = 21;	// Move a single pawn
 	USE = 22;	// Use a power
 	UPDATE = 23;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
@@ -52,19 +52,19 @@ message pawn {
 	//
 	required uint32 col = 1;
 	required uint32 row = 2;
-	
+
 	// Used to set/update pawn information
 	//
 	optional colour colour = 11;
 	optional uint32 range = 12;
 	optional uint32 flags = 13;
 	repeated power powers = 15;
-	
+
 	// Used to move/update pawn
 	//
 	optional uint32 new_row = 21;
 	optional uint32 new_col = 22;
-	
+
 	// Used by PAWN_USE
 	//
 	optional uint32 use_power = 31;
@@ -82,15 +82,15 @@ message scenario {
 
 message message {
 	required msgtype msg = 1;
-	
+
 	optional string player_name = 2;
 	optional uint32 player_id = 3;
-	
+
 	repeated tile tiles = 4;
 	repeated pawn pawns = 5;
 	repeated player players = 8;
 	optional scenario scenario = 9;
-	
+
 	optional string quit_msg = 11;
 	optional bool is_draw = 12;
 	repeated uint32 power_rand_vals = 13;

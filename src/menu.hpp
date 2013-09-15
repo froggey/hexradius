@@ -18,43 +18,43 @@ struct MainMenu {
 	GUI::TextButton host_btn;
 	GUI::TextButton options_btn;
 	GUI::TextButton quit_btn;
-	
+
 	MainMenu();
-	
+
 	void run();
 };
 
 struct JoinMenu {
 	GUI gui;
-	
+
 	GUI::TextButton host_label;
 	GUI::TextBox host_input;
-	
+
 	GUI::TextButton port_label;
 	GUI::TextBox port_input;
-	
+
 	GUI::TextButton join_btn;
 	GUI::TextButton back_btn;
-	
+
 	JoinMenu();
-	
+
 	void run();
 };
 
 struct HostMenu {
 	GUI gui;
-	
+
 	GUI::TextButton port_label;
 	GUI::TextBox port_input;
-	
+
 	GUI::TextButton scenario_label;
 	GUI::TextBox scenario_input;
-	
+
 	GUI::TextButton host_btn;
 	GUI::TextButton back_btn;
-	
+
 	HostMenu();
-	
+
 	void run();
 };
 

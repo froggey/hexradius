@@ -10,13 +10,13 @@ namespace Animators {
 		virtual bool render() { return false; }
 		virtual void free() {};
 	};
-	
+
 	struct PawnCrush : Generic {
 		int tx, ty;
 		Uint32 init_ticks;
-		
+
 		PawnCrush(int tile_x, int tile_y);
-		
+
 		bool render();
 		void free();
 	};
