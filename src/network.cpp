@@ -481,7 +481,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				update.set_msg(protocol::UPDATE);
 
 				update.add_pawns();
-				pawn->CopyToProto(update.mutable_pawns(0), false);
+				pawn->CopyToProto(update.mutable_pawns(0), true);
 
 				WriteAll(update);
 			}
