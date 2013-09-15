@@ -31,7 +31,7 @@ Tile *GameState::tile_at_screen(int x, int y) {
 	Tile::List::iterator ti = tiles.end();
 
 	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
-	assert(SDL_LockSurface(tile) == 0);
+	ensure_SDL_LockSurface(tile);
 
 	do {
 		ti--;

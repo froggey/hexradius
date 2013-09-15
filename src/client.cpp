@@ -551,7 +551,7 @@ void Client::DrawScreen() {
 		current_animator->do_stuff();
 	}
 
-	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
+	ensure_SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
 
 	{
 		SDL_Rect rect = {0,0,0,0};
@@ -614,10 +614,10 @@ void Client::DrawScreen() {
 			}
 		}
 
-		assert(SDL_BlitSurface(tile_img, NULL, screen, &rect) == 0);
+		ensure_SDL_BlitSurface(tile_img, NULL, screen, &rect);
 
 		if((*ti)->has_power) {
-			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
+			ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
 		}
 
 		if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
@@ -659,7 +659,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 
 	unsigned int frame = torus_frame;
 
-	assert(SDL_BlitSurface(shadow, &base, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 		rect.x -= climb_offset;
@@ -674,14 +674,14 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 	}
 
 	SDL_Rect srect = { frame * 50, (pawn->colour * 50) + base.y, 50, base.h };
-	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(pawn_graphics, &srect, screen, &rect);
 
 	srect.x = pawn->range * 50;
 	srect.y = (pawn->colour * 50) + base.y;
-	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(range_overlay, &srect, screen, &rect);
 
 	if(pawn->flags & PWR_SHIELD) {
-		assert(SDL_BlitSurface(shield, &base, screen, &rect) == 0);
+		ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 	}
 }
 

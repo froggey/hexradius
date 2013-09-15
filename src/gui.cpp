@@ -8,6 +8,7 @@
 #include "gui.hpp"
 #include "fontstuff.hpp"
 #include "loadimage.hpp"
+#include "octradius.hpp"
 
 void GUI::Thing::HandleEvent(const SDL_Event &) {
 }
@@ -52,12 +53,12 @@ void GUI::poll(bool read_events) {
 				srect.w = (x+w - rect.x >= bgimg->w ? bgimg->w : x+w - rect.x);
 				srect.h = (y+h - rect.y >= bgimg->h ? bgimg->h : y+h - rect.y);
 
-				assert(SDL_BlitSurface(bgimg, &srect, screen, &rect) == 0);
+				ensure_SDL_BlitSurface(bgimg, &srect, screen, &rect);
 			}
 		}
 	}else{
 		SDL_Rect rect = {x,y,w,h};
-		assert(SDL_FillRect(screen, &rect, bgcolour) == 0);
+		ensure_SDL_FillRect(screen, &rect, bgcolour);
 	}
 
 	for(thing_set::iterator t = things.begin(); t != things.end(); t++) {
@@ -205,7 +206,7 @@ void GUI::ImgButton::Draw() {
 		srect.x = srect.w;
 	}
 
-	assert(SDL_BlitSurface(image, NULL, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(image, NULL, screen, &rect);
 }
 
 GUI::TextBox::TextBox(GUI &g, int ax, int ay, int aw, int ah, int to) : Thing(g) {
@@ -287,14 +288,14 @@ void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 void GUI::TextBox::Draw() {
 	SDL_Rect rect = {x, y, w, h};
 
-	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+	ensure_SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
 	rect.x += 1;
 	rect.y += 1;
 	rect.w -= 1;
 	rect.h -= 1;
 
-	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 255, 255, 255)) == 0);
+	ensure_SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 255, 255, 255));
 
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	int fh = TTF_FontHeight(font);
@@ -309,7 +310,7 @@ void GUI::TextBox::Draw() {
 		rect.w = FontStuff::TextWidth(font, insert_offset < text.length() ? text.substr(insert_offset, 1) : "A");
 		rect.h = fh;
 
-		assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+		ensure_SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
 		if(insert_offset < text.length()) {
 			FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(255,255,255), text.substr(insert_offset, 1));
@@ -354,9 +355,10 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	m_borders = true;
 	m_opacity = 178;
 
-	assert((m_bgs = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, screen->format->BitsPerPixel, 0, 0, 0, 0)));
-	assert(SDL_SetAlpha(m_bgs, SDL_SRCALPHA, m_opacity) == 0);
-	assert(SDL_FillRect(m_bgs, NULL, ImgStuff::MapColour(m_bgc)) == 0);
+	m_bgs = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, screen->format->BitsPerPixel, 0, 0, 0, 0);
+	assert(m_bgs);
+	ensure_SDL_SetAlpha(m_bgs, SDL_SRCALPHA, m_opacity);
+	ensure_SDL_FillRect(m_bgs, NULL, ImgStuff::MapColour(m_bgc));
 
 	m_text = text;
 	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 16);
@@ -374,16 +376,16 @@ GUI::TextButton::~TextButton() {
 void GUI::TextButton::Draw() {
 	SDL_Rect rect = {x, y, w, h};
 
-	assert(SDL_BlitSurface(m_bgs, NULL, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(m_bgs, NULL, screen, &rect);
 
 	if(m_borders) {
 		Uint32 bcolour = has_focus() ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
 		SDL_Rect ra = {x,y,w,1}, rb = {x,y,1,h}, rc = {x,y+h,w,1}, rd = {x+w,y,1,h+1};
 
-		assert(SDL_FillRect(screen, &ra, bcolour) == 0);
-		assert(SDL_FillRect(screen, &rb, bcolour) == 0);
-		assert(SDL_FillRect(screen, &rc, bcolour) == 0);
-		assert(SDL_FillRect(screen, &rd, bcolour) == 0);
+		ensure_SDL_FillRect(screen, &ra, bcolour);
+		ensure_SDL_FillRect(screen, &rb, bcolour);
+		ensure_SDL_FillRect(screen, &rc, bcolour);
+		ensure_SDL_FillRect(screen, &rd, bcolour);
 	}
 
 	rect.w = 0;
@@ -452,16 +454,16 @@ GUI::DropDown::~DropDown() {
 void GUI::DropDown::Draw() {
 	SDL_Rect rect = {x+w-h, y, h, h};
 
-	assert(SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0)) == 0);
+	ensure_SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 0, 0, 0));
 
 	Uint32 bcolour = has_focus() ? SDL_MapRGB(screen->format, 255, 255, 0) : SDL_MapRGB(screen->format, 255, 255, 255);
 	SDL_Rect ra = {x,y,w,1}, rb = {x,y,1,h}, rc = {x,y+h,w,1}, rd = {x+w,y,1,h+1}, re = {x+w-h,y,1,h};
 
-	assert(SDL_FillRect(screen, &ra, bcolour) == 0);
-	assert(SDL_FillRect(screen, &rb, bcolour) == 0);
-	assert(SDL_FillRect(screen, &rc, bcolour) == 0);
-	assert(SDL_FillRect(screen, &rd, bcolour) == 0);
-	assert(SDL_FillRect(screen, &re, bcolour) == 0);
+	ensure_SDL_FillRect(screen, &ra, bcolour);
+	ensure_SDL_FillRect(screen, &rb, bcolour);
+	ensure_SDL_FillRect(screen, &rc, bcolour);
+	ensure_SDL_FillRect(screen, &rd, bcolour);
+	ensure_SDL_FillRect(screen, &re, bcolour);
 }
 
 static void dropdown_set(const GUI::TextButton &button, const SDL_Event &, void *arg) {

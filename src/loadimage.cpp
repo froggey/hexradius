@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "loadimage.hpp"
+#include "octradius.hpp"
 
 SDL_Surface *screen = NULL;
 int screen_w = -1, screen_h = -1;
@@ -167,7 +168,7 @@ void ImgStuff::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
 	}
 
 void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
-	assert(SDL_LockSurface(surface) == 0);
+	ensure_SDL_LockSurface(surface);
 
 	for(int x = 0; x < surface->w; x++) {
 		for(int y = 0; y < surface->h; y++) {
@@ -198,10 +199,10 @@ void ImgStuff::draw_rect(SDL_Rect rect, const SDL_Colour &colour, uint8_t alpha)
 	SDL_Surface *s = SDL_CreateRGBSurface(SDL_SWSURFACE, rect.w, rect.h, screen->format->BitsPerPixel, 0, 0, 0, 0);
 	assert(s);
 
-	assert(SDL_FillRect(s, NULL, SDL_MapRGB(s->format, colour.r, colour.g, colour.b)) == 0);
-	assert(SDL_SetAlpha(s, SDL_SRCALPHA, alpha) == 0);
+	ensure_SDL_FillRect(s, NULL, SDL_MapRGB(s->format, colour.r, colour.g, colour.b));
+	ensure_SDL_SetAlpha(s, SDL_SRCALPHA, alpha);
 
-	assert(SDL_BlitSurface(s, NULL, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(s, NULL, screen, &rect);
 
 	SDL_FreeSurface(s);
 }
