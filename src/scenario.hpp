@@ -27,7 +27,7 @@ struct Scenario {
 	void store_proto(protocol::message &msg);
 	void load_proto(const protocol::message &msg);
 
-	Tile::List init_game(std::set<PlayerColour> spawn_colours);
+	void init_game(std::set<PlayerColour> spawn_colours, Tile::List &ret);
 
 	Scenario(const Scenario &s) {
 		CopyTiles(tiles, s.tiles);

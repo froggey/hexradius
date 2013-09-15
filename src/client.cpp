@@ -341,7 +341,7 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 			colours.insert(p.colour);
 		}
 
-		tiles = scenario.init_game(colours);
+		scenario.init_game(colours, tiles);
 
 		state = GAME;
 

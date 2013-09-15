@@ -189,7 +189,7 @@ void Server::StartGame(void) {
 		colours.insert(c->colour);
 	}
 
-	tiles = scenario.init_game(colours);
+	scenario.init_game(colours, tiles);
 
 	protocol::message begin;
 	begin.set_msg(protocol::BEGIN);

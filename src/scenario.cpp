@@ -172,9 +172,7 @@ void Scenario::load_proto(const protocol::message &msg) {
 	}
 }
 
-Tile::List Scenario::init_game(std::set<PlayerColour> spawn_colours) {
-	Tile::List ret;
-
+void Scenario::init_game(std::set<PlayerColour> spawn_colours, Tile::List &ret) {
 	CopyTiles(ret, tiles);
 
 	for(Tile::List::iterator t = ret.begin(); t != ret.end(); t++) {
@@ -182,6 +180,4 @@ Tile::List Scenario::init_game(std::set<PlayerColour> spawn_colours) {
 			(*t)->pawn.reset();
 		}
 	}
-
-	return ret;
 }
