@@ -428,6 +428,9 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 
 			if(p) {
 				p->colour = (PlayerColour)msg.players(0).colour();
+				if(my_id == msg.players(0).id()) {
+					my_colour = p->colour;
+				}
 				lobby_regen();
 			}
 		}else{
