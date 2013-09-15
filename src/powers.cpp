@@ -9,38 +9,38 @@
 #undef RELATIVE
 
 Powers::Power Powers::powers[] = {
-	{"Destroy Row", &Powers::destroy_row, 50, true},
-	{"Destroy Radial", &Powers::destroy_radial, 50, true},
-	{"Destroy NW-SE", &Powers::destroy_bs, 50, true},
-	{"Destroy NE-SW", &Powers::destroy_fs, 50, true},
+	{"Destroy", &Powers::destroy_row, 50, true, Powers::Power::row},
+	{"Destroy", &Powers::destroy_radial, 50, true, Powers::Power::radial},
+	{"Destroy", &Powers::destroy_bs, 50, true, Powers::Power::nw_se},
+	{"Destroy", &Powers::destroy_fs, 50, true, Powers::Power::ne_sw},
 
-	{"Raise Tile", &Powers::raise_tile, 100, true},
-	{"Lower Tile", &Powers::lower_tile, 100, true},
-	{"Increase Range", &Powers::increase_range, 20, true},
-	{"Hover", &Powers::hover, 30, true},
-	{"Shield", &Powers::shield, 30, true},
-	{"Invisibility", &Powers::invisibility, 300000, true},
-	{"Teleport", &Powers::teleport, 60, true},
+	{"Raise Tile", &Powers::raise_tile, 100, true, Powers::Power::undirected},
+	{"Lower Tile", &Powers::lower_tile, 100, true, Powers::Power::undirected},
+	{"Increase Range", &Powers::increase_range, 20, true, Powers::Power::undirected},
+	{"Hover", &Powers::hover, 30, true, Powers::Power::undirected},
+	{"Shield", &Powers::shield, 30, true, Powers::Power::undirected},
+	{"Invisibility", &Powers::invisibility, 30, true, Powers::Power::undirected},
+	{"Teleport", &Powers::teleport, 60, true, Powers::Power::undirected},
 
-	{"Elevate Row", &Powers::elevate_row, 70, true},
-	{"Elevate Radial", &Powers::elevate_radial, 70, true},
-	{"Elevate NW-SE", &Powers::elevate_bs, 70, true},
-	{"Elevate NE-SW", &Powers::elevate_fs, 70, true},
+	{"Elevate", &Powers::elevate_row, 70, true, Powers::Power::row},
+	{"Elevate", &Powers::elevate_radial, 70, true, Powers::Power::radial},
+	{"Elevate", &Powers::elevate_bs, 70, true, Powers::Power::nw_se},
+	{"Elevate", &Powers::elevate_fs, 70, true, Powers::Power::ne_sw},
 
-	{"Dig Row", &Powers::dig_row, 70, true},
-	{"Dig Radial", &Powers::dig_radial, 70, true},
-	{"Dig NW-SE", &Powers::dig_bs, 70, true},
-	{"Dig NE-SW", &Powers::dig_fs, 70, true},
+	{"Dig", &Powers::dig_row, 70, true, Powers::Power::row},
+	{"Dig", &Powers::dig_radial, 70, true, Powers::Power::radial},
+	{"Dig", &Powers::dig_bs, 70, true, Powers::Power::nw_se},
+	{"Dig", &Powers::dig_fs, 70, true, Powers::Power::ne_sw},
 
-	{"Purify Row", &Powers::purify_row, 50, true},
-	{"Purify Radial", &Powers::purify_radial, 50, true},
-	{"Purify NW-SE", &Powers::purify_bs, 50, true},
-	{"Purify NE-SW", &Powers::purify_fs, 50, true},
+	{"Purify", &Powers::purify_row, 50, true, Powers::Power::row},
+	{"Purify", &Powers::purify_radial, 50, true, Powers::Power::radial},
+	{"Purify", &Powers::purify_bs, 50, true, Powers::Power::nw_se},
+	{"Purify", &Powers::purify_fs, 50, true, Powers::Power::ne_sw},
 
-	{"Annihilate Row", &Powers::annihilate_row, 50, false},
-	{"Annihilate Radial", &Powers::annihilate_radial, 50, false},
-	{"Annihilate NW-SE", &Powers::annihilate_bs, 50, false},
-	{"Annihilate NE-SW", &Powers::annihilate_fs, 50, false}
+	{"Annihilate", &Powers::annihilate_row, 50, false, Powers::Power::row},
+	{"Annihilate", &Powers::annihilate_radial, 50, false, Powers::Power::radial},
+	{"Annihilate", &Powers::annihilate_bs, 50, false, Powers::Power::nw_se},
+	{"Annihilate", &Powers::annihilate_fs, 50, false, Powers::Power::ne_sw}
 };
 
 const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
