@@ -91,6 +91,7 @@ bool Pawn::UsePower(int power, Server *server, Client *client) {
 		}
 	}
 
+	power_messages.push_back(PowerMessage(power, false));
 	return true;
 }
 

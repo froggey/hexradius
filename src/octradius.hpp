@@ -10,6 +10,7 @@
 #include <string.h>
 #include <map>
 #include <set>
+#include <list>
 #include <SDL/SDL_ttf.h>
 #include <sstream>
 #include <boost/shared_array.hpp>
@@ -102,6 +103,14 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 
 		Tile *last_tile;
 		Uint32 teleport_time;
+		struct PowerMessage {
+			int power;
+			bool added;
+			float time;
+			
+			PowerMessage(int p, bool a) : power(p), added(a), time(3) {}
+		};
+		std::list<PowerMessage> power_messages;
 
 		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : all_tiles(at) {
 			cur_tile = ct;

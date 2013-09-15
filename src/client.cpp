@@ -481,11 +481,21 @@ void Client::handle_message_game(const protocol::message &msg) {
 			}
 
 			pawn->flags = msg.pawns(i).flags();
+			std::map<int, int> old_powers(pawn->powers);
 			pawn->powers.clear();
 
 			for(int p = 0; p < msg.pawns(i).powers_size(); p++) {
 				int index = msg.pawns(i).powers(p).index();
 				int num = msg.pawns(i).powers(p).num();
+				int old_num = old_powers[index];
+				if (num < old_num) {
+					for (int i = num; i < old_num; i++)
+						pawn->power_messages.push_back(Pawn::PowerMessage(index, false));
+				}
+				else {
+					for (int i = old_num; i < num; i++)
+						pawn->power_messages.push_back(Pawn::PowerMessage(index, true));
+				}
 
 				if(index < 0 || index >= Powers::num_powers || num <= 0) {
 					continue;
@@ -689,6 +699,15 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 		ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 	if(pawn->flags & PWR_INVISIBLE)
 		ensure_SDL_BlitSurface(invisible, &base, screen, &rect);
+	
+	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
+	for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); i++) {
+		i->time -= dt;
+		if (i->time > 0)
+			draw_power_message(pawn, *i);
+		else
+			i = pawn->power_messages.erase(i);
+	}
 }
 
 void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
@@ -900,4 +919,30 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 		rect.x -= fw*3;
 		rect.y += fh;
 	}
+}
+
+void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
+	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
+	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
+	
+	std::string str = Powers::powers[pm.power].name;
+	str = (pm.added ? "+ " : "- ") + str;
+
+	int fh = std::max(TTF_FontLineSkip(font), TTF_FontLineSkip(symbol_font));
+	int fw = FontStuff::TextWidth(font, "0");
+	
+	SDL_Rect rect;
+	rect.w = FontStuff::TextWidth(font, str);
+	rect.w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[pm.power].direction]);
+	rect.w += fw;
+	rect.h = fh;
+	rect.x = pawn->cur_tile->screen_x - rect.w / 2;
+	rect.y = pawn->cur_tile->screen_y - 32 * pm.time;
+
+	ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178 * std::min(pm.time, 1.0f));
+
+	SDL_Color font_colour = {0, 255, 0, 0};
+
+	rect.x += FontStuff::BlitText(screen, rect, font, font_colour, str);
+	rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_suffixes[Powers::powers[pm.power].direction]);
 }

@@ -258,7 +258,7 @@ void Server::NextTurn(void) {
 				continue;
 			}
 		}
-
+#ifndef NEVERENDING
 		if(turn == last) {
 			state = LOBBY;
 
@@ -272,7 +272,7 @@ void Server::NextTurn(void) {
 
 			return;
 		}
-
+#endif
 		if((*turn)->colour != SPECTATE) {
 			int match = 0;
 
@@ -288,7 +288,7 @@ void Server::NextTurn(void) {
 			}
 		}
 	}
-
+#ifndef NEVERENDING
 	if(turn == last) {
 		state = LOBBY;
 
@@ -303,7 +303,7 @@ void Server::NextTurn(void) {
 
 		return;
 	}
-
+#endif
 	if(--pspawn_turns == 0) {
 		SpawnPowers();
 	}

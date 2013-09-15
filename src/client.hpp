@@ -119,6 +119,7 @@ class Client {
 		void draw_pawn_tile(pawn_ptr pawn, Tile *tile);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
 		void draw_pmenu(pawn_ptr pawn);
+		void draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm);
 
 		void lobby_regen();
 
