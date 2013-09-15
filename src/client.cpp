@@ -24,8 +24,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-static void start_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
-	Client *client = (Client*)arg;
+static void start_cb(const GUI::TextButton &, const SDL_Event &, Client *client) {
 	client->send_begin();
 }
 
@@ -38,7 +37,7 @@ static void push_sdl_event(int code) {
 	SDL_PushEvent(&l_event);
 }
 
-static void leave_cb(const GUI::TextButton &, const SDL_Event &, void *) {
+static void leave_cb(const GUI::TextButton &, const SDL_Event &) {
 	push_sdl_event(EVENT_RETURN);
 }
 
@@ -59,7 +58,7 @@ Client::Client(std::string host, uint16_t port) :
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
 	lobby_buttons.push_back(cm);
 
-	boost::shared_ptr<GUI::TextButton> ab(new GUI::TextButton(lobby_gui, 350, 310, 100, 35, 1, "Abort", &leave_cb, this));
+	boost::shared_ptr<GUI::TextButton> ab(new GUI::TextButton(lobby_gui, 350, 310, 100, 35, 1, "Abort", &leave_cb));
 	lobby_buttons.push_back(ab);
 
 	boost::asio::ip::tcp::resolver resolver(io_service);
@@ -123,7 +122,12 @@ void Client::WriteProto(const protocol::message &msg) {
 	send_queue.push(send_buf(msg));
 
 	if(send_queue.size() == 1) {
-		async_write(socket, boost::asio::buffer(send_queue.front().buf.get(), send_queue.front().size), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error));
+		async_write(socket,
+			    boost::asio::buffer(send_queue.front().buf.get(),
+						send_queue.front().size),
+			    boost::bind(&Client::WriteFinish,
+					this,
+					boost::asio::placeholders::error));
 	}
 }
 
@@ -137,7 +141,12 @@ void Client::WriteFinish(const boost::system::error_code& error) {
 	}
 
 	if(!send_queue.empty()) {
-		async_write(socket, boost::asio::buffer(send_queue.front().buf.get(), send_queue.front().size), boost::bind(&Client::WriteFinish, this, boost::asio::placeholders::error));
+		async_write(socket,
+			    boost::asio::buffer(send_queue.front().buf.get(),
+						send_queue.front().size),
+			    boost::bind(&Client::WriteFinish,
+					this,
+					boost::asio::placeholders::error));
 	}
 }
 
@@ -270,7 +279,11 @@ void Client::run() {
 }
 
 void Client::ReadSize(void) {
-	async_read(socket, boost::asio::buffer(&msgsize, sizeof(uint32_t)), boost::bind(&Client::ReadMessage, this, boost::asio::placeholders::error));
+	async_read(socket,
+		   boost::asio::buffer(&msgsize, sizeof(uint32_t)),
+		   boost::bind(&Client::ReadMessage,
+			       this,
+			       boost::asio::placeholders::error));
 }
 
 void Client::ReadMessage(const boost::system::error_code& error) {
@@ -287,7 +300,11 @@ void Client::ReadMessage(const boost::system::error_code& error) {
 	}
 
 	msgbuf.resize(msgsize);
-	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Client::ReadFinish, this, boost::asio::placeholders::error));
+	async_read(socket,
+		   boost::asio::buffer(&(msgbuf[0]), msgsize),
+		   boost::bind(&Client::ReadFinish,
+			       this,
+			       boost::asio::placeholders::error));
 }
 
 void Client::ReadFinish(const boost::system::error_code& error) {
@@ -407,11 +424,11 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		lobby_buttons.push_back(pc);
 
 		if(my_id == ADMIN_ID) {
-			boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", &start_cb, this));
+			boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", boost::bind(start_cb, _1, _2, this)));
 			lobby_buttons.push_back(sg);
 		}
 
-		boost::shared_ptr<GUI::TextButton> lg(new GUI::TextButton(lobby_gui, 645, 384, 135, 35, 2, "Leave Game", &leave_cb, this));
+		boost::shared_ptr<GUI::TextButton> lg(new GUI::TextButton(lobby_gui, 645, 384, 135, 35, 2, "Leave Game", leave_cb));
 		lobby_buttons.push_back(lg);
 
 		lobby_regen();
@@ -720,8 +737,7 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
 	DrawPawn(pawn, rect, base);
 }
 
-static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &item, void *arg) {
-	Client *client = (Client*)arg;
+static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &item, Client *client) {
 	client->change_colour(item.i1, (PlayerColour)item.i2);
 
 	return false;
@@ -751,8 +767,7 @@ void Client::lobby_regen() {
 				}
 			}
 
-			pc->callback = &ccolour_callback;
-			pc->callback_arg = this;
+			pc->callback = boost::bind(ccolour_callback, _1, _2, this);
 
 			lobby_drops.push_back(pc);
 		}else{
