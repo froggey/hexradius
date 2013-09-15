@@ -72,14 +72,19 @@ class Client {
 		int screen_w, screen_h;
 		bool screen_set;
 		unsigned int last_redraw;
+		/* Drag origin. */
 		int xd, yd;
 		SDL_Rect board;
 		anim_set animators;
 		unsigned int torus_frame;
 		double climb_offset;
 
+		/* Pawn currently being dragged. */
 		pawn_ptr dpawn;
+		/* Pawn currently selected, for the purpose of power usage. */
 		pawn_ptr mpawn;
+		/* Pawn the mouse is currently over,
+		 * only valid if no dpawn or mpawn. */
 		pawn_ptr hpawn;
 
 		struct pmenu_entry {
