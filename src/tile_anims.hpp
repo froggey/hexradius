@@ -17,6 +17,7 @@ namespace TileAnimators {
 
 		Animator(Client* _client, Tile::List _tiles);
 		virtual void do_stuff() = 0;
+		virtual ~Animator();
 	};
 
 	enum ElevationMode { ABSOLUTE, RELATIVE };

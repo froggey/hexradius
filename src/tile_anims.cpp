@@ -16,6 +16,9 @@ namespace TileAnimators {
 	Animator::Animator(Client* _client, Tile::List _tiles) :
 		tiles(_tiles), client(_client) {}
 
+	Animator::~Animator() {
+	}
+
 	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
 		Animator(_client, _tiles) {
 		BOOST_FOREACH(Tile* t, tiles) {
