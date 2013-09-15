@@ -12,13 +12,14 @@
 #include <boost/shared_ptr.hpp>
 
 class GUI {
-	public:
+public:
 
 	enum alignment { LEFT, CENTER, RIGHT };
 
 	struct Thing {
-		virtual void HandleEvent(const SDL_Event &event) {};
-		virtual void Draw() {};
+		virtual void HandleEvent(const SDL_Event &event);
+		virtual void Draw();
+		virtual ~Thing();
 
 		GUI &gui;
 

@@ -13,7 +13,8 @@ const double E = 2.71828182845904523536;
 namespace TileAnimators {
 	Animator* current_animator = NULL;
 
-	Animator::Animator(Client* _client, Tile::List _tiles): client(_client), tiles(_tiles) {}
+	Animator::Animator(Client* _client, Tile::List _tiles) :
+		tiles(_tiles), client(_client) {}
 
 	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
 		Animator(_client, _tiles) {

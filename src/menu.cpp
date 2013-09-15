@@ -16,29 +16,29 @@ static bool running, submenu;
 
 static void options_main(const GUI::TextButton &button, const SDL_Event &event, void *arg);
 
-static void main_join_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void main_join_cb(const GUI::TextButton &, const SDL_Event &, void *) {
 	JoinMenu jmenu;
 	jmenu.run();
 }
 
-static void main_host_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void main_host_cb(const GUI::TextButton &, const SDL_Event &, void *) {
 	HostMenu hmenu;
 	hmenu.run();
 }
 
-static void quit_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void quit_cb(const GUI::TextButton &, const SDL_Event &, void *) {
 	running = false;
 }
 
-static void back_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void back_cb(const GUI::TextButton &, const SDL_Event &, void *) {
 	submenu = false;
 }
 
-static bool port_input_filter(const GUI::TextBox &tbox, const SDL_Event &event, void *arg) {
+static bool port_input_filter(const GUI::TextBox &, const SDL_Event &event, void *) {
 	return isdigit(event.key.keysym.sym);
 }
 
-static void app_quit_cb(const GUI &gui, const SDL_Event &event, void *arg) {
+static void app_quit_cb(const GUI &, const SDL_Event &, void *) {
 	running = false;
 }
 
@@ -63,7 +63,7 @@ void MainMenu::run() {
 	}
 }
 
-static void join_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void join_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	JoinMenu *menu = (JoinMenu*)arg;
 
 	if(menu->host_input.text.empty()) {
@@ -97,7 +97,7 @@ static void join_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	submenu = false;
 }
 
-static void join_textbox_enter(const GUI::TextBox &tbox, const SDL_Event &event, void *arg) {
+static void join_textbox_enter(const GUI::TextBox &, const SDL_Event &event, void *arg) {
 	JoinMenu *menu = (JoinMenu*)arg;
 	join_cb(menu->join_btn, event, arg);
 }
@@ -135,7 +135,7 @@ void JoinMenu::run() {
 	}
 }
 
-static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void host_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	HostMenu *menu = (HostMenu*)arg;
 
 	int port = atoi(menu->port_input.text.c_str());
@@ -146,10 +146,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 		return;
 	}
 
-	Scenario scn;
-	scn.load_file(scenario);
-
-	Server server(port, scn);
+	Server server(port, scenario);
 
 	Client client("127.0.0.1", port);
 
@@ -164,7 +161,7 @@ static void host_cb(const GUI::TextButton &button, const SDL_Event &event, void 
 	submenu = false;
 }
 
-static void host_textbox_enter(const GUI::TextBox &tbox, const SDL_Event &event, void *arg) {
+static void host_textbox_enter(const GUI::TextBox &, const SDL_Event &event, void *arg) {
 	HostMenu *menu = (HostMenu*)arg;
 	host_cb(menu->host_btn, event, arg);
 }
@@ -212,7 +209,7 @@ struct options_inputs {
 		show_lines(gui, 385, 235, 25, 25, 2, options.show_lines) {}
 };
 
-static void save_options(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void save_options(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	struct options_inputs *inputs = (options_inputs*)arg;
 
 	if(inputs->username.text.empty()) {
@@ -227,7 +224,7 @@ static void save_options(const GUI::TextButton &button, const SDL_Event &event, 
 	submenu = false;
 }
 
-static void options_main(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void options_main(const GUI::TextButton &, const SDL_Event &, void *) {
 	GUI gui(0, 0, MENU_WIDTH, MENU_HEIGHT);
 
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));

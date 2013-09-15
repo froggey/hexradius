@@ -17,7 +17,7 @@ bool Animators::PawnCrush::render() {
 		return false;
 	}else{
 		SDL_Rect rect = {tx, ty, 0, 0};
-		assert(SDL_BlitSurface(crush_img, NULL, screen, &rect) == 0);
+		ensure_SDL_BlitSurface(crush_img, NULL, screen, &rect);
 
 		return true;
 	}

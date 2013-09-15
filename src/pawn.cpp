@@ -20,10 +20,12 @@ bool Pawn::destroyed() {
 	return destroyed_by != OK;
 }
 
-bool Pawn::Move(Tile *tile, Server *server, Client *client) {
+bool Pawn::Move(Tile *tile, Server *, Client *client) {
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
-		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) && (tile->col == cur_tile->col + (cur_tile->row % 2) || tile->col+1 == cur_tile->col + (cur_tile->row % 2)))
+		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) &&
+		  (tile->col == cur_tile->col + (cur_tile->row % 2) ||
+		   tile->col+1 == cur_tile->col + (cur_tile->row % 2)))
 	) {
 		return false;
 	}

@@ -18,6 +18,8 @@
 #include "animator.hpp"
 #include "scenario.hpp"
 
+class GameState;
+
 class Client {
 	public:
 		bool quit;	// Game returned due to application quit
@@ -33,8 +35,7 @@ class Client {
 		void change_colour(uint16_t id, PlayerColour colour);
 		void add_animator(Animators::Generic* anim);
 
-		std::vector<uint32_t> power_rand_vals;
-		Tile::List tiles;
+		GameState *game_state;
 
 	private:
 		struct Player {
@@ -71,14 +72,19 @@ class Client {
 		int screen_w, screen_h;
 		bool screen_set;
 		unsigned int last_redraw;
+		/* Drag origin. */
 		int xd, yd;
 		SDL_Rect board;
 		anim_set animators;
 		unsigned int torus_frame;
 		double climb_offset;
 
+		/* Pawn currently being dragged. */
 		pawn_ptr dpawn;
+		/* Pawn currently selected, for the purpose of power usage. */
 		pawn_ptr mpawn;
+		/* Pawn the mouse is currently over,
+		 * only valid if no dpawn or mpawn. */
 		pawn_ptr hpawn;
 
 		struct pmenu_entry {
@@ -112,7 +118,7 @@ class Client {
 		void DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base);
 		void draw_pawn_tile(pawn_ptr pawn, Tile *tile);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
-		void draw_pmenu(pawn_ptr pawn, bool set_pmenu);
+		void draw_pmenu(pawn_ptr pawn);
 
 		void lobby_regen();
 

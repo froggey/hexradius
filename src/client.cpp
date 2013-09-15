@@ -15,6 +15,7 @@
 #include "tile_anims.hpp"
 #include "gui.hpp"
 #include "menu.hpp"
+#include "gamestate.hpp"
 
 const int EVENT_RDTIMER = 1;	// Redraw timer has fired
 const int EVENT_RETURN = 2;	// Client should return - i.e. leave button pressed
@@ -23,7 +24,7 @@ static int within_rect(SDL_Rect rect, int x, int y) {
 	return (x >= rect.x && x < rect.x+rect.w && y >= rect.y && y < rect.y+rect.h);
 }
 
-static void start_cb(const GUI::TextButton &button, const SDL_Event &event, void *arg) {
+static void start_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	Client *client = (Client*)arg;
 	client->send_begin();
 }
@@ -37,16 +38,22 @@ static void push_sdl_event(int code) {
 	SDL_PushEvent(&l_event);
 }
 
-static void leave_cb(const GUI::TextButton &btn, const SDL_Event &event, void *arg) {
+static void leave_cb(const GUI::TextButton &, const SDL_Event &, void *) {
 	push_sdl_event(EVENT_RETURN);
 }
 
-static Uint32 redraw_callback(Uint32 interval, void *param) {
+static Uint32 redraw_callback(Uint32 interval, void *) {
 	push_sdl_event(EVENT_RDTIMER);
 	return interval;
 }
 
-Client::Client(std::string host, uint16_t port) : quit(false), socket(io_service), redraw_timer(NULL), turn(0), state(CONNECTING), last_redraw(0), board(SDL_Rect()), dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()), pmenu_area(SDL_Rect()), current_animator(NULL), lobby_gui(0, 0, 800, 600) {
+Client::Client(std::string host, uint16_t port) :
+	quit(false), current_animator(NULL), game_state(0),
+	socket(io_service), redraw_timer(NULL), turn(0),
+	state(CONNECTING), last_redraw(0), board(SDL_Rect()),
+	dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()),
+	pmenu_area(SDL_Rect()), lobby_gui(0, 0, 800, 600)
+{
 	lobby_gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 
 	boost::shared_ptr<GUI::TextButton> cm(new GUI::TextButton(lobby_gui, 300, 255, 200, 35, 0, "Connecting..."));
@@ -78,7 +85,7 @@ Client::~Client() {
 	std::cout << "Waiting for client network thread to exit..." << std::endl;
 	network_thread.join();
 
-	FreeTiles(tiles);
+	delete game_state;
 
 	for(anim_set::iterator anim = animators.begin(); anim != animators.end(); anim++) {
 		(*anim)->free();
@@ -164,7 +171,7 @@ void Client::run() {
 		}
 
 		if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
-			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
+			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			if(event.button.button == SDL_BUTTON_LEFT) {
 				xd = event.button.x;
@@ -176,7 +183,7 @@ void Client::run() {
 			}
 		}
 		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && !current_animator) {
-			Tile *tile = TileAtXY(tiles, event.button.x, event.button.y);
+			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
 				if(within_rect(pmenu_area, event.button.x, event.button.y)) {
@@ -226,7 +233,7 @@ void Client::run() {
 			}
 		}
 		else if(event.type == SDL_MOUSEMOTION) {
-			Tile *tile = TileAtXY(tiles, event.motion.x, event.motion.y);
+			Tile *tile = game_state->tile_at_screen(event.motion.x, event.motion.y);
 
 			if(dpawn) {
 				last_redraw = 0;
@@ -246,7 +253,7 @@ void Client::run() {
 				int mouse_x, mouse_y;
 				SDL_GetMouseState(&mouse_x, &mouse_y);
 
-				Tile *tile = TileAtXY(tiles, mouse_x, mouse_y);
+				Tile *tile = game_state->tile_at_screen(mouse_x, mouse_y);
 				if(tile) {
 					std::cout << "Mouse is over tile " << tile->col << "," << tile->row << std::endl;
 				}else{
@@ -308,7 +315,7 @@ void Client::handle_message(const protocol::message &msg) {
 			PlayerColour c = (PlayerColour)msg.players(0).colour();
 
 			std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
-			DestroyTeamPawns(tiles, c);
+			DestroyTeamPawns(game_state->tiles, c);
 
 			for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 				if((*p).colour == c) {
@@ -341,19 +348,19 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 			colours.insert(p.colour);
 		}
 
-		scenario.init_game(colours, tiles);
+		game_state = scenario.init_game(colours);
 
 		state = GAME;
 
 		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 		int bskip = TTF_FontLineSkip(bfont);
 
-		Tile::List::iterator tile = tiles.begin();
+		Tile::List::iterator tile = game_state->tiles.begin();
 
 		board.x = 0;
 		board.y = bskip;
 
-		for(; tile != tiles.end(); tile++) {
+		for(; tile != game_state->tiles.end(); tile++) {
 			int w = 2*BOARD_OFFSET + (*tile)->col * TILE_WOFF + TILE_WIDTH + (((*tile)->row % 2) * TILE_ROFF);
 			int h = 2*BOARD_OFFSET + (*tile)->row * TILE_HOFF + TILE_HEIGHT;
 
@@ -447,8 +454,8 @@ void Client::handle_message_game(const protocol::message &msg) {
 		std::cout << "Turn for player " << turn << std::endl;
 	}else if(msg.msg() == protocol::MOVE) {
 		if(msg.pawns_size() == 1) {
-			pawn_ptr pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
-			Tile *tile = FindTile(tiles, msg.pawns(0).new_col(), msg.pawns(0).new_row());
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+			Tile *tile = game_state->tile_at(msg.pawns(0).new_col(), msg.pawns(0).new_row());
 
 			if(!(pawn && tile && pawn->Move(tile, NULL, this))) {
 				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
@@ -458,7 +465,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 	}else if(msg.msg() == protocol::UPDATE) {
 		for(int i = 0; i < msg.tiles_size(); i++) {
-			Tile *tile = FindTile(tiles, msg.tiles(i).col(), msg.tiles(i).row());
+			Tile *tile = game_state->tile_at(msg.tiles(i).col(), msg.tiles(i).row());
 			if(!tile) {
 				continue;
 			}
@@ -468,7 +475,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 
 		for(int i = 0; i < msg.pawns_size(); i++) {
-			pawn_ptr pawn = FindPawn(tiles, msg.pawns(i).col(), msg.pawns(i).row());
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(i).col(), msg.pawns(i).row());
 			if(!pawn) {
 				continue;
 			}
@@ -489,15 +496,15 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 	}else if(msg.msg() == protocol::USE) {
 		if(msg.pawns_size() == 1) {
-			pawn_ptr pawn = FindPawn(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
 
 			if(pawn) {
 				int power = msg.pawns(0).use_power();
 
-				power_rand_vals.clear();
+				game_state->power_rand_vals.clear();
 
 				for(int i = 0; i < msg.power_rand_vals_size(); i++) {
-					power_rand_vals.push_back(msg.power_rand_vals(i));
+					game_state->power_rand_vals.push_back(msg.power_rand_vals(i));
 				}
 
 				pawn->UsePower(power, NULL, this);
@@ -516,7 +523,8 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 
 		state = LOBBY;
-		FreeTiles(tiles);
+		delete game_state;
+		game_state = 0;
 
 		ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 	}else{
@@ -543,7 +551,7 @@ void Client::DrawScreen() {
 		current_animator->do_stuff();
 	}
 
-	assert(SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0)) != -1);
+	ensure_SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
 
 	{
 		SDL_Rect rect = {0,0,0,0};
@@ -565,15 +573,15 @@ void Client::DrawScreen() {
 		}
 	}
 
-	Tile::List::iterator ti = tiles.begin();
+	Tile::List::iterator ti = game_state->tiles.begin();
 
 	int mouse_x, mouse_y;
 	SDL_GetMouseState(&mouse_x, &mouse_y);
-	Tile *htile = TileAtXY(tiles, mouse_x, mouse_y);
+	Tile *htile = game_state->tile_at_screen(mouse_x, mouse_y);
 
 	int bs_col, fs_col, diag_row = -1;
 
-	for(; ti != tiles.end(); ti++) {
+	for(; ti != game_state->tiles.end(); ti++) {
 		SDL_Rect rect;
 		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
 		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
@@ -606,10 +614,10 @@ void Client::DrawScreen() {
 			}
 		}
 
-		assert(SDL_BlitSurface(tile_img, NULL, screen, &rect) == 0);
+		ensure_SDL_BlitSurface(tile_img, NULL, screen, &rect);
 
 		if((*ti)->has_power) {
-			assert(SDL_BlitSurface(pickup, NULL, screen, &rect) == 0);
+			ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
 		}
 
 		if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
@@ -637,7 +645,7 @@ void Client::DrawScreen() {
 	pmenu_area.h = 0;
 
 	if(mpawn) {
-		draw_pmenu(mpawn, true);
+		draw_pmenu(mpawn);
 	}
 
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
@@ -651,7 +659,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 
 	unsigned int frame = torus_frame;
 
-	assert(SDL_BlitSurface(shadow, &base, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 		rect.x -= climb_offset;
@@ -666,14 +674,14 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 	}
 
 	SDL_Rect srect = { frame * 50, (pawn->colour * 50) + base.y, 50, base.h };
-	assert(SDL_BlitSurface(pawn_graphics, &srect, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(pawn_graphics, &srect, screen, &rect);
 
 	srect.x = pawn->range * 50;
 	srect.y = (pawn->colour * 50) + base.y;
-	assert(SDL_BlitSurface(range_overlay, &srect, screen, &rect) == 0);
+	ensure_SDL_BlitSurface(range_overlay, &srect, screen, &rect);
 
 	if(pawn->flags & PWR_SHIELD) {
-		assert(SDL_BlitSurface(shield, &base, screen, &rect) == 0);
+		ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 	}
 }
 
@@ -706,7 +714,7 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
 	DrawPawn(pawn, rect, base);
 }
 
-static bool ccolour_callback(const GUI::DropDown &dropdown, const GUI::DropDown::Item &item, void *arg) {
+static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &item, void *arg) {
 	Client *client = (Client*)arg;
 	client->change_colour(item.i1, (PlayerColour)item.i2);
 
@@ -811,7 +819,7 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 	}
 }
 
-void Client::draw_pmenu(pawn_ptr pawn, bool set_pmenu) {
+void Client::draw_pmenu(pawn_ptr pawn) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 
 	int fh = TTF_FontLineSkip(font);
@@ -851,7 +859,7 @@ void Client::draw_pmenu(pawn_ptr pawn, bool set_pmenu) {
 	pmenu_area = rect;
 	rect.h = fh;
 
-	SDL_Color font_colour = {0,255,0};
+	SDL_Color font_colour = {0,255,0, 0};
 
 	for(i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
 		pmenu_entry foobar = {rect, i->first};

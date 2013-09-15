@@ -71,7 +71,13 @@ struct Tile {
 	int screen_x, screen_y;
 	pawn_ptr render_pawn;
 
-	Tile(int c, int r, int h) : col(c), row(r), height(h), power(-1), has_power(false), pawn(pawn_ptr()), screen_x(0), screen_y(0), render_pawn(pawn_ptr()), animating(false) {}
+	Tile(int c, int r, int h) :
+		col(c), row(r), height(h),
+		power(-1), has_power(false),
+		pawn(pawn_ptr()),
+		animating(false), screen_x(0), screen_y(0),
+		render_pawn(pawn_ptr())
+	{}
 
 	bool SetHeight(int h);
 
@@ -134,13 +140,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List fs_tiles();
 };
 
-Tile *FindTile(Tile::List &list, int c, int r);
-pawn_ptr FindPawn(Tile::List &list, int c, int r);
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
-Tile *TileAtXY(Tile::List &tiles, int x, int y);
-pawn_ptr PawnAtXY(Tile::List &tiles, int x, int y);
-void FreeTiles(Tile::List &tiles);
-void CopyTiles(Tile::List &dest, const Tile::List &src);
 void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
 struct options {
@@ -163,5 +163,13 @@ struct send_buf {
 
 	send_buf(const protocol::message &message);
 };
+
+/* Exception-throwing versions of some SDL functions. */
+void ensure_SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect);
+void ensure_SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, Uint32 color);
+void ensure_SDL_LockSurface(SDL_Surface *surface);
+void ensure_SDL_SetAlpha(SDL_Surface *surface, Uint32 flags, Uint8 alpha);
+
+
 
 #endif

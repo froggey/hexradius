@@ -31,7 +31,15 @@
 namespace po = boost::program_options;
 
 const char *team_names[] = { "Blue", "Red", "Green", "Yellow", "Purple", "Orange", "Spectator" };
-const SDL_Colour team_colours[] = { {0,0,255}, {255,0,0}, {0,255,0}, {255,255,0}, {160,32,240}, {255,165,0}, {190,190,190} };
+const SDL_Colour team_colours[] = {
+	{0,0,255, 0},
+	{255,0,0, 0},
+	{0,255,0, 0},
+	{255,255,0, 0},
+	{160,32,240, 0},
+	{255,165,0, 0},
+	{190,190,190, 0}
+};
 
 struct options options;
 
@@ -68,8 +76,12 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == 0);
-	assert(TTF_Init() == 0);
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+		throw std::runtime_error(std::string("SDL error: ") + SDL_GetError());
+	}
+	if(TTF_Init() != 0) {
+		throw std::runtime_error("Cannot initialize SDL_TTF");
+	}
 	SDL_EnableUNICODE(1);
 
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
@@ -79,10 +91,7 @@ int main(int argc, char **argv) {
 	ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 
 	if(vm.count("host")) {
-		Scenario scn;
-		scn.load_file(scenario);
-
-		Server server(port, scn);
+		Server server(port, scenario);
 
 		Client client("127.0.0.1", port);
 
@@ -173,4 +182,28 @@ send_buf::send_buf(const protocol::message &message) : buf() {
 
 	memcpy(buf.get(), &psize, sizeof(psize));
 	memcpy(buf.get()+sizeof(psize), pb.data(), pb.size());
+}
+
+void ensure_SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+	if(SDL_BlitSurface(src, srcrect, dst, dstrect)) {
+		throw std::runtime_error(std::string("SDL error: ") + SDL_GetError());
+	}
+}
+
+void ensure_SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, Uint32 color) {
+	if(SDL_FillRect(dst, dstrect, color)) {
+		throw std::runtime_error(std::string("SDL error: ") + SDL_GetError());
+	}
+}
+
+void ensure_SDL_LockSurface(SDL_Surface *surf) {
+	if(SDL_LockSurface(surf)) {
+		throw std::runtime_error(std::string("SDL error: ") + SDL_GetError());
+	}
+}
+
+void ensure_SDL_SetAlpha(SDL_Surface *surface, Uint32 flags, Uint8 alpha) {
+	if(SDL_SetAlpha(surface, flags, alpha)) {
+		throw std::runtime_error(std::string("SDL error: ") + SDL_GetError());
+	}
 }

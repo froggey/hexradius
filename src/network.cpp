@@ -9,9 +9,10 @@
 #include "network.hpp"
 #include "octradius.pb.h"
 #include "powers.hpp"
+#include "gamestate.hpp"
 
-Server::Server(uint16_t port, Scenario &s) : acceptor(io_service) {
-	scenario = s;
+Server::Server(uint16_t port, const std::string &s) : game_state(0), acceptor(io_service) {
+	scenario.load_file(s);
 
 	idcounter = 0;
 
@@ -39,7 +40,7 @@ Server::~Server() {
 	std::cout << "Waiting for server thread to exit..." << std::endl;
 	worker.join();
 
-	FreeTiles(tiles);
+	delete game_state;
 }
 
 void Server::worker_main() {
@@ -87,7 +88,7 @@ void Server::Client::BeginRead() {
 	async_read(socket, boost::asio::buffer(&msgsize, sizeof(uint32_t)), boost::bind(&Server::Client::BeginRead2, this, boost::asio::placeholders::error, shared_from_this()));
 }
 
-void Server::Client::BeginRead2(const boost::system::error_code& error, ptr cptr) {
+void Server::Client::BeginRead2(const boost::system::error_code& error, ptr /*cptr*/) {
 	if(qcalled) {
 		return;
 	}
@@ -108,7 +109,7 @@ void Server::Client::BeginRead2(const boost::system::error_code& error, ptr cptr
 	async_read(socket, boost::asio::buffer(&(msgbuf[0]), msgsize), boost::bind(&Server::Client::FinishRead, this, boost::asio::placeholders::error, shared_from_this()));
 }
 
-void Server::Client::FinishRead(const boost::system::error_code& error, ptr cptr) {
+void Server::Client::FinishRead(const boost::system::error_code& error, ptr /*cptr*/) {
 	if(qcalled) {
 		return;
 	}
@@ -165,7 +166,7 @@ void Server::Client::WriteBasic(protocol::msgtype type) {
 	Write(msg);
 }
 
-void Server::Client::FinishWrite(const boost::system::error_code& error, ptr cptr) {
+void Server::Client::FinishWrite(const boost::system::error_code& error, ptr /*cptr*/) {
 	send_queue.pop();
 
 	if(qcalled) {
@@ -189,7 +190,7 @@ void Server::StartGame(void) {
 		colours.insert(c->colour);
 	}
 
-	scenario.init_game(colours, tiles);
+	game_state = scenario.init_game(colours);
 
 	protocol::message begin;
 	begin.set_msg(protocol::BEGIN);
@@ -227,7 +228,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 		server.WriteAll(qmsg, this);
 	}
 
-	DestroyTeamPawns(server.tiles, colour);
+	DestroyTeamPawns(server.game_state->tiles, colour);
 
 	if(*(server.turn) == shared_from_this()) {
 		server.NextTurn();
@@ -244,7 +245,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	server.clients.erase(shared_from_this());
 }
 
-void Server::Client::FinishQuit(const boost::system::error_code& error, ptr cptr) {}
+void Server::Client::FinishQuit(const boost::system::error_code &, ptr /*cptr*/) {}
 
 void Server::NextTurn(void) {
 	client_set::iterator last = turn;
@@ -275,7 +276,7 @@ void Server::NextTurn(void) {
 		if((*turn)->colour != SPECTATE) {
 			int match = 0;
 
-			for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
+			for(Tile::List::iterator t = game_state->tiles.begin(); t != game_state->tiles.end(); t++) {
 				if((*t)->pawn && (*t)->pawn->colour == (*turn)->colour) {
 					match = 1;
 					break;
@@ -316,9 +317,9 @@ void Server::NextTurn(void) {
 
 void Server::SpawnPowers(void) {
 	Tile::List ctiles;
-	Tile::List::iterator t = tiles.begin();
+	Tile::List::iterator t = game_state->tiles.begin();
 
-	for(; t != tiles.end(); t++) {
+	for(; t != game_state->tiles.end(); t++) {
 		if(!(*t)->pawn && !(*t)->has_power) {
 			ctiles.push_back(*t);
 		}
@@ -428,8 +429,8 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		const protocol::pawn &p_pawn = msg.pawns(0);
 
-		pawn_ptr pawn = FindPawn(tiles, p_pawn.col(), p_pawn.row());
-		Tile *tile = FindTile(tiles, p_pawn.new_col(), p_pawn.new_row());
+		pawn_ptr pawn = game_state->pawn_at(p_pawn.col(), p_pawn.row());
+		Tile *tile = game_state->tile_at(p_pawn.new_col(), p_pawn.new_row());
 
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
 			return true;
@@ -455,12 +456,12 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			client->WriteBasic(protocol::BADMOVE);
 		}
 	}else if(msg.msg() == protocol::USE && msg.pawns_size() == 1) {
-		Tile *tile = FindTile(tiles, msg.pawns(0).col(), msg.pawns(0).row());
+		Tile *tile = game_state->tile_at(msg.pawns(0).col(), msg.pawns(0).row());
 		pawn_ptr pawn = tile ? tile->pawn : pawn_ptr();
 
 		int power = msg.pawns(0).use_power();
 
-		power_rand_vals.clear();
+		game_state->power_rand_vals.clear();
 
 		if(!pawn || !pawn->UsePower(power, this, NULL)) {
 			client->WriteBasic(protocol::BADMOVE);
@@ -469,7 +470,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 			smsg.clear_power_rand_vals();
 
-			for(std::vector<uint32_t>::iterator i = power_rand_vals.begin(); i != power_rand_vals.end(); i++) {
+			for(std::vector<uint32_t>::iterator i = game_state->power_rand_vals.begin(); i != game_state->power_rand_vals.end(); i++) {
 				smsg.add_power_rand_vals(*i);
 			}
 
@@ -480,7 +481,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				update.set_msg(protocol::UPDATE);
 
 				update.add_pawns();
-				pawn->CopyToProto(update.mutable_pawns(0), false);
+				pawn->CopyToProto(update.mutable_pawns(0), true);
 
 				WriteAll(update);
 			}
