@@ -652,14 +652,19 @@ void Client::DrawScreen() {
 }
 
 void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
+	if (pawn->flags & PWR_INVISIBLE && pawn->colour != my_colour)
+		return;
+	
 	SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
 	SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
 	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
 	SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png");
+	SDL_Surface *invisible = ImgStuff::GetImage("graphics/upgrades/invisible.png");
 
 	unsigned int frame = torus_frame;
-
-	ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
+	
+	if (!(pawn->flags & PWR_INVISIBLE))
+		ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
 	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 		rect.x -= climb_offset;
@@ -672,17 +677,18 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 	else if(!(pawn->flags & HAS_POWER)) {
 		frame = 0;
 	}
-
+	
 	SDL_Rect srect = { frame * 50, (pawn->colour * 50) + base.y, 50, base.h };
 	ensure_SDL_BlitSurface(pawn_graphics, &srect, screen, &rect);
-
+	
 	srect.x = pawn->range * 50;
 	srect.y = (pawn->colour * 50) + base.y;
 	ensure_SDL_BlitSurface(range_overlay, &srect, screen, &rect);
 
-	if(pawn->flags & PWR_SHIELD) {
+	if(pawn->flags & PWR_SHIELD)
 		ensure_SDL_BlitSurface(shield, &base, screen, &rect);
-	}
+	if(pawn->flags & PWR_INVISIBLE)
+		ensure_SDL_BlitSurface(invisible, &base, screen, &rect);
 }
 
 void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {

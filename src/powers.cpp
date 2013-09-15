@@ -19,6 +19,7 @@ Powers::Power Powers::powers[] = {
 	{"Increase Range", &Powers::increase_range, 20, true},
 	{"Hover", &Powers::hover, 30, true},
 	{"Shield", &Powers::shield, 30, true},
+	{"Invisibility", &Powers::invisibility, 300000, true},
 	{"Teleport", &Powers::teleport, 60, true},
 
 	{"Elevate Row", &Powers::elevate_row, 70, true},
@@ -227,6 +228,15 @@ namespace Powers {
 		}
 
 		pawn->flags |= PWR_SHIELD;
+		return true;
+	}
+	
+	bool invisibility(pawn_ptr pawn, Server *server, Client *client) {
+		if (pawn->flags & PWR_INVISIBLE) {
+			return false;
+		}
+
+		pawn->flags |= PWR_INVISIBLE;
 		return true;
 	}
 

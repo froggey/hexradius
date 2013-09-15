@@ -11,7 +11,8 @@ class Client;
 const uint32_t PWR_SHIELD = 1<<0;
 const uint32_t PWR_CLIMB = 1<<1;
 const uint32_t HAS_POWER = 1<<2;
-const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB);
+const uint32_t PWR_INVISIBLE = 1<<3;
+const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE);
 
 namespace Powers {
 	struct Power {
@@ -41,6 +42,7 @@ namespace Powers {
 	bool increase_range(pawn_ptr pawn, Server *server, Client *client);
 	bool hover(pawn_ptr pawn, Server *server, Client *client);
 	bool shield(pawn_ptr pawn, Server *server, Client *client);
+	bool invisibility(pawn_ptr pawn, Server *server, Client *client);
 	bool teleport(pawn_ptr pawn, Server *server, Client *client);
 
 	bool elevate_row(pawn_ptr pawn, Server *server, Client *client);
