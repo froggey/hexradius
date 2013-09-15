@@ -230,8 +230,8 @@ namespace Powers {
 		pawn->flags |= PWR_SHIELD;
 		return true;
 	}
-	
-	bool invisibility(pawn_ptr pawn, Server *server, Client *client) {
+
+	bool invisibility(pawn_ptr pawn, Server *, Client *) {
 		if (pawn->flags & PWR_INVISIBLE) {
 			return false;
 		}

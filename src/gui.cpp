@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
 
 #include "gui.hpp"
 #include "fontstuff.hpp"
@@ -32,9 +33,8 @@ void GUI::set_bg_image(SDL_Surface *img) {
 	bgimg = img;
 }
 
-void GUI::set_quit_callback(void_callback callback, void *arg) {
+void GUI::set_quit_callback(callback_t callback) {
 	quit_callback = callback;
-	quit_callback_arg = arg;
 }
 
 void GUI::poll(bool read_events) {
@@ -108,7 +108,7 @@ void GUI::handle_event(const SDL_Event &event) {
 
 		case SDL_QUIT:
 			if(quit_callback) {
-				quit_callback(*this, event, quit_callback_arg);
+				quit_callback(*this, event);
 			}
 
 			break;
@@ -171,7 +171,7 @@ void GUI::focus_next() {
 	}
 }
 
-GUI::ImgButton::ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_f cb, void *arg) : Thing(_gui), callback(cb), callback_arg(arg), image(img) {
+GUI::ImgButton::ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_t cb) : Thing(_gui), onclick_callback(cb), image(img) {
 	x = ax;
 	y = ay;
 	w = image->w;
@@ -192,8 +192,8 @@ void GUI::ImgButton::HandleEvent(const SDL_Event &event) {
 	}
 
 	if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-		if(event.button.x == x_down && event.button.y == y_down && callback) {
-			callback(*this, event, callback_arg);
+		if(event.button.x == x_down && event.button.y == y_down && onclick_callback) {
+			onclick_callback(*this, event);
 		}
 	}
 }
@@ -218,11 +218,8 @@ GUI::TextBox::TextBox(GUI &g, int ax, int ay, int aw, int ah, int to) : Thing(g)
 
 	insert_offset = 0;
 
-	enter_callback = NULL;
-	enter_callback_arg = NULL;
-
-	input_callback = NULL;
-	input_callback_arg = NULL;
+	enter_callback = 0;
+	input_callback = 0;
 
 	gui.add_thing(this);
 }
@@ -244,7 +241,7 @@ void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 			}
 		}else if(event.key.keysym.sym == SDLK_RETURN) {
 			if(enter_callback) {
-				enter_callback(*this, event, enter_callback_arg);
+				enter_callback(*this, event);
 			}
 		}else if(event.key.keysym.sym == SDLK_LEFT) {
 			if(insert_offset > 0) {
@@ -264,7 +261,7 @@ void GUI::TextBox::HandleEvent(const SDL_Event &event) {
 			}
 		}else if(isprint(event.key.keysym.sym)) {
 			if(input_callback) {
-				if(input_callback(*this, event, input_callback_arg)) {
+				if(input_callback(*this, event)) {
 					text.insert(insert_offset++, 1, event.key.keysym.sym);
 				}else{
 					std::cerr << "Illegal character" << std::endl;
@@ -341,7 +338,7 @@ void GUI::TextDisplay::Draw() {
 	FontStuff::BlitText(screen, rect, font, colour, text);
 }
 
-GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback, void *callback_arg) : Thing(g) {
+GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, callback_t callback) : Thing(g) {
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = aw;
@@ -363,7 +360,6 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	m_text = text;
 	m_font = FontStuff::LoadFont("fonts/DejaVuSans.ttf", 16);
 	m_callback = callback;
-	m_arg = callback_arg;
 
 	gui.add_thing(this);
 }
@@ -420,11 +416,11 @@ void GUI::TextButton::HandleEvent(const SDL_Event &event) {
 		y_down = event.button.y;
 	}else if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		if(event.button.x == x_down && event.button.y == y_down && m_callback) {
-			m_callback(*this, event, m_arg);
+			m_callback(*this, event);
 		}
 	}else if(event.type == SDL_KEYDOWN) {
 		if((event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_SPACE) && m_callback) {
-			m_callback(*this, event, m_arg);
+			m_callback(*this, event);
 		}
 	}
 }
@@ -441,8 +437,7 @@ GUI::DropDown::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : Thing(
 
 	selected = items.end();
 
-	callback = NULL;
-	callback_arg = NULL;
+	callback = 0;
 
 	gui.add_thing(this);
 }
@@ -486,7 +481,7 @@ void GUI::DropDown::HandleEvent(const SDL_Event &event) {
 			int to = 2000;
 
 			for(std::vector<Item>::iterator i = items.begin(); i != items.end(); i++) {
-				boost::shared_ptr<TextButton> btn(new TextButton(gui, x, ty, w, h, to, (*i).text, &dropdown_set, this));
+				boost::shared_ptr<TextButton> btn(new TextButton(gui, x, ty, w, h, to, (*i).text, boost::bind(dropdown_set, _1, _2, this)));
 				btn->set_fg_colour((*i).colour);
 				btn->align(LEFT);
 				btn->m_borders = false;
@@ -520,7 +515,7 @@ void GUI::DropDown::HandleEvent(const SDL_Event &event) {
 }
 
 void GUI::DropDown::select(item_list::iterator item) {
-	if(!callback || callback(*this, *item, callback_arg)) {
+	if(!callback || callback(*this, *item)) {
 		button.m_text = item->text;
 		button.set_fg_colour(item->colour);
 		selected = item;
@@ -545,9 +540,8 @@ GUI::Checkbox::~Checkbox() {
 	gui.del_thing(this);
 }
 
-void GUI::Checkbox::set_callback(void_callback callback, void *arg) {
+void GUI::Checkbox::set_callback(callback_t callback) {
 	toggle_callback = callback;
-	toggle_callback_arg = arg;
 }
 
 void GUI::Checkbox::Draw() {

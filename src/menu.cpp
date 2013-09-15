@@ -14,31 +14,31 @@
 
 static bool running, submenu;
 
-static void options_main(const GUI::TextButton &button, const SDL_Event &event, void *arg);
+static void options_main(const GUI::TextButton &button, const SDL_Event &event);
 
-static void main_join_cb(const GUI::TextButton &, const SDL_Event &, void *) {
+static void main_join_cb(const GUI::TextButton &, const SDL_Event &) {
 	JoinMenu jmenu;
 	jmenu.run();
 }
 
-static void main_host_cb(const GUI::TextButton &, const SDL_Event &, void *) {
+static void main_host_cb(const GUI::TextButton &, const SDL_Event &) {
 	HostMenu hmenu;
 	hmenu.run();
 }
 
-static void quit_cb(const GUI::TextButton &, const SDL_Event &, void *) {
+static void quit_cb(const GUI::TextButton &, const SDL_Event &) {
 	running = false;
 }
 
-static void back_cb(const GUI::TextButton &, const SDL_Event &, void *) {
+static void back_cb(const GUI::TextButton &, const SDL_Event &) {
 	submenu = false;
 }
 
-static bool port_input_filter(const GUI::TextBox &, const SDL_Event &event, void *) {
+static bool port_input_filter(const GUI::TextBox &, const SDL_Event &event) {
 	return isdigit(event.key.keysym.sym);
 }
 
-static void app_quit_cb(const GUI &, const SDL_Event &, void *) {
+static void app_quit_cb(const GUI &, const SDL_Event &) {
 	running = false;
 }
 
@@ -63,9 +63,7 @@ void MainMenu::run() {
 	}
 }
 
-static void join_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
-	JoinMenu *menu = (JoinMenu*)arg;
-
+static void join_cb(const GUI::TextButton &, const SDL_Event &, JoinMenu *menu) {
 	if(menu->host_input.text.empty()) {
 		std::cout << "No host" << std::endl;
 		return;
@@ -97,9 +95,8 @@ static void join_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	submenu = false;
 }
 
-static void join_textbox_enter(const GUI::TextBox &, const SDL_Event &event, void *arg) {
-	JoinMenu *menu = (JoinMenu*)arg;
-	join_cb(menu->join_btn, event, arg);
+static void join_textbox_enter(const GUI::TextBox &, const SDL_Event &event, JoinMenu *menu) {
+	join_cb(menu->join_btn, event, menu);
 }
 
 JoinMenu::JoinMenu() :
@@ -111,18 +108,18 @@ JoinMenu::JoinMenu() :
 	port_label(gui, 245, 277, 100, 25, 0, "Port:"),
 	port_input(gui, 355, 277, 200, 25, 2),
 
-	join_btn(gui, 332, 322, 135, 35, 3, "Join Game", &join_cb, this),
+	join_btn(gui, 332, 322, 135, 35, 3, "Join Game", boost::bind(join_cb, _1, _2, this)),
 	back_btn(gui, 20, 545, 135, 35, 4, "Back", &back_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
 
 	host_label.align(GUI::RIGHT);
-	host_input.set_enter_callback(&join_textbox_enter, this);
+	host_input.set_enter_callback(boost::bind(join_textbox_enter, _1, _2, this));
 
 	port_label.align(GUI::RIGHT);
 	port_input.set_text(to_string(DEFAULT_PORT));
-	port_input.set_enter_callback(&join_textbox_enter, this);
+	port_input.set_enter_callback(boost::bind(join_textbox_enter, _1, _2, this));
 	port_input.set_input_callback(&port_input_filter);
 }
 
@@ -135,9 +132,7 @@ void JoinMenu::run() {
 	}
 }
 
-static void host_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
-	HostMenu *menu = (HostMenu*)arg;
-
+static void host_cb(const GUI::TextButton &, const SDL_Event &, HostMenu *menu) {
 	int port = atoi(menu->port_input.text.c_str());
 	std::string scenario = menu->scenario_input.text;
 
@@ -161,9 +156,8 @@ static void host_cb(const GUI::TextButton &, const SDL_Event &, void *arg) {
 	submenu = false;
 }
 
-static void host_textbox_enter(const GUI::TextBox &, const SDL_Event &event, void *arg) {
-	HostMenu *menu = (HostMenu*)arg;
-	host_cb(menu->host_btn, event, arg);
+static void host_textbox_enter(const GUI::TextBox &, const SDL_Event &event, HostMenu *menu) {
+	host_cb(menu->host_btn, event, menu);
 }
 
 HostMenu::HostMenu() :
@@ -175,7 +169,7 @@ HostMenu::HostMenu() :
 	scenario_label(gui, 245, 277, 100, 25, 0, "Scenario:"),
 	scenario_input(gui, 355, 277, 200, 25, 2),
 
-	host_btn(gui, 332, 322, 135, 35, 3, "Host Game", &host_cb, this),
+	host_btn(gui, 332, 322, 135, 35, 3, "Host Game", boost::bind(host_cb, _1, _2, this)),
 	back_btn(gui, 20, 545, 135, 35, 4, "Back", &back_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
@@ -183,12 +177,12 @@ HostMenu::HostMenu() :
 
 	port_label.align(GUI::RIGHT);
 	port_input.set_text(to_string(DEFAULT_PORT));
-	port_input.set_enter_callback(&host_textbox_enter, this);
+	port_input.set_enter_callback(boost::bind(host_textbox_enter, _1, _2, this));
 	port_input.set_input_callback(&port_input_filter);
 
 	scenario_label.align(GUI::RIGHT);
 	scenario_input.set_text("scenario/hex_2p.txt");
-	scenario_input.set_enter_callback(&host_textbox_enter, this);
+	scenario_input.set_enter_callback(boost::bind(host_textbox_enter, _1, _2, this));
 }
 
 void HostMenu::run() {
@@ -209,9 +203,7 @@ struct options_inputs {
 		show_lines(gui, 385, 235, 25, 25, 2, options.show_lines) {}
 };
 
-static void save_options(const GUI::TextButton &, const SDL_Event &, void *arg) {
-	struct options_inputs *inputs = (options_inputs*)arg;
-
+static void save_options(const GUI::TextButton &, const SDL_Event &, struct options_inputs *inputs) {
 	if(inputs->username.text.empty()) {
 		std::cerr << "Username field is empty" << std::endl;
 		return;
@@ -224,7 +216,7 @@ static void save_options(const GUI::TextButton &, const SDL_Event &, void *arg) 
 	submenu = false;
 }
 
-static void options_main(const GUI::TextButton &, const SDL_Event &, void *) {
+static void options_main(const GUI::TextButton &, const SDL_Event &) {
 	GUI gui(0, 0, MENU_WIDTH, MENU_HEIGHT);
 
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
@@ -240,7 +232,7 @@ static void options_main(const GUI::TextButton &, const SDL_Event &, void *) {
 	lines_label.align(GUI::RIGHT);
 
 	GUI::TextButton back_btn(gui, 20, 545, 135, 35, 21, "Back", &back_cb);
-	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", &save_options, &inputs);
+	GUI::TextButton save_btn(gui, 645, 545, 135, 35, 20, "Save", boost::bind(save_options, _1, _2, &inputs));
 
 	for(submenu = true; submenu && running;) {
 		gui.poll(true);

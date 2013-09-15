@@ -10,6 +10,8 @@
 #include <SDL/SDL_ttf.h>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 class GUI {
 public:
@@ -49,16 +51,15 @@ public:
 	};
 
 	struct ImgButton : Thing {
-		typedef void (*callback_f)(const ImgButton &button, const SDL_Event &event, void *arg);
+		typedef boost::function<void(const ImgButton &, const SDL_Event &)> callback_t;
 
-		callback_f callback;
-		void *callback_arg;
+		callback_t onclick_callback;
 
 		SDL_Surface *image;
 
 		int x_down, y_down;
 
-		ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_f cb = NULL, void *arg = NULL);
+		ImgButton(GUI &_gui, SDL_Surface *img, int ax, int ay, int to, callback_t cb = callback_t());
 		~ImgButton();
 
 		void HandleEvent(const SDL_Event &event);
@@ -66,31 +67,26 @@ public:
 	};
 
 	struct TextBox : Thing {
-		typedef bool (*bool_callback)(const TextBox &tbox, const SDL_Event &event, void *arg);
-		typedef void (*void_callback)(const TextBox &tbox, const SDL_Event &event, void *arg);
+		typedef boost::function<void(const TextBox &tbox, const SDL_Event &event)> enter_callback_t;
+		typedef boost::function<bool(const TextBox &tbox, const SDL_Event &event)> input_callback_t;
 
 		std::string text;
 		unsigned int insert_offset;
 
-		void_callback enter_callback;
-		void *enter_callback_arg;
-
-		bool_callback input_callback;
-		void *input_callback_arg;
+		enter_callback_t enter_callback;
+		input_callback_t input_callback;
 
 		TextBox(GUI &g, int ax, int ay, int aw, int ah, int to);
 		~TextBox();
 
 		void set_text(const std::string &new_text);
 
-		void set_enter_callback(void_callback callback, void *arg = NULL) {
+		void set_enter_callback(enter_callback_t callback) {
 			enter_callback = callback;
-			enter_callback_arg = arg;
 		}
 
-		void set_input_callback(bool_callback callback, void *arg = NULL) {
+		void set_input_callback(input_callback_t callback) {
 			input_callback = callback;
-			input_callback_arg = arg;
 		}
 
 		void HandleEvent(const SDL_Event &event);
@@ -113,7 +109,7 @@ public:
 	};
 
 	struct TextButton : Thing {
-		typedef void (*void_callback)(const TextButton &button, const SDL_Event &event, void *arg);
+		typedef boost::function<void(const TextButton &, const SDL_Event &event)> callback_t;
 
 		std::string m_text;
 		TTF_Font *m_font;
@@ -125,12 +121,11 @@ public:
 		uint8_t m_opacity;
 		SDL_Surface *m_bgs;
 
-		void_callback m_callback;
-		void *m_arg;
+		callback_t m_callback;
 
 		int x_down, y_down;
 
-		TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, void_callback callback = NULL, void *callback_arg = NULL);
+		TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std::string text, callback_t callback = callback_t());
 		~TextButton();
 
 		void align(alignment align) {
@@ -169,7 +164,7 @@ public:
 			int i1, i2;
 		};
 
-		typedef bool (*bool_callback)(const GUI::DropDown &drop, const Item &item, void *arg);
+		typedef boost::function<bool(const GUI::DropDown &drop, const Item &item)> callback_t;
 
 		typedef std::vector<Item> item_list;
 
@@ -180,8 +175,7 @@ public:
 
 		std::vector<boost::shared_ptr<TextButton> > item_buttons;
 
-		bool_callback callback;
-		void *callback_arg;
+		callback_t callback;
 
 		DropDown(GUI &g, int ax, int ay, int aw, int ah, int to);
 		~DropDown();
@@ -193,19 +187,18 @@ public:
 	};
 
 	struct Checkbox : Thing {
-		typedef void (*void_callback)(const GUI::Checkbox &checkbox, void *arg);
+		typedef boost::function<void(const GUI::Checkbox &checkbox)> callback_t;
 
 		bool state;
 
 		int x_down, y_down;
 
-		void_callback toggle_callback;
-		void *toggle_callback_arg;
+		callback_t toggle_callback;
 
 		Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state = false);
 		~Checkbox();
 
-		void set_callback(void_callback callback, void *arg = NULL);
+		void set_callback(callback_t callback);
 
 		void Draw();
 		void HandleEvent(const SDL_Event &event);
@@ -213,35 +206,34 @@ public:
 
 	typedef std::set<Thing*,thing_compare> thing_set;
 
-	public:
-		typedef void (*void_callback)(const GUI &gui, const SDL_Event &event, void *arg);
+public:
+	typedef boost::function<void(const GUI &drop, const SDL_Event &event)> callback_t;
 
-		GUI(int ax, int ay, int aw, int ah);
+	GUI(int ax, int ay, int aw, int ah);
 
-		void set_bg_colour(int r, int g, int b);
-		void set_bg_image(SDL_Surface *img);
+	void set_bg_colour(int r, int g, int b);
+	void set_bg_image(SDL_Surface *img);
 
-		void set_quit_callback(void_callback callback, void *arg = NULL);
+	void set_quit_callback(callback_t callback);
 
-		void poll(bool read_events);
-		void handle_event(const SDL_Event &event);
+	void poll(bool read_events);
+	void handle_event(const SDL_Event &event);
 
-	private:
-		int x, y, w, h;
-		Uint32 bgcolour;
-		SDL_Surface *bgimg;
+private:
+	int x, y, w, h;
+	Uint32 bgcolour;
+	SDL_Surface *bgimg;
 
-		thing_set things;
+	thing_set things;
 
-		bool v_focus;
-		thing_set::iterator focus;
+	bool v_focus;
+	thing_set::iterator focus;
 
-		void_callback quit_callback;
-		void *quit_callback_arg;
+	callback_t quit_callback;
 
-		void add_thing(Thing *thing);
-		void del_thing(Thing *thing);
-		void focus_next();
+	void add_thing(Thing *thing);
+	void del_thing(Thing *thing);
+	void focus_next();
 };
 
 #endif /* !OR_GUI_HPP */

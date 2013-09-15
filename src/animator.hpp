@@ -7,8 +7,9 @@
 
 namespace Animators {
 	struct Generic {
-		virtual bool render() { return false; }
-		virtual void free() {};
+		virtual ~Generic();
+		virtual bool render();
+		virtual void free();
 	};
 
 	struct PawnCrush : Generic {
@@ -20,6 +21,6 @@ namespace Animators {
 		bool render();
 		void free();
 	};
-};
+}
 
 #endif /* !OR_ANIMATOR_HPP */

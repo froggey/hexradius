@@ -70,7 +70,6 @@ class Client {
 		Scenario scenario;
 
 		int screen_w, screen_h;
-		bool screen_set;
 		unsigned int last_redraw;
 		/* Drag origin. */
 		int xd, yd;

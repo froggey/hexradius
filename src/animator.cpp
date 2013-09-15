@@ -2,6 +2,16 @@
 #include "loadimage.hpp"
 #include "gui.hpp"
 
+Animators::Generic::~Generic() {
+}
+
+bool Animators::Generic::render() {
+	return false;
+}
+
+void Animators::Generic::free() {
+}
+
 Animators::PawnCrush::PawnCrush(int tile_x, int tile_y) {
 	tx = tile_x;
 	ty = tile_y;
