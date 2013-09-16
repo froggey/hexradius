@@ -59,6 +59,15 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		flags |= HAS_POWER;
 		tile->has_power = false;
 	}
+	if(tile->has_mine && tile->mine_colour != colour) {
+		if(client) {
+			client->add_animator(new Animators::PawnBoom(tile->screen_x, tile->screen_y));
+		}
+		if(!(flags & PWR_SHIELD)) {
+			this->destroy(MINED);
+		}
+		tile->has_mine = false;
+	}
 
 	return true;
 }

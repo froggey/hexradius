@@ -69,3 +69,15 @@ Animators::PawnPow::PawnPow(int tile_x, int tile_y) :
 		       scale_tween_point_vec(&pow_animation_tween[0],
 					     &pow_animation_tween[boost::size(pow_animation_tween)])) {
 }
+
+static const Animators::ImageAnimation::scale_tween_point boom_animation_tween[] = {
+	{0, 0.0f},
+	{350, 1.0f},
+	{400, 0.75f}
+};
+
+Animators::PawnBoom::PawnBoom(int tile_x, int tile_y) :
+	ImageAnimation(tile_x, tile_y, 700, "graphics/boom.png",
+		       scale_tween_point_vec(&boom_animation_tween[0],
+					     &boom_animation_tween[boost::size(boom_animation_tween)])) {
+}

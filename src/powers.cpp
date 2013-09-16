@@ -40,7 +40,14 @@ Powers::Power Powers::powers[] = {
 	{"Annihilate", &Powers::annihilate_row, 50, false, Powers::Power::row},
 	{"Annihilate", &Powers::annihilate_radial, 50, false, Powers::Power::radial},
 	{"Annihilate", &Powers::annihilate_bs, 50, false, Powers::Power::nw_se},
-	{"Annihilate", &Powers::annihilate_fs, 50, false, Powers::Power::ne_sw}
+	{"Annihilate", &Powers::annihilate_fs, 50, false, Powers::Power::ne_sw},
+
+	{"Mine", &Powers::mine, 60, true, Powers::Power::undirected},
+	{"Mine", &Powers::mine_row, 20, false, Powers::Power::row},
+	{"Mine", &Powers::mine_radial, 40, false, Powers::Power::radial},
+	{"Mine", &Powers::mine_bs, 20, false, Powers::Power::nw_se},
+	{"Mine", &Powers::mine_fs, 20, false, Powers::Power::ne_sw},
+
 };
 
 const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
@@ -244,10 +251,13 @@ namespace Powers {
 	}
 
 	static bool purify(Tile::List tiles, pawn_ptr pawn) {
-		Tile::List::iterator i = tiles.begin();
 		bool ret = false;
 
-		for(; i != tiles.end(); i++) {
+		for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
+			if((*i)->has_mine && (*i)->mine_colour != pawn->colour) {
+				(*i)->has_mine = false;
+				ret = true;
+			}
 			if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 				(*i)->pawn->flags &= ~PWR_GOOD;
 				(*i)->pawn->range = 0;
@@ -346,4 +356,36 @@ namespace Powers {
 	bool annihilate_fs(pawn_ptr pawn, Server *, Client *client) {
 		return annihilate(pawn->fs_tiles(), client);
 	}
+
+static int lay_mines(Tile::List tiles, PlayerColour colour) {
+	int n_mines = 0;
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		Tile *tile = *i;
+		if(tile->has_mine) continue;
+		tile->has_mine = true;
+		tile->mine_colour = colour;
+		n_mines += 1;
+	}
+	return n_mines;
+}
+
+bool mine(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(Tile::List(1, pawn->cur_tile), pawn->colour) == 1;
+}
+
+bool mine_row(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->RowTiles(), pawn->colour) != 0;
+}
+
+bool mine_radial(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->RadialTiles(), pawn->colour) != 0;
+}
+
+bool mine_bs(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->bs_tiles(), pawn->colour) != 0;
+}
+
+bool mine_fs(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->fs_tiles(), pawn->colour) != 0;
+}
 }
