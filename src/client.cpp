@@ -332,7 +332,9 @@ void Client::handle_message(const protocol::message &msg) {
 			PlayerColour c = (PlayerColour)msg.players(0).colour();
 
 			std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
-			DestroyTeamPawns(game_state->tiles, c);
+			if(game_state) {
+				DestroyTeamPawns(game_state->tiles, c);
+			}
 
 			for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 				if((*p).colour == c) {

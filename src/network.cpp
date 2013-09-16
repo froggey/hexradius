@@ -228,7 +228,9 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 		server.WriteAll(qmsg, this);
 	}
 
-	DestroyTeamPawns(server.game_state->tiles, colour);
+	if(server.game_state) {
+		DestroyTeamPawns(server.game_state->tiles, colour);
+	}
 
 	if(*(server.turn) == shared_from_this()) {
 		server.NextTurn();
