@@ -249,6 +249,7 @@ void Server::Client::FinishQuit(const boost::system::error_code &, ptr /*cptr*/)
 
 void Server::NextTurn(void) {
 	client_set::iterator last = turn;
+	bool allow_end = !getenv("HR_DONT_END_GAME");
 
 	while(1) {
 		if(turn == clients.end()) {
@@ -258,8 +259,8 @@ void Server::NextTurn(void) {
 				continue;
 			}
 		}
-#ifndef NEVERENDING
-		if(turn == last) {
+
+		if(allow_end && turn == last) {
 			state = LOBBY;
 
 			turn = clients.end();
@@ -272,7 +273,7 @@ void Server::NextTurn(void) {
 
 			return;
 		}
-#endif
+
 		if((*turn)->colour != SPECTATE) {
 			int match = 0;
 
@@ -288,8 +289,8 @@ void Server::NextTurn(void) {
 			}
 		}
 	}
-#ifndef NEVERENDING
-	if(turn == last) {
+
+	if(allow_end && turn == last) {
 		state = LOBBY;
 
 		protocol::message gover;
@@ -303,7 +304,7 @@ void Server::NextTurn(void) {
 
 		return;
 	}
-#endif
+
 	if(--pspawn_turns == 0) {
 		SpawnPowers();
 	}
@@ -448,7 +449,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				msg.add_pawns();
 				pawn->CopyToProto(msg.mutable_pawns(0), true);
 
-				client->Write(msg);
+				WriteAll(msg);
 			}
 
 			NextTurn();

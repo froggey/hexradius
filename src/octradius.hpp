@@ -108,7 +108,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 			bool added;
 			float time;
 			
-			PowerMessage(int p, bool a) : power(p), added(a), time(3) {}
+			PowerMessage(int p, bool a) : power(p), added(a), time(2) {}
 		};
 		std::list<PowerMessage> power_messages;
 

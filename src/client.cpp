@@ -942,7 +942,9 @@ void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
 	
-	std::string str = Powers::powers[pm.power].name;
+	bool hide = (pm.added && pawn->colour != my_colour);
+	
+	std::string str = hide ? "???" : Powers::powers[pm.power].name;
 	str = (pm.added ? "+ " : "- ") + str;
 
 	int fh = std::max(TTF_FontLineSkip(font), TTF_FontLineSkip(symbol_font));
@@ -950,16 +952,18 @@ void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
 	
 	SDL_Rect rect;
 	rect.w = FontStuff::TextWidth(font, str);
-	rect.w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[pm.power].direction]);
+	if (!hide)
+		rect.w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[pm.power].direction]);
 	rect.w += fw;
 	rect.h = fh;
 	rect.x = pawn->cur_tile->screen_x - rect.w / 2;
-	rect.y = pawn->cur_tile->screen_y - 32 * pm.time;
+	rect.y = pawn->cur_tile->screen_y - 32 + 16 * pm.time;
 
 	ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178 * std::min(pm.time, 1.0f));
 
 	SDL_Color font_colour = {0, 255, 0, 0};
 
 	rect.x += FontStuff::BlitText(screen, rect, font, font_colour, str);
-	rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_suffixes[Powers::powers[pm.power].direction]);
+	if (!hide)
+		rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_suffixes[Powers::powers[pm.power].direction]);
 }
