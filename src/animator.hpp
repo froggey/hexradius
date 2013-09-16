@@ -6,19 +6,32 @@
 #include "octradius.hpp"
 
 namespace Animators {
-	struct Generic {
-		virtual ~Generic();
-		virtual bool render() = 0;
-	};
+class Generic {
+public:
+	virtual ~Generic();
+	virtual bool render() = 0;
+};
 
-	struct PawnCrush : Generic {
-		int tx, ty;
-		Uint32 init_ticks;
+class ImageAnimation : public Generic {
+public:
+	int tx, ty;
+	Uint32 init_ticks;
+	Uint32 runtime;
+	SDL_Surface *image;
 
-		PawnCrush(int tile_x, int tile_y);
+	ImageAnimation(int tile_x, int tile_y, Uint32 runtime, const std::string &image);
+	bool render();
+};
 
-		bool render();
-	};
+class PawnCrush : public ImageAnimation {
+public:
+	PawnCrush(int tile_x, int tile_y);
+};
+
+class PawnPow : public ImageAnimation {
+public:
+	PawnPow(int tile_x, int tile_y);
+};
 }
 
 #endif /* !OR_ANIMATOR_HPP */
