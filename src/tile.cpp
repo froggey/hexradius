@@ -38,11 +38,3 @@ Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 
 	return ret;
 }
-
-void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour) {
-	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
-		if((*t)->pawn && (*t)->pawn->colour == colour) {
-			(*t)->pawn.reset();
-		}
-	}
-}

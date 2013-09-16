@@ -229,7 +229,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	}
 
 	if(server.game_state) {
-		DestroyTeamPawns(server.game_state->tiles, colour);
+		server.game_state->destroy_team_pawns(colour);
 	}
 
 	if(*(server.turn) == shared_from_this()) {

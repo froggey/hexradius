@@ -150,7 +150,6 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 };
 
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
-void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
 struct options {
 	std::string username;

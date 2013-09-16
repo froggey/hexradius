@@ -333,7 +333,7 @@ void Client::handle_message(const protocol::message &msg) {
 
 			std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
 			if(game_state) {
-				DestroyTeamPawns(game_state->tiles, c);
+				game_state->destroy_team_pawns(c);
 			}
 
 			for(player_set::iterator p = players.begin(); p != players.end(); p++) {

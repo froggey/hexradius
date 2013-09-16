@@ -25,6 +25,9 @@ public:
 	/** Return the "topmost" pawn rendered at the given X,Y screen co-ordinates
 	 * or null if there is no pawn at that location. */
 	pawn_ptr pawn_at_screen(int x, int y);
+
+	/** Destroy all the pawns on the given team. */
+	void destroy_team_pawns(PlayerColour colour);
 };
 
 #endif
