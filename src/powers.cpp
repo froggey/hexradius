@@ -22,10 +22,10 @@ Powers::Power Powers::powers[] = {
 	{"Invisibility", &Powers::invisibility, 30, true, Powers::Power::undirected},
 	{"Teleport", &Powers::teleport, 60, true, Powers::Power::undirected},
 
-	{"Elevate", &Powers::elevate_row, 70, true, Powers::Power::row},
-	{"Elevate", &Powers::elevate_radial, 70, true, Powers::Power::radial},
-	{"Elevate", &Powers::elevate_bs, 70, true, Powers::Power::nw_se},
-	{"Elevate", &Powers::elevate_fs, 70, true, Powers::Power::ne_sw},
+	{"Elevate", &Powers::elevate_row, 7000, true, Powers::Power::row},
+	{"Elevate", &Powers::elevate_radial, 7000, true, Powers::Power::radial},
+	{"Elevate", &Powers::elevate_bs, 7000, true, Powers::Power::nw_se},
+	{"Elevate", &Powers::elevate_fs, 7000, true, Powers::Power::ne_sw},
 
 	{"Dig", &Powers::dig_row, 70, true, Powers::Power::row},
 	{"Dig", &Powers::dig_radial, 70, true, Powers::Power::radial},
@@ -40,7 +40,12 @@ Powers::Power Powers::powers[] = {
 	{"Annihilate", &Powers::annihilate_row, 50, false, Powers::Power::row},
 	{"Annihilate", &Powers::annihilate_radial, 50, false, Powers::Power::radial},
 	{"Annihilate", &Powers::annihilate_bs, 50, false, Powers::Power::nw_se},
-	{"Annihilate", &Powers::annihilate_fs, 50, false, Powers::Power::ne_sw}
+	{"Annihilate", &Powers::annihilate_fs, 50, false, Powers::Power::ne_sw},
+	
+	{"Smash", &Powers::smash_row, 10000, false, Powers::Power::row},
+	{"Smash", &Powers::smash_radial, 10000, false, Powers::Power::radial},
+	{"Smash", &Powers::smash_bs, 10000, false, Powers::Power::nw_se},
+	{"Smash", &Powers::smash_fs, 10000, false, Powers::Power::ne_sw},
 };
 
 const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
@@ -345,5 +350,38 @@ namespace Powers {
 
 	bool annihilate_fs(pawn_ptr pawn, Server *, Client *client) {
 		return annihilate(pawn->fs_tiles(), client);
+	}
+
+	static bool smash(Tile::List tiles, pawn_ptr pawn, Client *client) {
+		bool ret = false;
+
+		for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
+			if((*tile)->pawn && (*tile)->pawn->colour != pawn->colour) {
+				(*tile)->pawn->destroy(Pawn::PWR_SMASH);
+				if(client) {
+					client->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
+				}
+				ret = true;
+				(*tile)->smashed = true;
+			}
+		}
+
+		return ret;
+	}
+
+	bool smash_row(pawn_ptr pawn, Server *, Client *client) {
+		return smash(pawn->RowTiles(), pawn, client);
+	}
+
+	bool smash_radial(pawn_ptr pawn, Server *, Client *client) {
+		return smash(pawn->RadialTiles(), pawn, client);
+	}
+
+	bool smash_bs(pawn_ptr pawn, Server *, Client *client) {
+		return smash(pawn->bs_tiles(), pawn, client);
+	}
+
+	bool smash_fs(pawn_ptr pawn, Server *, Client *client) {
+		return smash(pawn->fs_tiles(), pawn, client);
 	}
 }

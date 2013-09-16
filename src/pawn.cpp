@@ -30,7 +30,7 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		return false;
 	}
 
-	if(tile->height-1 > cur_tile->height && !(flags & PWR_CLIMB)) {
+	if((tile->height > cur_tile->height + 1 || tile->smashed) && !(flags & PWR_CLIMB)) {
 		return false;
 	}
 

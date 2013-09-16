@@ -61,6 +61,7 @@ struct Tile {
 	int height;
 	int power;
 	bool has_power;
+	bool smashed;
 	pawn_ptr pawn;
 
 	bool animating;
@@ -74,7 +75,7 @@ struct Tile {
 
 	Tile(int c, int r, int h) :
 		col(c), row(r), height(h),
-		power(-1), has_power(false),
+		power(-1), has_power(false), smashed(false),
 		pawn(pawn_ptr()),
 		animating(false), screen_x(0), screen_y(0),
 		render_pawn(pawn_ptr())
@@ -90,7 +91,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List &all_tiles;
 
 	public:
-		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE };
+		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH };
 		typedef std::map<int,int> PowerList;
 
 		Tile *cur_tile;

@@ -67,6 +67,11 @@ namespace Powers {
 	bool annihilate_radial(pawn_ptr pawn, Server *server, Client *client);
 	bool annihilate_bs(pawn_ptr pawn, Server *server, Client *client);
 	bool annihilate_fs(pawn_ptr pawn, Server *server, Client *client);
+	
+	bool smash_row(pawn_ptr pawn, Server *, Client *client);
+	bool smash_radial(pawn_ptr pawn, Server *, Client *client);
+	bool smash_bs(pawn_ptr pawn, Server *, Client *client);
+	bool smash_fs(pawn_ptr pawn, Server *, Client *client);
 }
 
 #endif /* !OR_POWERS_HPP */

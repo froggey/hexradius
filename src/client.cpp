@@ -569,8 +569,11 @@ void Client::DrawScreen() {
 	climb_offset = 2.5+(2.0*sin(SDL_GetTicks() / 300.0));
 
 	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
+	SDL_Surface *smashed_tile = ImgStuff::GetImage("graphics/hextile-broken.png");
 	SDL_Surface *tint_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
+	SDL_Surface *smashed_tint_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,100,0));
 	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
+	SDL_Surface *smashed_line_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
 
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
@@ -628,10 +631,10 @@ void Client::DrawScreen() {
 		(*ti)->screen_x = rect.x;
 		(*ti)->screen_y = rect.y;
 
-		SDL_Surface *tile_img = tile;
+		SDL_Surface *tile_img = (*ti)->smashed ? smashed_tile : tile;
 
 		if(htile == *ti) {
-			tile_img = tint_tile;
+			tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
 		}else if(htile && options.show_lines) {
 			if(diag_row != (*ti)->row) {
 				diag_cols(htile, (*ti)->row, bs_col, fs_col);
@@ -639,7 +642,7 @@ void Client::DrawScreen() {
 			}
 
 			if((*ti)->col == bs_col || (*ti)->col == fs_col || (*ti)->row == htile->row) {
-				tile_img = line_tile;
+				tile_img = (*ti)->smashed ? smashed_line_tile : line_tile;
 			}
 		}
 
