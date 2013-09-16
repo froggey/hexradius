@@ -64,13 +64,16 @@ int Powers::RandomPower(void) {
 }
 
 namespace Powers {
-	static bool destroy_enemies(Tile::List area, pawn_ptr pawn) {
+	static bool destroy_enemies(Tile::List area, pawn_ptr pawn, Client *client) {
 		Tile::List::iterator i = area.begin();
 		bool ret = false;
 
 		while(i != area.end()) {
 			if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
 				(*i)->pawn->destroy(Pawn::PWR_DESTROY);
+				if(client) {
+					client->add_animator(new Animators::PawnPow((*i)->screen_x, (*i)->screen_y));
+				}
 				ret = true;
 			}
 
@@ -80,20 +83,20 @@ namespace Powers {
 		return ret;
 	}
 
-	bool destroy_row(pawn_ptr pawn, Server *, Client *) {
-		return destroy_enemies(pawn->RowTiles(), pawn);
+	bool destroy_row(pawn_ptr pawn, Server *, Client *client) {
+		return destroy_enemies(pawn->RowTiles(), pawn, client);
 	}
 
-	bool destroy_radial(pawn_ptr pawn, Server *, Client *) {
-		return destroy_enemies(pawn->RadialTiles(), pawn);
+	bool destroy_radial(pawn_ptr pawn, Server *, Client *client) {
+		return destroy_enemies(pawn->RadialTiles(), pawn, client);
 	}
 
-	bool destroy_bs(pawn_ptr pawn, Server *, Client *) {
-		return destroy_enemies(pawn->bs_tiles(), pawn);
+	bool destroy_bs(pawn_ptr pawn, Server *, Client *client) {
+		return destroy_enemies(pawn->bs_tiles(), pawn, client);
 	}
 
-	bool destroy_fs(pawn_ptr pawn, Server *, Client *) {
-		return destroy_enemies(pawn->fs_tiles(), pawn);
+	bool destroy_fs(pawn_ptr pawn, Server *, Client *client) {
+		return destroy_enemies(pawn->fs_tiles(), pawn, client);
 	}
 
 	bool raise_tile(pawn_ptr pawn, Server *, Client *client) {
@@ -312,12 +315,15 @@ namespace Powers {
 		return true;
 	}
 
-	static bool annihilate(Tile::List tiles) {
+	static bool annihilate(Tile::List tiles, Client *client) {
 		bool ret = false;
 
 		for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
 			if((*tile)->pawn) {
 				(*tile)->pawn->destroy(Pawn::PWR_ANNIHILATE);
+				if(client) {
+					client->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
+				}
 				ret = true;
 			}
 		}
@@ -325,19 +331,19 @@ namespace Powers {
 		return ret;
 	}
 
-	bool annihilate_row(pawn_ptr pawn, Server *, Client *) {
-		return annihilate(pawn->RowTiles());
+	bool annihilate_row(pawn_ptr pawn, Server *, Client *client) {
+		return annihilate(pawn->RowTiles(), client);
 	}
 
-	bool annihilate_radial(pawn_ptr pawn, Server *, Client *) {
-		return annihilate(pawn->RadialTiles());
+	bool annihilate_radial(pawn_ptr pawn, Server *, Client *client) {
+		return annihilate(pawn->RadialTiles(), client);
 	}
 
-	bool annihilate_bs(pawn_ptr pawn, Server *, Client *) {
-		return annihilate(pawn->bs_tiles());
+	bool annihilate_bs(pawn_ptr pawn, Server *, Client *client) {
+		return annihilate(pawn->bs_tiles(), client);
 	}
 
-	bool annihilate_fs(pawn_ptr pawn, Server *, Client *) {
-		return annihilate(pawn->fs_tiles());
+	bool annihilate_fs(pawn_ptr pawn, Server *, Client *client) {
+		return annihilate(pawn->fs_tiles(), client);
 	}
 }

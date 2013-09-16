@@ -87,7 +87,7 @@ Client::~Client() {
 	delete game_state;
 
 	for(anim_set::iterator anim = animators.begin(); anim != animators.end(); anim++) {
-		(*anim)->free();
+		delete *anim;
 	}
 }
 
@@ -655,10 +655,12 @@ void Client::DrawScreen() {
 	}
 
 	for(anim_set::iterator ait = animators.begin(); ait != animators.end();) {
-		anim_set::iterator anim = ait++;
+		anim_set::iterator current_anim = ait++;
+		Animators::Generic *anim = *current_anim;
 
-		if(!(*anim)->render()) {
-			animators.erase(anim);
+		if(!anim->render()) {
+			delete anim;
+			animators.erase(current_anim);
 		}
 	}
 

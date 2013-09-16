@@ -5,34 +5,26 @@
 Animators::Generic::~Generic() {
 }
 
-bool Animators::Generic::render() {
-	return false;
+Animators::ImageAnimation::ImageAnimation(int tile_x, int tile_y, Uint32 runtime, const std::string &image) :
+	tx(tile_x), ty(tile_y),
+	init_ticks(SDL_GetTicks()), runtime(runtime),
+	image(ImgStuff::GetImage(image)) {
 }
 
-void Animators::Generic::free() {
-}
-
-Animators::PawnCrush::PawnCrush(int tile_x, int tile_y) {
-	tx = tile_x;
-	ty = tile_y;
-
-	init_ticks = SDL_GetTicks();
-}
-
-bool Animators::PawnCrush::render() {
-	SDL_Surface *crush_img = ImgStuff::GetImage("graphics/crush.png");
-
-	if(SDL_GetTicks() >= init_ticks+500) {
-		delete this;
+bool Animators::ImageAnimation::render() {
+	if(SDL_GetTicks() >= init_ticks+runtime) {
 		return false;
-	}else{
-		SDL_Rect rect = {tx, ty, 0, 0};
-		ensure_SDL_BlitSurface(crush_img, NULL, screen, &rect);
-
-		return true;
 	}
+	SDL_Rect rect = {tx, ty, 0, 0};
+	ensure_SDL_BlitSurface(image, NULL, screen, &rect);
+
+	return true;
 }
 
-void Animators::PawnCrush::free() {
-	delete this;
+Animators::PawnCrush::PawnCrush(int tile_x, int tile_y) :
+	ImageAnimation(tile_x, tile_y, 500, "graphics/crush.png") {
+}
+
+Animators::PawnPow::PawnPow(int tile_x, int tile_y) :
+	ImageAnimation(tile_x, tile_y, 500, "graphics/kapow.png") {
 }
