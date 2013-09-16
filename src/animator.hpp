@@ -8,8 +8,7 @@
 namespace Animators {
 	struct Generic {
 		virtual ~Generic();
-		virtual bool render();
-		virtual void free();
+		virtual bool render() = 0;
 	};
 
 	struct PawnCrush : Generic {
@@ -19,7 +18,6 @@ namespace Animators {
 		PawnCrush(int tile_x, int tile_y);
 
 		bool render();
-		void free();
 	};
 }
 
