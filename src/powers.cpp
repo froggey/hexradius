@@ -205,7 +205,7 @@ static bool invisibility(pawn_ptr pawn, Server *, Client *) {
 	return true;
 }
 
-static bool purify(Tile::List tiles, pawn_ptr pawn) {
+static bool purify(Tile::List tiles, pawn_ptr pawn, Client *client) {
 	bool ret = false;
 
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
@@ -216,7 +216,15 @@ static bool purify(Tile::List tiles, pawn_ptr pawn) {
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 			(*i)->pawn->flags &= ~PWR_GOOD;
 			(*i)->pawn->range = 0;
-
+			// Hovering pawns that fall on a mine trigger it.
+			(*i)->pawn->maybe_step_on_mine(client);
+			// And falling onto a smashed tile is bad.
+			if((*i)->smashed) {
+				if(client) {
+					client->add_animator(new Animators::PawnOhShitIFellDownAHole((*i)->screen_x, (*i)->screen_y));
+				}
+				(*i)->pawn->destroy(Pawn::FELL_OUT_OF_THE_WORLD);
+			}
 			ret = true;
 		}
 	}
@@ -224,20 +232,20 @@ static bool purify(Tile::List tiles, pawn_ptr pawn) {
 	return ret;
 }
 
-static bool purify_row(pawn_ptr pawn, Server *, Client *) {
-	return purify(pawn->RowTiles(), pawn);
+static bool purify_row(pawn_ptr pawn, Server *, Client *client) {
+	return purify(pawn->RowTiles(), pawn, client);
 }
 
-static bool purify_radial(pawn_ptr pawn, Server *, Client *) {
-	return purify(pawn->RadialTiles(), pawn);
+static bool purify_radial(pawn_ptr pawn, Server *, Client *client) {
+	return purify(pawn->RadialTiles(), pawn, client);
 }
 
-static bool purify_bs(pawn_ptr pawn, Server *, Client *) {
-	return purify(pawn->bs_tiles(), pawn);
+static bool purify_bs(pawn_ptr pawn, Server *, Client *client) {
+	return purify(pawn->bs_tiles(), pawn, client);
 }
 
-static bool purify_fs(pawn_ptr pawn, Server *, Client *) {
-	return purify(pawn->fs_tiles(), pawn);
+static bool purify_fs(pawn_ptr pawn, Server *, Client *client) {
+	return purify(pawn->fs_tiles(), pawn, client);
 }
 
 static bool teleport(pawn_ptr pawn, Server *server, Client *client) {

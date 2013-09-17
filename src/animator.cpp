@@ -81,3 +81,14 @@ Animators::PawnBoom::PawnBoom(int tile_x, int tile_y) :
 		       scale_tween_point_vec(&boom_animation_tween[0],
 					     &boom_animation_tween[boost::size(boom_animation_tween)])) {
 }
+
+static const Animators::ImageAnimation::scale_tween_point aiee_animation_tween[] = {
+	{0, 1.0f},
+	{1500, 0.0f}
+};
+
+Animators::PawnOhShitIFellDownAHole::PawnOhShitIFellDownAHole(int tile_x, int tile_y) :
+	ImageAnimation(tile_x, tile_y, 1500, "graphics/aiee.png",
+		       scale_tween_point_vec(&aiee_animation_tween[0],
+					     &aiee_animation_tween[boost::size(aiee_animation_tween)])) {
+}

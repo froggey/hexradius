@@ -88,7 +88,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List &all_tiles;
 
 	public:
-		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED  };
+		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD };
 		typedef std::map<int,int> PowerList;
 
 		Tile *cur_tile;
@@ -140,6 +140,9 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 
 		void AddPower(int power);
 		bool UsePower(int power, Server *server, Client *client);
+
+		/* Test if the pawn moved (or fell) onto a mine. */
+		void maybe_step_on_mine(Client *client);
 
 		Tile::List RowTiles(void);
 		Tile::List RadialTiles(void);

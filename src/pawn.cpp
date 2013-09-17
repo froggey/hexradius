@@ -59,15 +59,7 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		flags |= HAS_POWER;
 		tile->has_power = false;
 	}
-	if(tile->has_mine && tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
-		if(client) {
-			client->add_animator(new Animators::PawnBoom(tile->screen_x, tile->screen_y));
-		}
-		if(!(flags & PWR_SHIELD)) {
-			this->destroy(MINED);
-		}
-		tile->has_mine = false;
-	}
+	maybe_step_on_mine(client);
 
 	return true;
 }
@@ -242,5 +234,18 @@ void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 			p->mutable_powers(index)->set_index(i->first);
 			p->mutable_powers(index)->set_num(i->second);
 		}
+	}
+}
+
+void Pawn::maybe_step_on_mine(Client *client)
+{
+	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
+		if(client) {
+			client->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
+		}
+		if(!(flags & PWR_SHIELD)) {
+			this->destroy(MINED);
+		}
+		cur_tile->has_mine = false;
 	}
 }

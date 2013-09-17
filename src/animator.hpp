@@ -48,6 +48,11 @@ class PawnBoom : public ImageAnimation {
 public:
 	PawnBoom(int tile_x, int tile_y);
 };
+
+class PawnOhShitIFellDownAHole : public ImageAnimation {
+public:
+	PawnOhShitIFellDownAHole(int tile_x, int tile_y);
+};
 }
 
 #endif /* !OR_ANIMATOR_HPP */
