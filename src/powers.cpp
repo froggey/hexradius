@@ -8,48 +8,6 @@
 #undef ABSOLUTE
 #undef RELATIVE
 
-Powers::Power Powers::powers[] = {
-	{"Destroy", &Powers::destroy_row, 50, true, Powers::Power::row},
-	{"Destroy", &Powers::destroy_radial, 50, true, Powers::Power::radial},
-	{"Destroy", &Powers::destroy_bs, 50, true, Powers::Power::nw_se},
-	{"Destroy", &Powers::destroy_fs, 50, true, Powers::Power::ne_sw},
-
-	{"Raise Tile", &Powers::raise_tile, 100, true, Powers::Power::undirected},
-	{"Lower Tile", &Powers::lower_tile, 100, true, Powers::Power::undirected},
-	{"Increase Range", &Powers::increase_range, 20, true, Powers::Power::undirected},
-	{"Hover", &Powers::hover, 30, true, Powers::Power::undirected},
-	{"Shield", &Powers::shield, 30, true, Powers::Power::undirected},
-	{"Invisibility", &Powers::invisibility, 30, true, Powers::Power::undirected},
-	{"Teleport", &Powers::teleport, 60, true, Powers::Power::undirected},
-
-	{"Elevate", &Powers::elevate_row, 70, true, Powers::Power::row},
-	{"Elevate", &Powers::elevate_radial, 70, true, Powers::Power::radial},
-	{"Elevate", &Powers::elevate_bs, 70, true, Powers::Power::nw_se},
-	{"Elevate", &Powers::elevate_fs, 70, true, Powers::Power::ne_sw},
-
-	{"Dig", &Powers::dig_row, 70, true, Powers::Power::row},
-	{"Dig", &Powers::dig_radial, 70, true, Powers::Power::radial},
-	{"Dig", &Powers::dig_bs, 70, true, Powers::Power::nw_se},
-	{"Dig", &Powers::dig_fs, 70, true, Powers::Power::ne_sw},
-
-	{"Purify", &Powers::purify_row, 50, true, Powers::Power::row},
-	{"Purify", &Powers::purify_radial, 50, true, Powers::Power::radial},
-	{"Purify", &Powers::purify_bs, 50, true, Powers::Power::nw_se},
-	{"Purify", &Powers::purify_fs, 50, true, Powers::Power::ne_sw},
-
-	{"Annihilate", &Powers::annihilate_row, 50, false, Powers::Power::row},
-	{"Annihilate", &Powers::annihilate_radial, 50, false, Powers::Power::radial},
-	{"Annihilate", &Powers::annihilate_bs, 50, false, Powers::Power::nw_se},
-	{"Annihilate", &Powers::annihilate_fs, 50, false, Powers::Power::ne_sw},
-	
-	{"Smash", &Powers::smash_row, 50, false, Powers::Power::row},
-	{"Smash", &Powers::smash_radial, 50, false, Powers::Power::radial},
-	{"Smash", &Powers::smash_bs, 50, false, Powers::Power::nw_se},
-	{"Smash", &Powers::smash_fs, 50, false, Powers::Power::ne_sw},
-};
-
-const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
-
 int Powers::RandomPower(void) {
 	int total = 0;
 	for (int i = 0; i < Powers::num_powers; i++) {
@@ -68,320 +26,403 @@ int Powers::RandomPower(void) {
 	abort();
 }
 
-namespace Powers {
-	static bool destroy_enemies(Tile::List area, pawn_ptr pawn, Client *client) {
-		Tile::List::iterator i = area.begin();
-		bool ret = false;
+static bool destroy_enemies(Tile::List area, pawn_ptr pawn, Client *client) {
+	Tile::List::iterator i = area.begin();
+	bool ret = false;
 
-		while(i != area.end()) {
-			if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
-				(*i)->pawn->destroy(Pawn::PWR_DESTROY);
-				if(client) {
-					client->add_animator(new Animators::PawnPow((*i)->screen_x, (*i)->screen_y));
-				}
-				ret = true;
+	while(i != area.end()) {
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
+			(*i)->pawn->destroy(Pawn::PWR_DESTROY);
+			if(client) {
+				client->add_animator(new Animators::PawnPow((*i)->screen_x, (*i)->screen_y));
 			}
-
-			i++;
+			ret = true;
 		}
 
-		return ret;
+		i++;
 	}
 
-	bool destroy_row(pawn_ptr pawn, Server *, Client *client) {
-		return destroy_enemies(pawn->RowTiles(), pawn, client);
+	return ret;
+}
+
+static bool destroy_row(pawn_ptr pawn, Server *, Client *client) {
+	return destroy_enemies(pawn->RowTiles(), pawn, client);
+}
+
+static bool destroy_radial(pawn_ptr pawn, Server *, Client *client) {
+	return destroy_enemies(pawn->RadialTiles(), pawn, client);
+}
+
+static bool destroy_bs(pawn_ptr pawn, Server *, Client *client) {
+	return destroy_enemies(pawn->bs_tiles(), pawn, client);
+}
+
+static bool destroy_fs(pawn_ptr pawn, Server *, Client *client) {
+	return destroy_enemies(pawn->fs_tiles(), pawn, client);
+}
+
+static bool raise_tile(pawn_ptr pawn, Server *, Client *client) {
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(
+			client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
+	return pawn->cur_tile->SetHeight(pawn->cur_tile->height + 1);
+}
+
+static bool lower_tile(pawn_ptr pawn, Server *, Client *client) {
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(
+			client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
+	return pawn->cur_tile->SetHeight(pawn->cur_tile->height - 1);
+}
+
+static bool increase_range(pawn_ptr pawn, Server *, Client *) {
+	if(pawn->range < 3) {
+		pawn->range++;
+		return true;
 	}
 
-	bool destroy_radial(pawn_ptr pawn, Server *, Client *client) {
-		return destroy_enemies(pawn->RadialTiles(), pawn, client);
-	}
+	return false;
+}
 
-	bool destroy_bs(pawn_ptr pawn, Server *, Client *client) {
-		return destroy_enemies(pawn->bs_tiles(), pawn, client);
-	}
-
-	bool destroy_fs(pawn_ptr pawn, Server *, Client *client) {
-		return destroy_enemies(pawn->fs_tiles(), pawn, client);
-	}
-
-	bool raise_tile(pawn_ptr pawn, Server *, Client *client) {
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(
-				client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
-		return pawn->cur_tile->SetHeight(pawn->cur_tile->height + 1);
-	}
-
-	bool lower_tile(pawn_ptr pawn, Server *, Client *client) {
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(
-				client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
-		return pawn->cur_tile->SetHeight(pawn->cur_tile->height - 1);
-	}
-
-	bool increase_range(pawn_ptr pawn, Server *, Client *) {
-		if(pawn->range < 3) {
-			pawn->range++;
-			return true;
-		}
-
+static bool hover(pawn_ptr pawn, Server *, Client *) {
+	if(pawn->flags & PWR_CLIMB) {
 		return false;
 	}
 
-	bool hover(pawn_ptr pawn, Server *, Client *) {
-		if(pawn->flags & PWR_CLIMB) {
-			return false;
-		}
-
-		pawn->flags |= PWR_CLIMB;
-		return true;
-	}
-
-	static bool elevate_tiles(Tile::List &tiles) {
-		Tile::List::iterator i = tiles.begin();
-		bool ret = false;
-
-		for(; i != tiles.end(); i++) {
-			ret = ((*i)->SetHeight(2) || ret);
-		}
-
-		return ret;
-	}
-
-	static bool dig_tiles(Tile::List &tiles) {
-		Tile::List::iterator i = tiles.begin();
-		bool ret = false;
-
-		for(; i != tiles.end(); i++) {
-			ret = ((*i)->SetHeight(-2) || ret);
-		}
-
-		return ret;
-	}
-
-	bool elevate_row(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->RowTiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
-
-		return elevate_tiles(tiles);
-	}
-
-	bool elevate_radial(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->RadialTiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
-
-		return elevate_tiles(tiles);
-	}
-
-	bool elevate_bs(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->bs_tiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
-
-		return elevate_tiles(tiles);
-	}
-
-	bool elevate_fs(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->fs_tiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
-
-		return elevate_tiles(tiles);
-	}
-
-	bool dig_row(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->RowTiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
-
-		return dig_tiles(tiles);
-	}
-
-	bool dig_radial(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->RadialTiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
-
-		return dig_tiles(tiles);
-	}
-
-	bool dig_bs(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->bs_tiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
-
-		return dig_tiles(tiles);
-	}
-
-	bool dig_fs(pawn_ptr pawn, Server *, Client *client) {
-		Tile::List tiles = pawn->fs_tiles();
-
-		if (client && !client->current_animator)
-			client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
-
-		return dig_tiles(tiles);
-	}
-
-	bool shield(pawn_ptr pawn, Server *, Client *) {
-		if(pawn->flags & PWR_SHIELD) {
-			return false;
-		}
-
-		pawn->flags |= PWR_SHIELD;
-		return true;
-	}
-
-	bool invisibility(pawn_ptr pawn, Server *, Client *) {
-		if (pawn->flags & PWR_INVISIBLE) {
-			return false;
-		}
-
-		pawn->flags |= PWR_INVISIBLE;
-		return true;
-	}
-
-	static bool purify(Tile::List tiles, pawn_ptr pawn) {
-		Tile::List::iterator i = tiles.begin();
-		bool ret = false;
-
-		for(; i != tiles.end(); i++) {
-			if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
-				(*i)->pawn->flags &= ~PWR_GOOD;
-				(*i)->pawn->range = 0;
-
-				ret = true;
-			}
-		}
-
-		return ret;
-	}
-
-	bool purify_row(pawn_ptr pawn, Server *, Client *) {
-		return purify(pawn->RowTiles(), pawn);
-	}
-
-	bool purify_radial(pawn_ptr pawn, Server *, Client *) {
-		return purify(pawn->RadialTiles(), pawn);
-	}
-
-	bool purify_bs(pawn_ptr pawn, Server *, Client *) {
-		return purify(pawn->bs_tiles(), pawn);
-	}
-
-	bool purify_fs(pawn_ptr pawn, Server *, Client *) {
-		return purify(pawn->fs_tiles(), pawn);
-	}
-
-	bool teleport(pawn_ptr pawn, Server *server, Client *client) {
-		if(server) {
-			Tile::List tlist;
-			Tile *tile;
-
-			do {
-				tlist = RandomTiles(server->game_state->tiles, 1, false);
-				tile = *(tlist.begin());
-			} while(tile->pawn);
-
-			server->game_state->power_rand_vals.push_back(tile->col);
-			server->game_state->power_rand_vals.push_back(tile->row);
-
-			tile->pawn.swap(pawn->cur_tile->pawn);
-			pawn->cur_tile = tile;
-		}else{
-			if(client->game_state->power_rand_vals.size() != 2) {
-				return false;
-			}
-
-			int col = client->game_state->power_rand_vals[0];
-			int row = client->game_state->power_rand_vals[1];
-
-			Tile *tile = client->game_state->tile_at(col, row);
-			if(!tile || tile->pawn) {
-				std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
-				return false;
-			}
-
-			pawn->last_tile = pawn->cur_tile;
-			pawn->last_tile->render_pawn = pawn;
-			pawn->teleport_time = SDL_GetTicks();
-
-			tile->pawn.swap(pawn->cur_tile->pawn);
-			pawn->cur_tile = tile;
-		}
-
-		return true;
-	}
-
-	static bool annihilate(Tile::List tiles, Client *client) {
-		bool ret = false;
-
-		for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
-			if((*tile)->pawn) {
-				(*tile)->pawn->destroy(Pawn::PWR_ANNIHILATE);
-				if(client) {
-					client->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
-				}
-				ret = true;
-			}
-		}
-
-		return ret;
-	}
-
-	bool annihilate_row(pawn_ptr pawn, Server *, Client *client) {
-		return annihilate(pawn->RowTiles(), client);
-	}
-
-	bool annihilate_radial(pawn_ptr pawn, Server *, Client *client) {
-		return annihilate(pawn->RadialTiles(), client);
-	}
-
-	bool annihilate_bs(pawn_ptr pawn, Server *, Client *client) {
-		return annihilate(pawn->bs_tiles(), client);
-	}
-
-	bool annihilate_fs(pawn_ptr pawn, Server *, Client *client) {
-		return annihilate(pawn->fs_tiles(), client);
-	}
-
-	static bool smash(Tile::List tiles, pawn_ptr pawn, Client *client) {
-		bool ret = false;
-
-		for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
-			if((*tile)->pawn && (*tile)->pawn->colour != pawn->colour) {
-				(*tile)->pawn->destroy(Pawn::PWR_SMASH);
-				if(client) {
-					client->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
-				}
-				ret = true;
-				(*tile)->smashed = true;
-			}
-		}
-
-		return ret;
-	}
-
-	bool smash_row(pawn_ptr pawn, Server *, Client *client) {
-		return smash(pawn->RowTiles(), pawn, client);
-	}
-
-	bool smash_radial(pawn_ptr pawn, Server *, Client *client) {
-		return smash(pawn->RadialTiles(), pawn, client);
-	}
-
-	bool smash_bs(pawn_ptr pawn, Server *, Client *client) {
-		return smash(pawn->bs_tiles(), pawn, client);
-	}
-
-	bool smash_fs(pawn_ptr pawn, Server *, Client *client) {
-		return smash(pawn->fs_tiles(), pawn, client);
-	}
+	pawn->flags |= PWR_CLIMB;
+	return true;
 }
+
+static bool elevate_tiles(Tile::List &tiles) {
+	Tile::List::iterator i = tiles.begin();
+	bool ret = false;
+
+	for(; i != tiles.end(); i++) {
+		ret = ((*i)->SetHeight(2) || ret);
+	}
+
+	return ret;
+}
+
+static bool dig_tiles(Tile::List &tiles) {
+	Tile::List::iterator i = tiles.begin();
+	bool ret = false;
+
+	for(; i != tiles.end(); i++) {
+		ret = ((*i)->SetHeight(-2) || ret);
+	}
+
+	return ret;
+}
+
+static bool elevate_row(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->RowTiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+
+	return elevate_tiles(tiles);
+}
+
+static bool elevate_radial(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->RadialTiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+
+	return elevate_tiles(tiles);
+}
+
+static bool elevate_bs(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->bs_tiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+
+	return elevate_tiles(tiles);
+}
+
+static bool elevate_fs(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->fs_tiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+
+	return elevate_tiles(tiles);
+}
+
+static bool dig_row(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->RowTiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+
+	return dig_tiles(tiles);
+}
+
+static bool dig_radial(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->RadialTiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+
+	return dig_tiles(tiles);
+}
+
+static bool dig_bs(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->bs_tiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+
+	return dig_tiles(tiles);
+}
+
+static bool dig_fs(pawn_ptr pawn, Server *, Client *client) {
+	Tile::List tiles = pawn->fs_tiles();
+
+	if (client && !client->current_animator)
+		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+
+	return dig_tiles(tiles);
+}
+
+static bool shield(pawn_ptr pawn, Server *, Client *) {
+	if(pawn->flags & PWR_SHIELD) {
+		return false;
+	}
+
+	pawn->flags |= PWR_SHIELD;
+	return true;
+}
+
+static bool invisibility(pawn_ptr pawn, Server *, Client *) {
+	if (pawn->flags & PWR_INVISIBLE) {
+		return false;
+	}
+
+	pawn->flags |= PWR_INVISIBLE;
+	return true;
+}
+
+static bool purify(Tile::List tiles, pawn_ptr pawn) {
+	bool ret = false;
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
+		if((*i)->has_mine && (*i)->mine_colour != pawn->colour) {
+			(*i)->has_mine = false;
+			ret = true;
+		}
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
+			(*i)->pawn->flags &= ~PWR_GOOD;
+			(*i)->pawn->range = 0;
+
+			ret = true;
+		}
+	}
+
+	return ret;
+}
+
+static bool purify_row(pawn_ptr pawn, Server *, Client *) {
+	return purify(pawn->RowTiles(), pawn);
+}
+
+static bool purify_radial(pawn_ptr pawn, Server *, Client *) {
+	return purify(pawn->RadialTiles(), pawn);
+}
+
+static bool purify_bs(pawn_ptr pawn, Server *, Client *) {
+	return purify(pawn->bs_tiles(), pawn);
+}
+
+static bool purify_fs(pawn_ptr pawn, Server *, Client *) {
+	return purify(pawn->fs_tiles(), pawn);
+}
+
+static bool teleport(pawn_ptr pawn, Server *server, Client *client) {
+	if(server) {
+		Tile::List tlist;
+		Tile *tile;
+
+		do {
+			tlist = RandomTiles(server->game_state->tiles, 1, false);
+			tile = *(tlist.begin());
+		} while(tile->pawn);
+
+		server->game_state->power_rand_vals.push_back(tile->col);
+		server->game_state->power_rand_vals.push_back(tile->row);
+
+		tile->pawn.swap(pawn->cur_tile->pawn);
+		pawn->cur_tile = tile;
+	}else{
+		if(client->game_state->power_rand_vals.size() != 2) {
+			return false;
+		}
+
+		int col = client->game_state->power_rand_vals[0];
+		int row = client->game_state->power_rand_vals[1];
+
+		Tile *tile = client->game_state->tile_at(col, row);
+		if(!tile || tile->pawn) {
+			std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
+			return false;
+		}
+
+		pawn->last_tile = pawn->cur_tile;
+		pawn->last_tile->render_pawn = pawn;
+		pawn->teleport_time = SDL_GetTicks();
+
+		tile->pawn.swap(pawn->cur_tile->pawn);
+		pawn->cur_tile = tile;
+	}
+
+	return true;
+}
+
+static bool annihilate(Tile::List tiles, Client *client) {
+	bool ret = false;
+
+	for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
+		if((*tile)->pawn) {
+			(*tile)->pawn->destroy(Pawn::PWR_ANNIHILATE);
+			if(client) {
+				client->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
+			}
+			ret = true;
+		}
+	}
+
+	return ret;
+}
+
+static bool annihilate_row(pawn_ptr pawn, Server *, Client *client) {
+	return annihilate(pawn->RowTiles(), client);
+}
+
+static bool annihilate_radial(pawn_ptr pawn, Server *, Client *client) {
+	return annihilate(pawn->RadialTiles(), client);
+}
+
+static bool annihilate_bs(pawn_ptr pawn, Server *, Client *client) {
+	return annihilate(pawn->bs_tiles(), client);
+}
+
+static bool annihilate_fs(pawn_ptr pawn, Server *, Client *client) {
+	return annihilate(pawn->fs_tiles(), client);
+}
+
+static bool smash(Tile::List tiles, pawn_ptr pawn, Client *client) {
+	bool ret = false;
+
+	for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
+		if((*tile)->pawn && (*tile)->pawn->colour != pawn->colour) {
+			(*tile)->pawn->destroy(Pawn::PWR_SMASH);
+			if(client) {
+				client->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
+			}
+			ret = true;
+			(*tile)->smashed = true;
+		}
+	}
+
+	return ret;
+}
+
+static bool smash_row(pawn_ptr pawn, Server *, Client *client) {
+	return smash(pawn->RowTiles(), pawn, client);
+}
+
+static bool smash_radial(pawn_ptr pawn, Server *, Client *client) {
+	return smash(pawn->RadialTiles(), pawn, client);
+}
+
+static bool smash_bs(pawn_ptr pawn, Server *, Client *client) {
+	return smash(pawn->bs_tiles(), pawn, client);
+}
+
+static bool smash_fs(pawn_ptr pawn, Server *, Client *client) {
+	return smash(pawn->fs_tiles(), pawn, client);
+}
+
+
+static int lay_mines(Tile::List tiles, PlayerColour colour) {
+	int n_mines = 0;
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		Tile *tile = *i;
+		if(tile->has_mine) continue;
+		tile->has_mine = true;
+		tile->mine_colour = colour;
+		n_mines += 1;
+	}
+
+	return n_mines;
+}
+
+static bool mine(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(Tile::List(1, pawn->cur_tile), pawn->colour) == 1;
+}
+
+static bool mine_row(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->RowTiles(), pawn->colour) != 0;
+}
+
+static bool mine_radial(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->RadialTiles(), pawn->colour) != 0;
+}
+
+static bool mine_bs(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->bs_tiles(), pawn->colour) != 0;
+}
+
+static bool mine_fs(pawn_ptr pawn, Server *, Client *) {
+	return lay_mines(pawn->fs_tiles(), pawn->colour) != 0;
+}
+
+Powers::Power Powers::powers[] = {
+	{"Destroy", &destroy_row, 50, true, Powers::Power::row},
+	{"Destroy", &destroy_radial, 50, true, Powers::Power::radial},
+	{"Destroy", &destroy_bs, 50, true, Powers::Power::nw_se},
+	{"Destroy", &destroy_fs, 50, true, Powers::Power::ne_sw},
+
+	{"Raise Tile", &raise_tile, 100, true, Powers::Power::undirected},
+	{"Lower Tile", &lower_tile, 100, true, Powers::Power::undirected},
+	{"Increase Range", &increase_range, 20, true, Powers::Power::undirected},
+	{"Hover", &hover, 30, true, Powers::Power::undirected},
+	{"Shield", &shield, 30, true, Powers::Power::undirected},
+	{"Invisibility", &invisibility, 30, true, Powers::Power::undirected},
+	{"Teleport", &teleport, 60, true, Powers::Power::undirected},
+
+	{"Elevate", &elevate_row, 70, true, Powers::Power::row},
+	{"Elevate", &elevate_radial, 70, true, Powers::Power::radial},
+	{"Elevate", &elevate_bs, 70, true, Powers::Power::nw_se},
+	{"Elevate", &elevate_fs, 70, true, Powers::Power::ne_sw},
+
+	{"Dig", &dig_row, 70, true, Powers::Power::row},
+	{"Dig", &dig_radial, 70, true, Powers::Power::radial},
+	{"Dig", &dig_bs, 70, true, Powers::Power::nw_se},
+	{"Dig", &dig_fs, 70, true, Powers::Power::ne_sw},
+
+	{"Purify", &purify_row, 50, true, Powers::Power::row},
+	{"Purify", &purify_radial, 50, true, Powers::Power::radial},
+	{"Purify", &purify_bs, 50, true, Powers::Power::nw_se},
+	{"Purify", &purify_fs, 50, true, Powers::Power::ne_sw},
+
+	{"Annihilate", &annihilate_row, 50, false, Powers::Power::row},
+	{"Annihilate", &annihilate_radial, 50, false, Powers::Power::radial},
+	{"Annihilate", &annihilate_bs, 50, false, Powers::Power::nw_se},
+	{"Annihilate", &annihilate_fs, 50, false, Powers::Power::ne_sw},
+
+	{"Mine", &mine, 60, true, Powers::Power::undirected},
+	{"Mine", &mine_row, 20, false, Powers::Power::row},
+	{"Mine", &mine_radial, 40, false, Powers::Power::radial},
+	{"Mine", &mine_bs, 20, false, Powers::Power::nw_se},
+	{"Mine", &mine_fs, 20, false, Powers::Power::ne_sw},
+	
+	{"Smash", &smash_row, 50, false, Powers::Power::row},
+	{"Smash", &smash_radial, 50, false, Powers::Power::radial},
+	{"Smash", &smash_bs, 50, false, Powers::Power::nw_se},
+	{"Smash", &smash_fs, 50, false, Powers::Power::ne_sw},
+};
+
+const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);

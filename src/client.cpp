@@ -333,7 +333,7 @@ void Client::handle_message(const protocol::message &msg) {
 
 			std::cout << "Team " << c << " quit (" << msg.quit_msg() << ")" << std::endl;
 			if(game_state) {
-				DestroyTeamPawns(game_state->tiles, c);
+				game_state->destroy_team_pawns(c);
 			}
 
 			for(player_set::iterator p = players.begin(); p != players.end(); p++) {
@@ -575,6 +575,7 @@ void Client::DrawScreen() {
 	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *smashed_line_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
+	SDL_Surface *mine = ImgStuff::GetImage("graphics/mines.png");
 
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
@@ -648,6 +649,13 @@ void Client::DrawScreen() {
 
 		ensure_SDL_BlitSurface(tile_img, NULL, screen, &rect);
 
+		if((*ti)->has_mine) {
+			SDL_Rect s;
+			s.x = 0;
+			s.y = (*ti)->mine_colour * 50;
+			s.w = s.h = 50;
+			ensure_SDL_BlitSurface(mine, &s, screen, &rect);
+		}
 		if((*ti)->has_power) {
 			ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
 		}

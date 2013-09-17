@@ -461,9 +461,7 @@ void GUI::DropDown::Draw() {
 	ensure_SDL_FillRect(screen, &re, bcolour);
 }
 
-static void dropdown_set(const GUI::TextButton &button, const SDL_Event &, void *arg) {
-	GUI::DropDown *drop = (GUI::DropDown*)arg;
-
+static void dropdown_set(const GUI::TextButton &button, const SDL_Event &, GUI::DropDown *drop) {
 	for(GUI::DropDown::item_list::iterator i = drop->items.begin(); i != drop->items.end(); i++) {
 		if(button.m_text == (*i).text) {
 			drop->select(i);

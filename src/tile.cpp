@@ -3,6 +3,15 @@
 #include "octradius.hpp"
 #include "loadimage.hpp"
 
+Tile::Tile(int c, int r, int h) :
+	col(c), row(r), height(h),
+	power(-1), has_power(false), smashed(false),
+	pawn(pawn_ptr()),
+	animating(false), screen_x(0), screen_y(0),
+	render_pawn(pawn_ptr()),
+	has_mine(false) {
+}
+
 bool Tile::SetHeight(int h) {
 	if(h != height && h <= 2 && h >= -2) {
 		height = h;
@@ -37,12 +46,4 @@ Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 	}
 
 	return ret;
-}
-
-void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour) {
-	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
-		if((*t)->pawn && (*t)->pawn->colour == colour) {
-			(*t)->pawn.reset();
-		}
-	}
 }

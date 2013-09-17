@@ -61,3 +61,11 @@ pawn_ptr GameState::pawn_at_screen(int x, int y) {
 	Tile *tile = tile_at_screen(x, y);
 	return tile ? tile->pawn : pawn_ptr();
 }
+
+void GameState::destroy_team_pawns(PlayerColour colour) {
+	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
+		if((*t)->pawn && (*t)->pawn->colour == colour) {
+			(*t)->pawn.reset();
+		}
+	}
+}

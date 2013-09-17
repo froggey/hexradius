@@ -73,13 +73,10 @@ struct Tile {
 	int screen_x, screen_y;
 	pawn_ptr render_pawn;
 
-	Tile(int c, int r, int h) :
-		col(c), row(r), height(h),
-		power(-1), has_power(false), smashed(false),
-		pawn(pawn_ptr()),
-		animating(false), screen_x(0), screen_y(0),
-		render_pawn(pawn_ptr())
-	{}
+	bool has_mine;
+	PlayerColour mine_colour;
+
+	Tile(int c, int r, int h);
 
 	bool SetHeight(int h);
 
@@ -91,7 +88,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List &all_tiles;
 
 	public:
-		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH };
+		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED  };
 		typedef std::map<int,int> PowerList;
 
 		Tile *cur_tile;
@@ -151,7 +148,6 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 };
 
 Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
-void DestroyTeamPawns(Tile::List &tiles, PlayerColour colour);
 
 struct options {
 	std::string username;
