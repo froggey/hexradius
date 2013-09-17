@@ -698,6 +698,9 @@ void Client::DrawScreen() {
 	if(mpawn) {
 		draw_pmenu(mpawn);
 	}
+	else if (hpawn && hpawn->colour == my_colour) {
+		draw_pmenu(hpawn);
+	}
 
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
