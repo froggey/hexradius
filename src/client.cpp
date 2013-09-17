@@ -706,14 +706,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 	bool hide = (pawn->flags & PWR_INVISIBLE && pawn->colour != my_colour);
 	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
 	
-	if (hide) {
-		for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); i++) {
-			i->time -= dt;
-			if (i->time <= 0)
-				i = pawn->power_messages.erase(i);
-		}
-	}
-	else {
+	if (!hide) {
 		SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
 		SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
 		SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
@@ -748,14 +741,13 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 			ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 		if(pawn->flags & PWR_INVISIBLE)
 			ensure_SDL_BlitSurface(invisible, &base, screen, &rect);
-		
-		for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); i++) {
-			i->time -= dt;
-			if (i->time > 0)
-				draw_power_message(pawn, *i);
-			else
-				i = pawn->power_messages.erase(i);
-		}
+	}
+	for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); i++) {
+		i->time -= dt;
+		if (i->time > 0)
+			draw_power_message(pawn, *i);
+		else
+			i = pawn->power_messages.erase(i);
 	}
 }
 
