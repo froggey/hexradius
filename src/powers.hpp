@@ -47,7 +47,6 @@ namespace Powers {
 	bool shield(pawn_ptr pawn, Server *server, Client *client);
 	bool invisibility(pawn_ptr pawn, Server *server, Client *client);
 	bool teleport(pawn_ptr pawn, Server *server, Client *client);
-	bool mine(pawn_ptr pawn, Server *server, Client *client);
 
 	bool elevate_row(pawn_ptr pawn, Server *server, Client *client);
 	bool elevate_radial(pawn_ptr pawn, Server *server, Client *client);
@@ -68,6 +67,12 @@ namespace Powers {
 	bool annihilate_radial(pawn_ptr pawn, Server *server, Client *client);
 	bool annihilate_bs(pawn_ptr pawn, Server *server, Client *client);
 	bool annihilate_fs(pawn_ptr pawn, Server *server, Client *client);
+
+	bool mine(pawn_ptr pawn, Server *server, Client *client);
+	bool mine_row(pawn_ptr pawn, Server *server, Client *client);
+	bool mine_radial(pawn_ptr pawn, Server *server, Client *client);
+	bool mine_bs(pawn_ptr pawn, Server *server, Client *client);
+	bool mine_fs(pawn_ptr pawn, Server *server, Client *client);
 }
 
 #endif /* !OR_POWERS_HPP */
