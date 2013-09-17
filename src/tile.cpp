@@ -9,7 +9,7 @@ Tile::Tile(int c, int r, int h) :
 	pawn(pawn_ptr()),
 	animating(false), screen_x(0), screen_y(0),
 	render_pawn(pawn_ptr()),
-	has_mine(false) {
+	has_mine(false), has_landing_pad(false) {
 }
 
 bool Tile::SetHeight(int h) {

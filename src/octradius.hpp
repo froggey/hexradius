@@ -76,6 +76,9 @@ struct Tile {
 	bool has_mine;
 	PlayerColour mine_colour;
 
+	bool has_landing_pad;
+	PlayerColour landing_pad_colour;
+
 	Tile(int c, int r, int h);
 
 	bool SetHeight(int h);

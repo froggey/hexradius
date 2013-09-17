@@ -25,7 +25,8 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
 		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) &&
 		  (tile->col == cur_tile->col + (cur_tile->row % 2) ||
-		   tile->col+1 == cur_tile->col + (cur_tile->row % 2)))
+		   tile->col+1 == cur_tile->col + (cur_tile->row % 2))) &&
+		!(tile->has_landing_pad && tile->landing_pad_colour == colour)
 	) {
 		return false;
 	}

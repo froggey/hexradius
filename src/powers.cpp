@@ -213,6 +213,10 @@ static bool purify(Tile::List tiles, pawn_ptr pawn, Client *client) {
 			(*i)->has_mine = false;
 			ret = true;
 		}
+		if((*i)->has_landing_pad && (*i)->landing_pad_colour != pawn->colour) {
+			(*i)->has_landing_pad = false;
+			ret = true;
+		}
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 			(*i)->pawn->flags &= ~PWR_GOOD;
 			(*i)->pawn->range = 0;
@@ -333,6 +337,7 @@ static bool smash(Tile::List tiles, pawn_ptr pawn, Client *client) {
 			(*tile)->smashed = true;
 			(*tile)->has_mine = false;
 			(*tile)->has_power = false;
+			(*tile)->has_landing_pad = false;
 		}
 	}
 
@@ -389,6 +394,13 @@ static bool mine_fs(pawn_ptr pawn, Server *, Client *) {
 	return lay_mines(pawn->fs_tiles(), pawn->colour) != 0;
 }
 
+static bool landing_pad(pawn_ptr pawn, Server *, Client *) {
+	if(pawn->cur_tile->smashed) return false;
+	pawn->cur_tile->has_landing_pad = true;
+	pawn->cur_tile->landing_pad_colour = pawn->colour;
+	return true;
+}
+
 Powers::Power Powers::powers[] = {
 	{"Destroy", &destroy_row, 50, true, Powers::Power::row},
 	{"Destroy", &destroy_radial, 50, true, Powers::Power::radial},
@@ -402,6 +414,7 @@ Powers::Power Powers::powers[] = {
 	{"Shield", &shield, 30, true, Powers::Power::undirected},
 	{"Invisibility", &invisibility, 30, true, Powers::Power::undirected},
 	{"Teleport", &teleport, 60, true, Powers::Power::undirected},
+	{"Landing Pad", &landing_pad, 60, true, Powers::Power::undirected},
 
 	{"Elevate", &elevate_row, 35, true, Powers::Power::row},
 	{"Elevate", &elevate_radial, 35, true, Powers::Power::radial},
