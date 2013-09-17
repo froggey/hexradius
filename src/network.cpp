@@ -334,6 +334,7 @@ void Server::SpawnPowers(void) {
 	msg.set_msg(protocol::UPDATE);
 
 	for(t = stiles.begin(); t != stiles.end(); t++) {
+		if((*t)->smashed) continue;
 		(*t)->power = Powers::RandomPower();
 		(*t)->has_power = true;
 

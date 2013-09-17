@@ -323,6 +323,8 @@ static bool smash(Tile::List tiles, pawn_ptr pawn, Client *client) {
 			}
 			ret = true;
 			(*tile)->smashed = true;
+			(*tile)->has_mine = false;
+			(*tile)->has_power = false;
 		}
 	}
 
@@ -385,23 +387,23 @@ Powers::Power Powers::powers[] = {
 	{"Destroy", &destroy_bs, 50, true, Powers::Power::nw_se},
 	{"Destroy", &destroy_fs, 50, true, Powers::Power::ne_sw},
 
-	{"Raise Tile", &raise_tile, 100, true, Powers::Power::undirected},
-	{"Lower Tile", &lower_tile, 100, true, Powers::Power::undirected},
+	{"Raise Tile", &raise_tile, 50, true, Powers::Power::undirected},
+	{"Lower Tile", &lower_tile, 50, true, Powers::Power::undirected},
 	{"Increase Range", &increase_range, 20, true, Powers::Power::undirected},
 	{"Hover", &hover, 30, true, Powers::Power::undirected},
 	{"Shield", &shield, 30, true, Powers::Power::undirected},
 	{"Invisibility", &invisibility, 30, true, Powers::Power::undirected},
 	{"Teleport", &teleport, 60, true, Powers::Power::undirected},
 
-	{"Elevate", &elevate_row, 70, true, Powers::Power::row},
-	{"Elevate", &elevate_radial, 70, true, Powers::Power::radial},
-	{"Elevate", &elevate_bs, 70, true, Powers::Power::nw_se},
-	{"Elevate", &elevate_fs, 70, true, Powers::Power::ne_sw},
+	{"Elevate", &elevate_row, 35, true, Powers::Power::row},
+	{"Elevate", &elevate_radial, 35, true, Powers::Power::radial},
+	{"Elevate", &elevate_bs, 35, true, Powers::Power::nw_se},
+	{"Elevate", &elevate_fs, 35, true, Powers::Power::ne_sw},
 
-	{"Dig", &dig_row, 70, true, Powers::Power::row},
-	{"Dig", &dig_radial, 70, true, Powers::Power::radial},
-	{"Dig", &dig_bs, 70, true, Powers::Power::nw_se},
-	{"Dig", &dig_fs, 70, true, Powers::Power::ne_sw},
+	{"Dig", &dig_row, 35, true, Powers::Power::row},
+	{"Dig", &dig_radial, 35, true, Powers::Power::radial},
+	{"Dig", &dig_bs, 35, true, Powers::Power::nw_se},
+	{"Dig", &dig_fs, 35, true, Powers::Power::ne_sw},
 
 	{"Purify", &purify_row, 50, true, Powers::Power::row},
 	{"Purify", &purify_radial, 50, true, Powers::Power::radial},
