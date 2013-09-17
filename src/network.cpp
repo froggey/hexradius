@@ -319,21 +319,12 @@ void Server::NextTurn(void) {
 }
 
 void Server::SpawnPowers(void) {
-	Tile::List ctiles;
-	Tile::List::iterator t = game_state->tiles.begin();
-
-	for(; t != game_state->tiles.end(); t++) {
-		if(!(*t)->pawn && !(*t)->has_power) {
-			ctiles.push_back(*t);
-		}
-	}
-
-	Tile::List stiles = RandomTiles(ctiles, pspawn_num, true);
+	Tile::List stiles = RandomTiles(game_state->tiles, pspawn_num, true, true, false, false);
 
 	protocol::message msg;
 	msg.set_msg(protocol::UPDATE);
 
-	for(t = stiles.begin(); t != stiles.end(); t++) {
+	for(Tile::List::iterator t = stiles.begin(); t != stiles.end(); t++) {
 		if((*t)->smashed) continue;
 		(*t)->power = Powers::RandomPower();
 		(*t)->has_power = true;

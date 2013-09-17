@@ -153,7 +153,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List fs_tiles();
 };
 
-Tile::List RandomTiles(Tile::List tiles, int num, bool uniq);
+Tile::List RandomTiles(Tile::List tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied);
 
 struct options {
 	std::string username;

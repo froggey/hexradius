@@ -254,13 +254,9 @@ static bool purify_fs(pawn_ptr pawn, Server *, Client *client) {
 
 static bool teleport(pawn_ptr pawn, Server *server, Client *client) {
 	if(server) {
-		Tile::List tlist;
 		Tile *tile;
 
-		do {
-			tlist = RandomTiles(server->game_state->tiles, 1, false);
-			tile = *(tlist.begin());
-		} while(tile->pawn);
+		tile = *(RandomTiles(server->game_state->tiles, 1, false, false, false, false).begin());
 
 		server->game_state->power_rand_vals.push_back(tile->col);
 		server->game_state->power_rand_vals.push_back(tile->row);
