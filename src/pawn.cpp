@@ -59,7 +59,7 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		flags |= HAS_POWER;
 		tile->has_power = false;
 	}
-	if(tile->has_mine && tile->mine_colour != colour) {
+	if(tile->has_mine && tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
 		if(client) {
 			client->add_animator(new Animators::PawnBoom(tile->screen_x, tile->screen_y));
 		}
