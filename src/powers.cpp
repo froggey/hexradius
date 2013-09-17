@@ -352,7 +352,7 @@ static int lay_mines(Tile::List tiles, PlayerColour colour) {
 	int n_mines = 0;
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		Tile *tile = *i;
-		if(tile->has_mine) continue;
+		if(tile->has_mine || tile->smashed) continue;
 		tile->has_mine = true;
 		tile->mine_colour = colour;
 		n_mines += 1;
