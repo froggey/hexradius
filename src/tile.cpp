@@ -29,8 +29,15 @@ void Tile::CopyToProto(protocol::tile *t) {
 	t->set_power(power >= 0 ? true : false);
 }
 
-Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
-	Tile::List ret;
+Tile::List RandomTiles(Tile::List _tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied) {
+	Tile::List ret, tiles;
+	
+	for (Tile::List::iterator i = _tiles.begin(); i != _tiles.end(); i++) {
+		if ((include_holes || !(*i)->smashed) &&
+			(include_mines || !(*i)->has_mine) &&
+			(include_occupied || !(*i)->pawn))
+			tiles.push_back(*i);
+	}
 
 	while(tiles.size() && num) {
 		Tile::List::iterator i = tiles.begin();
@@ -38,7 +45,7 @@ Tile::List RandomTiles(Tile::List tiles, int num, bool uniq) {
 
 		ret.push_back(*i);
 
-		if(uniq) {
+		if(unique) {
 			tiles.erase(i);
 		}
 
