@@ -253,9 +253,8 @@ static bool purify_fs(pawn_ptr pawn, Server *, Client *client) {
 }
 
 static bool teleport(pawn_ptr pawn, Server *server, Client *client) {
+	Tile *tile;
 	if(server) {
-		Tile *tile;
-
 		tile = *(RandomTiles(server->game_state->tiles, 1, false, false, false, false).begin());
 
 		server->game_state->power_rand_vals.push_back(tile->col);
@@ -271,7 +270,7 @@ static bool teleport(pawn_ptr pawn, Server *server, Client *client) {
 		int col = client->game_state->power_rand_vals[0];
 		int row = client->game_state->power_rand_vals[1];
 
-		Tile *tile = client->game_state->tile_at(col, row);
+		tile = client->game_state->tile_at(col, row);
 		if(!tile || tile->pawn) {
 			std::cerr << "Invalid teleport attempted, out of sync?" << std::endl;
 			return false;
@@ -285,6 +284,14 @@ static bool teleport(pawn_ptr pawn, Server *server, Client *client) {
 		pawn->cur_tile = tile;
 	}
 
+	if(tile->has_power) {
+		if(tile->power >= 0) {
+			pawn->AddPower(tile->power);
+		}
+
+		pawn->flags |= HAS_POWER;
+		tile->has_power = false;
+	}
 	return true;
 }
 
