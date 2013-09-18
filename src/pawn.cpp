@@ -270,9 +270,9 @@ void Pawn::maybe_step_on_mine(Client *client)
 		if(client) {
 			client->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
 		}
+		cur_tile->has_mine = false;
 		if(!(flags & PWR_SHIELD)) {
 			this->destroy(MINED);
 		}
-		cur_tile->has_mine = false;
 	}
 }
