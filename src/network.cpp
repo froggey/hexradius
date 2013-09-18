@@ -253,6 +253,8 @@ void Server::NextTurn(void) {
 	client_set::iterator last = turn;
 	bool allow_end = !getenv("HR_DONT_END_GAME");
 
+	black_hole_suck();
+
 	while(1) {
 		if(turn == clients.end()) {
 			turn = clients.begin();
@@ -300,8 +302,6 @@ void Server::NextTurn(void) {
 	if(--pspawn_turns == 0) {
 		SpawnPowers();
 	}
-
-	black_hole_suck();
 
 	protocol::message tmsg;
 	tmsg.set_msg(protocol::TURN);
