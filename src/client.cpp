@@ -471,12 +471,16 @@ void Client::handle_message_game(const protocol::message &msg) {
 	if(msg.msg() == protocol::TURN) {
 		turn = msg.player_id();
 		std::cout << "Turn for player " << turn << std::endl;
-	}else if(msg.msg() == protocol::MOVE) {
+	}else if(msg.msg() == protocol::MOVE || msg.msg() == protocol::FORCE_MOVE) {
 		if(msg.pawns_size() == 1) {
 			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
 			Tile *tile = game_state->tile_at(msg.pawns(0).new_col(), msg.pawns(0).new_row());
 
-			if(!(pawn && tile && pawn->Move(tile, NULL, this))) {
+			if(!pawn || !tile) {
+				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
+			} else if(msg.msg() == protocol::FORCE_MOVE) {
+				pawn->force_move(tile, 0, this);
+			} else if(!pawn->Move(tile, NULL, this)) {
 				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
 			}
 		}else{

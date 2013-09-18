@@ -420,6 +420,7 @@ static bool black_hole(pawn_ptr pawn, Server *, Client *client) {
 		client->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
 	}
 	tile->has_black_hole = true;
+	tile->black_hole_power = pawn->range + 1;
 	tile->has_mine = false;
 	tile->has_power = false;
 	tile->has_landing_pad = false;
@@ -441,7 +442,7 @@ Powers::Power Powers::powers[] = {
 	{"Infravision", &infravision, 40, true, Powers::Power::undirected},
 	{"Teleport", &teleport, 60, true, Powers::Power::undirected},
 	{"Landing Pad", &landing_pad, 60, true, Powers::Power::undirected},
-	{"Black Hole", &black_hole, 5, true, Powers::Power::undirected},
+	{"Black Hole", &black_hole, 15, true, Powers::Power::undirected},
 
 	{"Elevate", &elevate_row, 35, true, Powers::Power::row},
 	{"Elevate", &elevate_radial, 35, true, Powers::Power::radial},

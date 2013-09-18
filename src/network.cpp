@@ -356,13 +356,14 @@ void Server::black_hole_suck() {
 	}
 
 	// Draw pawns towards each black hole.
-	// Chance is inversely proportional to the square of the euclidean distance.
+	// Chance is inversely proportional to the square of the euclidean distance
+	// and increased by the black hole's power.
 	for(std::set<Tile *>::iterator bh = black_holes.begin(); bh != black_holes.end(); ++bh) {
 		for(std::set<pawn_ptr>::iterator p = pawns.begin(); p != pawns.end(); ++p) {
 			float col_distance = sqrt(((*bh)->col - (*p)->cur_tile->col) * ((*bh)->col - (*p)->cur_tile->col));
 			float row_distance = sqrt(((*bh)->row - (*p)->cur_tile->row) * ((*bh)->row - (*p)->cur_tile->row));
 			float distance = sqrt(col_distance * col_distance + row_distance * row_distance);
-			float chance = 1.0f / pow(distance, 2.0f);
+			float chance = 1.0f / pow(distance, 2.0f) * (*bh)->black_hole_power;
 			if(rand() % 100 < (chance * 100)) {
 				// OM NOM NOM.
 				black_hole_suck_pawn(*bh, *p);
@@ -371,8 +372,70 @@ void Server::black_hole_suck() {
 	}
 }
 
-void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn)
-{
+static int move_towards(int target, int current) {
+	if(target > current) return current+1;
+	if(target < current) return current-1;
+	return current;
+}
+
+// Return true if pawn can be pulled onto the tile.
+static bool can_pull_on_to(Tile *tile, pawn_ptr pawn) {
+	if(tile->pawn) return false;
+	// Tiles can be pulled off ledges, but not up cliffs.
+	if(tile->height > pawn->cur_tile->height + 1) return false;
+	return true;
+}
+
+void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
+	Tile *target_1, *target_2;
+	Tile *target;
+
+	// Figure out what tile the pawn should be pulled onto.
+	target_1 = game_state->tile_at(move_towards(tile->col, pawn->cur_tile->col), pawn->cur_tile->row);
+	target_2 = game_state->tile_at(pawn->cur_tile->col, move_towards(tile->row, pawn->cur_tile->row));
+
+	if(target_1 && !can_pull_on_to(target_1, pawn)) {
+		target_1 = 0;
+	}
+	if(target_2 && !can_pull_on_to(target_2, pawn)) {
+		target_2 = 0;
+	}
+	if(target_1 && target_2) {
+		target = (rand() & 1) ? target_1 : target_2;
+	} else if(target_1) {
+		target = target_1;
+	} else if(target_2) {
+		target = target_2;
+	} else {
+		return;
+	}
+
+	// Notify clients.
+	{
+		protocol::message msg;
+		msg.set_msg(protocol::FORCE_MOVE);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_new_col(target->col);
+		msg.mutable_pawns(0)->set_new_row(target->row);
+		WriteAll(msg);
+	}
+
+	bool hp = tile->has_power;
+
+	pawn->force_move(target, this, 0);
+
+	if(hp) {
+		protocol::message msg;
+		msg.set_msg(protocol::UPDATE);
+
+		msg.add_pawns();
+		pawn->CopyToProto(msg.mutable_pawns(0), true);
+
+		WriteAll(msg);
+	}
+
 }
 
 bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg) {

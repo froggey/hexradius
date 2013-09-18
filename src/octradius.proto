@@ -23,6 +23,7 @@ enum msgtype {
 	MOVE = 21;	// Move a single pawn
 	USE = 22;	// Use a power
 	UPDATE = 23;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
+        FORCE_MOVE = 24;// Forcibly move a single pawn.
 }
 
 enum colour {
