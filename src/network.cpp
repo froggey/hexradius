@@ -276,19 +276,9 @@ void Server::NextTurn(void) {
 			return;
 		}
 
-		if((*turn)->colour != SPECTATE) {
-			int match = 0;
-
-			for(Tile::List::iterator t = game_state->tiles.begin(); t != game_state->tiles.end(); t++) {
-				if((*t)->pawn && (*t)->pawn->colour == (*turn)->colour) {
-					match = 1;
-					break;
-				}
-			}
-
-			if(match) {
+		if((*turn)->colour != SPECTATE &&
+		   !game_state->player_pawns((*turn)->colour).empty()) {
 				break;
-			}
 		}
 	}
 
