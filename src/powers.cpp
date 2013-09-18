@@ -398,7 +398,9 @@ static bool mine_fs(pawn_ptr pawn, Server *, Client *) {
 }
 
 static bool landing_pad(pawn_ptr pawn, Server *, Client *) {
-	if(pawn->cur_tile->smashed || pawn->cur_tile->has_black_hole) return false;
+	if(pawn->cur_tile->smashed) return false;
+	if(pawn->cur_tile->has_landing_pad && pawn->cur_tile->landing_pad_colour == pawn->colour) return false;
+	if(pawn->cur_tile->has_black_hole) return false;
 	pawn->cur_tile->has_landing_pad = true;
 	pawn->cur_tile->landing_pad_colour = pawn->colour;
 	return true;
