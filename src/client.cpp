@@ -945,6 +945,7 @@ static const char *direction_suffixes[5] = {
 };
 
 void Client::draw_pmenu(pawn_ptr pawn) {
+	if(!pawn->cur_tile) return;
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
 
