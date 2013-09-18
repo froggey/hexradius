@@ -360,6 +360,9 @@ void Server::black_hole_suck() {
 	// and increased by the black hole's power.
 	for(std::set<Tile *>::iterator bh = black_holes.begin(); bh != black_holes.end(); ++bh) {
 		for(std::set<pawn_ptr>::iterator p = pawns.begin(); p != pawns.end(); ++p) {
+			if(p->destroyed()) {
+				continue;
+			}
 			float col_distance = sqrt(((*bh)->col - (*p)->cur_tile->col) * ((*bh)->col - (*p)->cur_tile->col));
 			float row_distance = sqrt(((*bh)->row - (*p)->cur_tile->row) * ((*bh)->row - (*p)->cur_tile->row));
 			float distance = sqrt(col_distance * col_distance + row_distance * row_distance);
