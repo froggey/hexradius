@@ -31,6 +31,10 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		return false;
 	}
 
+	if(tile->has_black_hole) {
+		return false;
+	}
+
 	if((tile->height > cur_tile->height + 1 || tile->smashed) && !(tile->has_landing_pad || (flags & PWR_CLIMB))) {
 		return false;
 	}

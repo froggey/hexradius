@@ -79,6 +79,8 @@ struct Tile {
 	bool has_landing_pad;
 	PlayerColour landing_pad_colour;
 
+	bool has_black_hole;
+
 	Tile(int c, int r, int h);
 
 	bool SetHeight(int h);
@@ -91,7 +93,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List &all_tiles;
 
 	public:
-		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD };
+		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD, BLACKHOLE };
 		typedef std::map<int,int> PowerList;
 
 		Tile *cur_tile;

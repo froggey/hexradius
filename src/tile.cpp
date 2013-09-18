@@ -9,7 +9,8 @@ Tile::Tile(int c, int r, int h) :
 	pawn(pawn_ptr()),
 	animating(false), screen_x(0), screen_y(0),
 	render_pawn(pawn_ptr()),
-	has_mine(false), has_landing_pad(false) {
+	has_mine(false), has_landing_pad(false),
+	has_black_hole(false) {
 }
 
 bool Tile::SetHeight(int h) {
@@ -31,12 +32,12 @@ void Tile::CopyToProto(protocol::tile *t) {
 
 Tile::List RandomTiles(Tile::List _tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied) {
 	Tile::List ret, tiles;
-	
-	for (Tile::List::iterator i = _tiles.begin(); i != _tiles.end(); i++) {
-		if ((include_holes || !(*i)->smashed) &&
-			(include_mines || !(*i)->has_mine) &&
-			(include_occupied || !(*i)->pawn))
-			tiles.push_back(*i);
+
+	BOOST_FOREACH(Tile *tile, _tiles) {
+		if ((include_holes || !(tile->smashed || tile->has_black_hole)) &&
+		    (include_mines || !tile->has_mine) &&
+		    (include_occupied || !tile->pawn))
+			tiles.push_back(tile);
 	}
 
 	while(tiles.size() && num) {
