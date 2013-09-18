@@ -311,6 +311,8 @@ void Server::NextTurn(void) {
 		SpawnPowers();
 	}
 
+	black_hole_suck();
+
 	protocol::message tmsg;
 	tmsg.set_msg(protocol::TURN);
 	tmsg.set_player_id((*turn)->id);
@@ -337,6 +339,40 @@ void Server::SpawnPowers(void) {
 	pspawn_num = (rand() % 4)+1;
 
 	WriteAll(msg);
+}
+
+void Server::black_hole_suck() {
+	std::set<Tile *> black_holes;
+	std::set<pawn_ptr> pawns;
+
+	// Find all pawn and all black holes.
+	for(Tile::List::iterator t = game_state->tiles.begin(); t != game_state->tiles.end(); ++t) {
+		if((*t)->pawn) {
+			pawns.insert((*t)->pawn);
+		}
+		if((*t)->has_black_hole) {
+			black_holes.insert(*t);
+		}
+	}
+
+	// Draw pawns towards each black hole.
+	// Chance is inversely proportional to the square of the euclidean distance.
+	for(std::set<Tile *>::iterator bh = black_holes.begin(); bh != black_holes.end(); ++bh) {
+		for(std::set<pawn_ptr>::iterator p = pawns.begin(); p != pawns.end(); ++p) {
+			float col_distance = sqrt(((*bh)->col - (*p)->cur_tile->col) * ((*bh)->col - (*p)->cur_tile->col));
+			float row_distance = sqrt(((*bh)->row - (*p)->cur_tile->row) * ((*bh)->row - (*p)->cur_tile->row));
+			float distance = sqrt(col_distance * col_distance + row_distance * row_distance);
+			float chance = 1.0f / pow(distance, 2.0f);
+			if(rand() % 100 < (chance * 100)) {
+				// OM NOM NOM.
+				black_hole_suck_pawn(*bh, *p);
+			}
+		}
+	}
+}
+
+void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn)
+{
 }
 
 bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg) {
