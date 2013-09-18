@@ -28,6 +28,7 @@ Scenario::~Scenario() {
 	throw std::runtime_error(filename + ":" + to_string(lnum) + ": " + s);
 
 void Scenario::load_file(std::string filename) {
+	last_filename = filename;
 	delete game_state;
 	game_state = new GameState;
 	colours.clear();
@@ -137,6 +138,13 @@ void Scenario::load_file(std::string filename) {
 }
 
 void Scenario::store_proto(protocol::message &msg) {
+	if(!game_state) {
+		if(!last_filename.empty()) {
+			load_file(last_filename);
+		} else {
+			load_proto(saved_msg);
+		}
+	}
 	assert(game_state);
 	for(Tile::List::iterator t = game_state->tiles.begin(); t != game_state->tiles.end(); t++) {
 		msg.add_tiles();
@@ -150,6 +158,8 @@ void Scenario::store_proto(protocol::message &msg) {
 }
 
 void Scenario::load_proto(const protocol::message &msg) {
+	saved_msg = msg;
+	last_filename = std::string();
 	delete game_state;
 	game_state = new GameState;
 	colours.clear();
@@ -184,6 +194,13 @@ void Scenario::load_proto(const protocol::message &msg) {
 }
 
 GameState *Scenario::init_game(std::set<PlayerColour> spawn_colours) {
+	if(!game_state) {
+		if(!last_filename.empty()) {
+			load_file(last_filename);
+		} else {
+			load_proto(saved_msg);
+		}
+	}
 	assert(game_state);
 	GameState *g = game_state;
 	game_state = 0;

@@ -11,6 +11,10 @@ struct Scenario : boost::noncopyable {
 	GameState *game_state;
 	std::set<PlayerColour> colours;
 
+	// Blech.
+	std::string last_filename;
+	protocol::message saved_msg;
+
 	Scenario();
 	~Scenario();
 
