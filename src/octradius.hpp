@@ -79,6 +79,9 @@ struct Tile {
 	bool has_landing_pad;
 	PlayerColour landing_pad_colour;
 
+	bool has_black_hole;
+	int black_hole_power;
+
 	Tile(int c, int r, int h);
 
 	bool SetHeight(int h);
@@ -91,7 +94,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List &all_tiles;
 
 	public:
-		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD };
+		enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD, BLACKHOLE };
 		typedef std::map<int,int> PowerList;
 
 		Tile *cur_tile;
@@ -140,6 +143,9 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		void CopyToProto(protocol::pawn *p, bool copy_powers);
 
 		bool Move(Tile *new_tile, Server *server, Client *client);
+		// Perform a move without performing the move checks.
+		// Moving on to a friendly pawn will still smash it!
+		void force_move(Tile *new_tile, Server *server, Client *client);
 
 		void AddPower(int power);
 		bool UsePower(int power, Server *server, Client *client);

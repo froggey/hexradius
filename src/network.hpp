@@ -102,6 +102,9 @@ public:
 
 		void NextTurn(void);
 		void SpawnPowers(void);
+		void black_hole_suck();
+		// Suck pawn towards the black hole's tile.
+		void black_hole_suck_pawn(Tile *tile, pawn_ptr pawn);
 
 		bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
 		bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);

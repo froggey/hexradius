@@ -368,7 +368,7 @@ static int lay_mines(Tile::List tiles, PlayerColour colour) {
 	int n_mines = 0;
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		Tile *tile = *i;
-		if(tile->has_mine || tile->smashed) continue;
+		if(tile->has_mine || tile->smashed || tile->has_black_hole) continue;
 		tile->has_mine = true;
 		tile->mine_colour = colour;
 		n_mines += 1;
@@ -400,6 +400,7 @@ static bool mine_fs(pawn_ptr pawn, Server *, Client *) {
 static bool landing_pad(pawn_ptr pawn, Server *, Client *) {
 	if(pawn->cur_tile->smashed) return false;
 	if(pawn->cur_tile->has_landing_pad && pawn->cur_tile->landing_pad_colour == pawn->colour) return false;
+	if(pawn->cur_tile->has_black_hole) return false;
 	pawn->cur_tile->has_landing_pad = true;
 	pawn->cur_tile->landing_pad_colour = pawn->colour;
 	return true;
@@ -411,6 +412,20 @@ static bool infravision(pawn_ptr pawn, Server *, Client *) {
 	}
 
 	pawn->flags |= PWR_INFRAVISION;
+	return true;
+}
+
+static bool black_hole(pawn_ptr pawn, Server *, Client *client) {
+	Tile *tile = pawn->cur_tile;
+	pawn->destroy(Pawn::BLACKHOLE);
+	if(client) {
+		client->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
+	}
+	tile->has_black_hole = true;
+	tile->black_hole_power = pawn->range + 1;
+	tile->has_mine = false;
+	tile->has_power = false;
+	tile->has_landing_pad = false;
 	return true;
 }
 
@@ -429,6 +444,7 @@ Powers::Power Powers::powers[] = {
 	{"Infravision", &infravision, 40, true, Powers::Power::undirected},
 	{"Teleport", &teleport, 60, true, Powers::Power::undirected},
 	{"Landing Pad", &landing_pad, 60, true, Powers::Power::undirected},
+	{"Black Hole", &black_hole, 15, true, Powers::Power::undirected},
 
 	{"Elevate", &elevate_row, 35, true, Powers::Power::row},
 	{"Elevate", &elevate_radial, 35, true, Powers::Power::radial},

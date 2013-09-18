@@ -12,6 +12,12 @@ public:
 	std::vector<uint32_t> power_rand_vals;
 	Tile::List tiles;
 
+	/** Return all the pawns on the board. */
+	std::vector<pawn_ptr> all_pawns();
+
+	/** Return all the pawns belonging to a given player. */
+	std::vector<pawn_ptr> player_pawns(PlayerColour colour);
+
 	/** Return the tile at given board column & row,
 	 * or null if there is no tile at that location. */
 	Tile *tile_at(int column, int row);

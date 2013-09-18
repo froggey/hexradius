@@ -11,6 +11,31 @@ GameState::~GameState() {
 	}
 }
 
+std::vector<pawn_ptr> GameState::all_pawns() {
+	std::vector<pawn_ptr> pawns;
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		if((*i)->pawn) {
+			pawns.push_back((*i)->pawn);
+		}
+	}
+
+	return pawns;
+}
+
+/** Return all the pawns belonging to a given player. */
+std::vector<pawn_ptr> GameState::player_pawns(PlayerColour colour) {
+	std::vector<pawn_ptr> pawns;
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		if((*i)->pawn && (*i)->pawn->colour == colour) {
+			pawns.push_back((*i)->pawn);
+		}
+	}
+
+	return pawns;
+}
+
 Tile *GameState::tile_at(int column, int row) {
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		if((*i)->col == column && (*i)->row == row) {

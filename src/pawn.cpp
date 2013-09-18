@@ -20,7 +20,8 @@ bool Pawn::destroyed() {
 	return destroyed_by != OK;
 }
 
-bool Pawn::Move(Tile *tile, Server *, Client *client) {
+bool Pawn::Move(Tile *tile, Server *server, Client *client) {
+	// Move only onto adjacent tiles or friendly landing pads.
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
 		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) &&
@@ -31,26 +32,53 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		return false;
 	}
 
+	// Avoid moving onto black holes.
+	if(tile->has_black_hole) {
+		return false;
+	}
+
+	// Don't walk up cliffs or onto smashed tiles unless hovering or the tile has a landing pad.
 	if((tile->height > cur_tile->height + 1 || tile->smashed) && !(tile->has_landing_pad || (flags & PWR_CLIMB))) {
 		return false;
 	}
 
-	if(tile->pawn) {
-		if(tile->pawn->colour == colour) {
-			return false;
-		}else if(tile->pawn->flags & PWR_SHIELD) {
-			return false;
-		}else{
-			if(client) {
-				client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
-			}
+	// Don't smash friendly or shielded pawns.
+	if(tile->pawn && (tile->pawn->colour == colour || (tile->pawn->flags & PWR_SHIELD))) {
+		return false;
+	}
 
-			tile->pawn->destroy(STOMP);
+	force_move(tile, server, client);
+
+	return true;
+}
+
+void Pawn::force_move(Tile *tile, Server *, Client *client) {
+	assert(tile);
+
+	if(tile->pawn) {
+		if(client) {
+			client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
 		}
 	}
 
 	tile->pawn.swap(cur_tile->pawn);
 	cur_tile = tile;
+
+	if(tile->has_black_hole) {
+		destroy(Pawn::BLACKHOLE);
+		if(client) {
+			client->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
+		}
+		return;
+	}
+
+	if(tile->smashed && !(flags & PWR_CLIMB)) {
+		destroy(Pawn::FELL_OUT_OF_THE_WORLD);
+		if(client) {
+			client->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
+		}
+		return;
+	}
 
 	if(tile->has_power) {
 		if(tile->power >= 0) {
@@ -61,8 +89,6 @@ bool Pawn::Move(Tile *tile, Server *, Client *client) {
 		tile->has_power = false;
 	}
 	maybe_step_on_mine(client);
-
-	return true;
 }
 
 void Pawn::AddPower(int power) {
@@ -244,9 +270,9 @@ void Pawn::maybe_step_on_mine(Client *client)
 		if(client) {
 			client->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
 		}
+		cur_tile->has_mine = false;
 		if(!(flags & PWR_SHIELD)) {
 			this->destroy(MINED);
 		}
-		cur_tile->has_mine = false;
 	}
 }
