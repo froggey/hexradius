@@ -528,7 +528,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		if(pawn->Move(tile, this, NULL)) {
 			WriteAll(msg);
 
-			if(hp) {
+			if(hp && !pawn->destroyed()) {
 				protocol::message msg;
 				msg.set_msg(protocol::UPDATE);
 
