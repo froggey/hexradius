@@ -598,17 +598,34 @@ void Client::DrawScreen() {
 		FontStuff::BlitText(screen, rect, font, ImgStuff::Colour(255,255,255), "Players: ");
 		rect.x += FontStuff::TextWidth(font, "Players: ");
 
-		player_set::iterator p = players.begin();
-
-		for(; p != players.end(); p++) {
+		for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 			if((*p).colour >= SPECTATE) {
 				continue;
 			}
 
 			TTF_Font *f = (*p).id == turn ? bfont : font;
 
-			FontStuff::BlitText(screen, rect, f, team_colours[(*p).colour], (*p).name + " ");
-			rect.x += FontStuff::TextWidth(f, (*p).name + " ");
+			std::vector<pawn_ptr> player_pawns = game_state->player_pawns((*p).colour);
+			int visible_pawns = 0;
+			int invisible_pawns = 0;
+			for(std::vector<pawn_ptr>::iterator i = player_pawns.begin(); i != player_pawns.end(); ++i) {
+				if((*i)->destroyed()) continue;
+				if((*i)->flags & PWR_INVISIBLE) {
+					invisible_pawns += 1;
+				} else {
+					visible_pawns += 1;
+				}
+			}
+
+			std::string text = (*p).name + " (";
+			if(my_colour == SPECTATE || my_colour == (*p).colour) {
+				text += to_string(visible_pawns + invisible_pawns);
+			} else {
+				text += to_string(visible_pawns);
+			}
+			text += ")  ";
+			FontStuff::BlitText(screen, rect, f, team_colours[(*p).colour], text);
+			rect.x += FontStuff::TextWidth(f, text);
 		}
 	}
 
