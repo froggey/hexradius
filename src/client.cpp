@@ -615,7 +615,23 @@ void Client::DrawScreen() {
 
 	int bs_col, fs_col, diag_row = -1;
 
-	for(; ti != game_state->tiles.end(); ti++) {
+	std::set<Tile *> infravision_tiles;
+	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
+		pawn_ptr p = (*ti)->pawn;
+		if(p && p->colour == my_colour && (p->flags & PWR_INFRAVISION)) {
+			Tile::List tiles;
+			tiles = p->RadialTiles();
+			infravision_tiles.insert(tiles.begin(), tiles.end());
+			tiles = p->RowTiles();
+			infravision_tiles.insert(tiles.begin(), tiles.end());
+			tiles = p->bs_tiles();
+			infravision_tiles.insert(tiles.begin(), tiles.end());
+			tiles = p->fs_tiles();
+			infravision_tiles.insert(tiles.begin(), tiles.end());
+		}
+	}
+
+	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
 		SDL_Rect rect;
 		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
 		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
@@ -670,9 +686,9 @@ void Client::DrawScreen() {
 		}
 
 		if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
-			draw_pawn_tile((*ti)->render_pawn, *ti);
+			draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles);
 		}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
-			draw_pawn_tile((*ti)->pawn, *ti);
+			draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles);
 		}
 	}
 
@@ -688,7 +704,7 @@ void Client::DrawScreen() {
 
 	if(dpawn) {
 		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0}, base = {0,0,50,50};
-		DrawPawn(dpawn, rect, base);
+		DrawPawn(dpawn, rect, base, std::set<Tile *>());
 	}
 
 	pmenu.clear();
@@ -705,16 +721,19 @@ void Client::DrawScreen() {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
-	bool hide = (pawn->flags & PWR_INVISIBLE && pawn->colour != my_colour);
+void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::set<Tile *> &infravision_tiles) {
+	bool hide = (pawn->flags & PWR_INVISIBLE) &&
+		(pawn->colour != my_colour) &&
+		(infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end());
 	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
-	
+
 	if (!hide) {
 		SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
 		SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
 		SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
 		SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png");
 		SDL_Surface *invisible = ImgStuff::GetImage("graphics/upgrades/invisible.png");
+		SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png");
 
 		unsigned int frame = torus_frame;
 
@@ -744,6 +763,8 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 			ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 		if(pawn->flags & PWR_INVISIBLE)
 			ensure_SDL_BlitSurface(invisible, &base, screen, &rect);
+		if(pawn->flags & PWR_INFRAVISION)
+			ensure_SDL_BlitSurface(infravision, &base, screen, &rect);
 	}
 	for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); i++) {
 		i->time -= dt;
@@ -754,7 +775,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base) {
 	}
 }
 
-void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
+void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &infravision_tiles) {
 	int teleport_y = 0;
 	SDL_Rect rect = {tile->screen_x, tile->screen_y, 0, 0}, base = {0,0,50,50};
 
@@ -780,7 +801,7 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile) {
 		return;
 	}
 
-	DrawPawn(pawn, rect, base);
+	DrawPawn(pawn, rect, base, infravision_tiles);
 }
 
 static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &item, Client *client) {

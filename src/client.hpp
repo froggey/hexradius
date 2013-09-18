@@ -114,8 +114,8 @@ class Client {
 		void handle_message_game(const protocol::message &msg);
 
 		void DrawScreen(void);
-		void DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base);
-		void draw_pawn_tile(pawn_ptr pawn, Tile *tile);
+		void DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::set<Tile *> &infravision_tiles);
+		void draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &infravision_tiles);
 		void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
 		void draw_pmenu(pawn_ptr pawn);
 		void draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm);

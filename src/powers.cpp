@@ -397,6 +397,15 @@ static bool landing_pad(pawn_ptr pawn, Server *, Client *) {
 	return true;
 }
 
+static bool infravision(pawn_ptr pawn, Server *, Client *) {
+	if (pawn->flags & PWR_INFRAVISION) {
+		return false;
+	}
+
+	pawn->flags |= PWR_INFRAVISION;
+	return true;
+}
+
 Powers::Power Powers::powers[] = {
 	{"Destroy", &destroy_row, 50, true, Powers::Power::row},
 	{"Destroy", &destroy_radial, 50, true, Powers::Power::radial},
@@ -408,7 +417,8 @@ Powers::Power Powers::powers[] = {
 	{"Increase Range", &increase_range, 20, true, Powers::Power::undirected},
 	{"Hover", &hover, 30, true, Powers::Power::undirected},
 	{"Shield", &shield, 30, true, Powers::Power::undirected},
-	{"Invisibility", &invisibility, 30, true, Powers::Power::undirected},
+	{"Invisibility", &invisibility, 40, true, Powers::Power::undirected},
+	{"Infravision", &infravision, 40, true, Powers::Power::undirected},
 	{"Teleport", &teleport, 60, true, Powers::Power::undirected},
 	{"Landing Pad", &landing_pad, 60, true, Powers::Power::undirected},
 
