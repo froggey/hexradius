@@ -589,8 +589,9 @@ void Client::DrawScreen() {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 
-	if (current_animator) {
-		current_animator->do_stuff();
+	if (current_animator && !current_animator->do_stuff()) {
+		delete current_animator;
+		current_animator = 0;
 	}
 
 	ensure_SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));

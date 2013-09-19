@@ -64,14 +64,14 @@ static bool destroy_fs(pawn_ptr pawn, Server *, Client *client) {
 static bool raise_tile(pawn_ptr pawn, Server *, Client *client) {
 	if (client && !client->current_animator)
 		client->current_animator = new TileAnimators::ElevationAnimator(
-			client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
+			Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1);
 	return pawn->cur_tile->SetHeight(pawn->cur_tile->height + 1);
 }
 
 static bool lower_tile(pawn_ptr pawn, Server *, Client *client) {
 	if (client && !client->current_animator)
 		client->current_animator = new TileAnimators::ElevationAnimator(
-			client, Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
+			Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1);
 	return pawn->cur_tile->SetHeight(pawn->cur_tile->height - 1);
 }
 
@@ -119,7 +119,7 @@ static bool elevate_row(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->RowTiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
 
 	return elevate_tiles(tiles);
 }
@@ -128,7 +128,7 @@ static bool elevate_radial(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->RadialTiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
 
 	return elevate_tiles(tiles);
 }
@@ -137,7 +137,7 @@ static bool elevate_bs(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->bs_tiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
 
 	return elevate_tiles(tiles);
 }
@@ -146,7 +146,7 @@ static bool elevate_fs(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->fs_tiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2);
 
 	return elevate_tiles(tiles);
 }
@@ -155,7 +155,7 @@ static bool dig_row(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->RowTiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
 
 	return dig_tiles(tiles);
 }
@@ -164,7 +164,7 @@ static bool dig_radial(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->RadialTiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
 
 	return dig_tiles(tiles);
 }
@@ -173,7 +173,7 @@ static bool dig_bs(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->bs_tiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
 
 	return dig_tiles(tiles);
 }
@@ -182,7 +182,7 @@ static bool dig_fs(pawn_ptr pawn, Server *, Client *client) {
 	Tile::List tiles = pawn->fs_tiles();
 
 	if (client && !client->current_animator)
-		client->current_animator = new TileAnimators::ElevationAnimator(client, tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
+		client->current_animator = new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, -2);
 
 	return dig_tiles(tiles);
 }
@@ -471,7 +471,7 @@ Powers::Power Powers::powers[] = {
 	{"Mine", &mine_radial, 40, false, Powers::Power::radial},
 	{"Mine", &mine_bs, 20, false, Powers::Power::nw_se},
 	{"Mine", &mine_fs, 20, false, Powers::Power::ne_sw},
-	
+
 	{"Smash", &smash_row, 50, false, Powers::Power::row},
 	{"Smash", &smash_radial, 50, false, Powers::Power::radial},
 	{"Smash", &smash_bs, 50, false, Powers::Power::nw_se},

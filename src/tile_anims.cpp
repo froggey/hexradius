@@ -13,14 +13,14 @@ const double E = 2.71828182845904523536;
 namespace TileAnimators {
 	Animator* current_animator = NULL;
 
-	Animator::Animator(Client* _client, Tile::List _tiles) :
-		tiles(_tiles), client(_client) {}
+	Animator::Animator(Tile::List _tiles) :
+		tiles(_tiles) {}
 
 	Animator::~Animator() {
 	}
 
-	ElevationAnimator::ElevationAnimator(Client* _client, Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
-		Animator(_client, _tiles) {
+	ElevationAnimator::ElevationAnimator(Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
+		Animator(_tiles) {
 		BOOST_FOREACH(Tile* t, tiles) {
 			if (!t->animating) {
 				int rx = (t->screen_x + t->height * TILE_HEIGHT_FACTOR) - (center->screen_x + center->height * TILE_HEIGHT_FACTOR);
@@ -38,7 +38,7 @@ namespace TileAnimators {
 		start_time = SDL_GetTicks();
 	}
 
-	void ElevationAnimator::do_stuff() {
+	bool ElevationAnimator::do_stuff() {
 		unsigned int ticks = SDL_GetTicks();
 		unsigned int t = ticks - start_time;
 		//uint dt = ticks - last_time;
@@ -67,10 +67,6 @@ namespace TileAnimators {
 			}
 		}
 
-		if (!did_stuff) {
-			assert(client->current_animator == this);
-			client->current_animator = NULL;
-			delete this;
-		}
+		return did_stuff;
 	}
 }
