@@ -1,5 +1,9 @@
 #include "gamestate.hpp"
 #include "loadimage.hpp"
+#include "network.hpp"
+#include "client.hpp"
+#include "animator.hpp"
+#include "tile_anims.hpp"
 #include <stdexcept>
 
 GameState::GameState() {
@@ -93,4 +97,48 @@ void GameState::destroy_team_pawns(PlayerColour colour) {
 			(*t)->pawn.reset();
 		}
 	}
+}
+
+void GameState::add_animator(TileAnimators::Animator *) {}
+void GameState::add_animator(Animators::Generic *) {}
+
+ServerGameState::ServerGameState(Server &server) : server(server) {}
+
+Tile *ServerGameState::teleport_hack(pawn_ptr) {
+	Tile *tile = *(RandomTiles(tiles, 1, false, false, false, false).begin());
+
+	power_rand_vals.push_back(tile->col);
+	power_rand_vals.push_back(tile->row);
+
+	return tile;
+}
+
+ClientGameState::ClientGameState(Client &client) : client(client) {}
+
+void ClientGameState::add_animator(TileAnimators::Animator *animator) {
+	if(client.current_animator) {
+		delete animator;
+	} else {
+		client.current_animator = animator;
+	}
+}
+
+void ClientGameState::add_animator(Animators::Generic *animator) {
+	client.add_animator(animator);
+}
+
+Tile *ClientGameState::teleport_hack(pawn_ptr pawn) {
+	assert(power_rand_vals.size() == 2);
+
+	int col = power_rand_vals[0];
+	int row = power_rand_vals[1];
+
+	Tile *tile = tile_at(col, row);
+	assert(tile && !tile->pawn);
+
+	pawn->last_tile = pawn->cur_tile;
+	pawn->last_tile->render_pawn = pawn;
+	pawn->teleport_time = SDL_GetTicks();
+
+	return tile;
 }

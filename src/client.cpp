@@ -49,7 +49,7 @@ static Uint32 redraw_callback(Uint32 interval, void *) {
 Client::Client(std::string host, uint16_t port) :
 	quit(false), current_animator(NULL), game_state(0),
 	socket(io_service), redraw_timer(NULL), turn(0),
-	state(CONNECTING), last_redraw(0), board(SDL_Rect()),
+	state(CONNECTING), scenario(*this), last_redraw(0), board(SDL_Rect()),
 	dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()),
 	pmenu_area(SDL_Rect()), lobby_gui(0, 0, 800, 600)
 {
@@ -546,7 +546,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 					game_state->power_rand_vals.push_back(msg.power_rand_vals(i));
 				}
 
-				if(!pawn->UsePower(power, NULL, this)) {
+				if(!pawn->UsePower(power, NULL, game_state)) {
 					std::cerr << "Invalid USE from server?" << std::endl;
 				}
 			}
@@ -665,6 +665,9 @@ void Client::DrawScreen() {
 	}
 
 	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
+		if((*ti)->pawn) {
+			assert(!(*ti)->pawn->destroyed());
+		}
 		SDL_Rect rect;
 		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
 		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
@@ -1022,15 +1025,15 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
-	
+
 	bool hide = (pm.added && pawn->colour != my_colour);
-	
+
 	std::string str = hide ? "???" : Powers::powers[pm.power].name;
 	str = (pm.added ? "+ " : "- ") + str;
 
 	int fh = std::max(TTF_FontLineSkip(font), TTF_FontLineSkip(symbol_font));
 	int fw = FontStuff::TextWidth(font, "0");
-	
+
 	SDL_Rect rect;
 	rect.w = FontStuff::TextWidth(font, str);
 	if (!hide)

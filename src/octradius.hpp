@@ -52,6 +52,7 @@ enum PlayerColour { BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, SPECTATE, NOINIT }
 class Pawn;
 class Server;
 class Client;
+class GameState;
 
 typedef boost::shared_ptr<Pawn> pawn_ptr;
 
@@ -130,10 +131,10 @@ class Pawn : public boost::enable_shared_from_this<Pawn>, boost::noncopyable {
 		void force_move(Tile *new_tile, Server *server, Client *client);
 
 		void AddPower(int power);
-		bool UsePower(int power, Server *server, Client *client);
+		bool UsePower(int power, Server *server, GameState *state);
 
 		/* Test if the pawn moved (or fell) onto a mine. */
-		void maybe_step_on_mine(Client *client);
+		void maybe_step_on_mine(GameState *state);
 
 		Tile::List RowTiles(void);
 		Tile::List RadialTiles(void);

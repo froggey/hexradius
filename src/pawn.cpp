@@ -4,6 +4,8 @@
 #include "powers.hpp"
 #include "octradius.pb.h"
 #include "client.hpp"
+#include "network.hpp"
+#include "gamestate.hpp"
 
 Pawn::Pawn(PlayerColour c, Tile::List &at, Tile *ct) :
 	all_tiles(at), cur_tile(ct), colour(c),
@@ -59,7 +61,7 @@ bool Pawn::Move(Tile *tile, Server *server, Client *client) {
 	return true;
 }
 
-void Pawn::force_move(Tile *tile, Server *, Client *client) {
+void Pawn::force_move(Tile *tile, Server *server, Client *client) {
 	assert(tile);
 
 	if(tile->pawn) {
@@ -94,7 +96,7 @@ void Pawn::force_move(Tile *tile, Server *, Client *client) {
 		}
 		tile->has_power = false;
 	}
-	maybe_step_on_mine(client);
+	maybe_step_on_mine(server ? server->game_state : client->game_state);
 }
 
 void Pawn::AddPower(int power) {
@@ -107,13 +109,15 @@ void Pawn::AddPower(int power) {
 	}
 }
 
-bool Pawn::UsePower(int power, Server *server, Client *client) {
+bool Pawn::UsePower(int power, Server *server, GameState *state) {
 	PowerList::iterator p = powers.find(power);
+
+	// Huh?
 	if(server && p == powers.end()) {
 		return false;
 	}
 
-	if(!Powers::powers[power].func(shared_from_this(), server, client)) {
+	if(!Powers::powers[power].func(shared_from_this(), state)) {
 		return false;
 	}
 
@@ -266,12 +270,10 @@ void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 	}
 }
 
-void Pawn::maybe_step_on_mine(Client *client)
+void Pawn::maybe_step_on_mine(GameState *state)
 {
 	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
-		if(client) {
-			client->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
-		}
+		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
 		cur_tile->has_mine = false;
 		if(!(flags & PWR_SHIELD)) {
 			this->destroy(MINED);

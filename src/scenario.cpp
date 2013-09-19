@@ -17,7 +17,13 @@ static char *next_value(char *str) {
 	return r;
 }
 
-Scenario::Scenario() : game_state(0) {
+Scenario::Scenario(Server &server) :
+	game_state(0), client(0), server(&server)
+{
+}
+Scenario::Scenario(Client &client) :
+	game_state(0), client(&client), server(0)
+{
 }
 
 Scenario::~Scenario() {
@@ -30,7 +36,9 @@ Scenario::~Scenario() {
 void Scenario::load_file(std::string filename) {
 	last_filename = filename;
 	delete game_state;
-	game_state = new GameState;
+	game_state = server ?
+		static_cast<GameState*>(new ServerGameState(*server)) :
+		static_cast<GameState*>(new ClientGameState(*client));
 	colours.clear();
 
 	std::fstream file(filename.c_str(), std::fstream::in);
@@ -161,7 +169,9 @@ void Scenario::load_proto(const protocol::message &msg) {
 	saved_msg = msg;
 	last_filename = std::string();
 	delete game_state;
-	game_state = new GameState;
+	game_state = server ?
+		static_cast<GameState*>(new ServerGameState(*server)) :
+		static_cast<GameState*>(new ClientGameState(*client));
 	colours.clear();
 
 	for(int i = 0; i < msg.tiles_size(); i++) {

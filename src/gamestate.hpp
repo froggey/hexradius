@@ -5,10 +5,13 @@
 #include <boost/utility.hpp>
 #include "octradius.hpp"
 
+namespace TileAnimators { class Animator; }
+namespace Animators { class Generic; }
+
 class GameState : boost::noncopyable {
 public:
 	GameState();
-	~GameState();
+	virtual ~GameState();
 	std::vector<uint32_t> power_rand_vals;
 	Tile::List tiles;
 
@@ -34,6 +37,28 @@ public:
 
 	/** Destroy all the pawns on the given team. */
 	void destroy_team_pawns(PlayerColour colour);
+
+	virtual void add_animator(TileAnimators::Animator *animator);
+	virtual void add_animator(Animators::Generic *animator);
+	virtual Tile *teleport_hack(pawn_ptr pawn) = 0;
+};
+
+class ServerGameState : public GameState {
+public:
+	ServerGameState(Server &server);
+	virtual Tile *teleport_hack(pawn_ptr pawn);
+private:
+	Server &server;
+};
+
+class ClientGameState : public GameState {
+public:
+	ClientGameState(Client &client);
+	virtual void add_animator(TileAnimators::Animator *animator);
+	virtual void add_animator(Animators::Generic *animator);
+	virtual Tile *teleport_hack(pawn_ptr pawn);
+private:
+	Client &client;
 };
 
 #endif

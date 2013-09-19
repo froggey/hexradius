@@ -11,7 +11,9 @@
 #include "powers.hpp"
 #include "gamestate.hpp"
 
-Server::Server(uint16_t port, const std::string &s) : game_state(0), acceptor(io_service) {
+Server::Server(uint16_t port, const std::string &s) :
+	game_state(0), acceptor(io_service), scenario(*this)
+{
 	scenario.load_file(s);
 
 	idcounter = 0;
@@ -550,7 +552,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		game_state->power_rand_vals.clear();
 
-		if(!pawn || !pawn->UsePower(power, this, NULL)) {
+		if(!pawn || !pawn->UsePower(power, this, game_state)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
 			protocol::message smsg = msg;
