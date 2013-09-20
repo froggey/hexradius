@@ -92,11 +92,11 @@ static bool hover(pawn_ptr pawn, GameState *) {
 static bool elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, GameState *state) {
 	bool ret = false;
 
+	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2));
+
 	for(Tile::List::const_iterator i = tiles.begin(); i != tiles.end(); i++) {
 		ret = ((*i)->SetHeight(2) || ret);
 	}
-
-	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, 2));
 
 	return ret;
 }
@@ -104,11 +104,11 @@ static bool elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, GameState *sta
 static bool dig_tiles(const Tile::List &tiles, pawn_ptr pawn, GameState *state) {
 	bool ret = false;
 
+	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, -3.0, TileAnimators::ABSOLUTE, -2));
+
 	for(Tile::List::const_iterator i = tiles.begin(); i != tiles.end(); i++) {
 		ret = ((*i)->SetHeight(-2) || ret);
 	}
-
-	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, -3.0, TileAnimators::ABSOLUTE, 2));
 
 	return ret;
 }
