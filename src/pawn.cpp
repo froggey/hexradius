@@ -29,7 +29,7 @@ bool Pawn::destroyed() {
 	return destroyed_by != OK;
 }
 
-bool Pawn::Move(Tile *tile, Server *server, Client *client) {
+bool Pawn::Move(Tile *tile, GameState *state) {
 	// Move only onto adjacent tiles or friendly landing pads.
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
@@ -56,18 +56,16 @@ bool Pawn::Move(Tile *tile, Server *server, Client *client) {
 		return false;
 	}
 
-	force_move(tile, server, client);
+	force_move(tile, state);
 
 	return true;
 }
 
-void Pawn::force_move(Tile *tile, Server *server, Client *client) {
+void Pawn::force_move(Tile *tile, GameState *state) {
 	assert(tile);
 
 	if(tile->pawn) {
-		if(client) {
-			client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
-		}
+		state->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
 		tile->pawn->destroy(STOMP);
 	}
 
@@ -76,17 +74,13 @@ void Pawn::force_move(Tile *tile, Server *server, Client *client) {
 
 	if(tile->has_black_hole) {
 		destroy(Pawn::BLACKHOLE);
-		if(client) {
-			client->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
-		}
+		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
 		return;
 	}
 
 	if(tile->smashed && !(flags & PWR_CLIMB)) {
 		destroy(Pawn::FELL_OUT_OF_THE_WORLD);
-		if(client) {
-			client->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
-		}
+		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
 		return;
 	}
 
@@ -96,7 +90,7 @@ void Pawn::force_move(Tile *tile, Server *server, Client *client) {
 		}
 		tile->has_power = false;
 	}
-	maybe_step_on_mine(server ? server->game_state : client->game_state);
+	maybe_step_on_mine(state);
 }
 
 void Pawn::AddPower(int power) {

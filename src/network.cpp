@@ -419,7 +419,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 
 	bool hp = target->has_power;
 
-	pawn->force_move(target, this, 0);
+	pawn->force_move(target, game_state);
 
 	if(hp) {
 		protocol::message msg;
@@ -527,7 +527,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		bool hp = tile->has_power;
 
-		if(pawn->Move(tile, this, NULL)) {
+		if(pawn->Move(tile, game_state)) {
 			WriteAll(msg);
 
 			if(hp && !pawn->destroyed()) {

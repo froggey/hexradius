@@ -482,8 +482,8 @@ void Client::handle_message_game(const protocol::message &msg) {
 			if(!pawn || !tile) {
 				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
 			} else if(msg.msg() == protocol::FORCE_MOVE) {
-				pawn->force_move(tile, 0, this);
-			} else if(!pawn->Move(tile, NULL, this)) {
+				pawn->force_move(tile, game_state);
+			} else if(!pawn->Move(tile, game_state)) {
 				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
 			}
 		}else{
