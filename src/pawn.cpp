@@ -59,6 +59,7 @@ void Pawn::force_move(Tile *tile, Server *, Client *client) {
 		if(client) {
 			client->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
 		}
+		tile->pawn->destroy(STOMP);
 	}
 
 	tile->pawn.swap(cur_tile->pawn);
