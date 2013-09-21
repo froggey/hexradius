@@ -157,6 +157,8 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 		Tile::List RadialTiles(void);
 		Tile::List bs_tiles();
 		Tile::List fs_tiles();
+
+		bool has_power();
 };
 
 Tile::List RandomTiles(Tile::List tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied);

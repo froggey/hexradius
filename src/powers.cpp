@@ -288,8 +288,6 @@ static bool teleport(pawn_ptr pawn, Server *server, Client *client) {
 		if(tile->power >= 0) {
 			pawn->AddPower(tile->power);
 		}
-
-		pawn->flags |= HAS_POWER;
 		tile->has_power = false;
 	}
 	return true;

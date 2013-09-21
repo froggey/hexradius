@@ -85,8 +85,6 @@ void Pawn::force_move(Tile *tile, Server *, Client *client) {
 		if(tile->power >= 0) {
 			AddPower(tile->power);
 		}
-
-		flags |= HAS_POWER;
 		tile->has_power = false;
 	}
 	maybe_step_on_mine(client);
@@ -114,10 +112,6 @@ bool Pawn::UsePower(int power, Server *server, Client *client) {
 
 	if(p != powers.end() && --p->second == 0) {
 		powers.erase(p);
-
-		if(powers.empty()) {
-			flags &= ~HAS_POWER;
-		}
 	}
 
 	power_messages.push_back(PowerMessage(power, false));
@@ -276,4 +270,9 @@ void Pawn::maybe_step_on_mine(Client *client)
 			this->destroy(MINED);
 		}
 	}
+}
+
+bool Pawn::has_power()
+{
+	return !powers.empty();
 }
