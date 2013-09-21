@@ -493,6 +493,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		for(int i = 0; i < msg.tiles_size(); i++) {
 			Tile *tile = game_state->tile_at(msg.tiles(i).col(), msg.tiles(i).row());
 			if(!tile) {
+				std::cerr << "Invalid tile " << msg.tiles(i).col() << "," << msg.tiles(i).col() << " update recieved from server! Out of sync?" << std::endl;
 				continue;
 			}
 
@@ -503,6 +504,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 		for(int i = 0; i < msg.pawns_size(); i++) {
 			pawn_ptr pawn = game_state->pawn_at(msg.pawns(i).col(), msg.pawns(i).row());
 			if(!pawn) {
+				std::cerr << "Invalid pawn " << msg.pawns(i).col() << "," << msg.pawns(i).col() << " update recieved from server! Out of sync?" << std::endl;
 				continue;
 			}
 
@@ -533,8 +535,9 @@ void Client::handle_message_game(const protocol::message &msg) {
 	}else if(msg.msg() == protocol::USE) {
 		if(msg.pawns_size() == 1) {
 			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
-
-			if(pawn) {
+			if(!pawn) {
+				std::cerr << "Recieved USE message invalid pawn at " << msg.pawns(0).col() << "," << msg.pawns(0).col() << ". ignoring" << std::endl;
+			} else {
 				int power = msg.pawns(0).use_power();
 
 				game_state->power_rand_vals.clear();
@@ -543,7 +546,9 @@ void Client::handle_message_game(const protocol::message &msg) {
 					game_state->power_rand_vals.push_back(msg.power_rand_vals(i));
 				}
 
-				pawn->UsePower(power, NULL, this);
+				if(!pawn->UsePower(power, NULL, this)) {
+					std::cerr << "Invalid USE from server?" << std::endl;
+				}
 			}
 		}else{
 			std::cerr << "Recieved USE message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
