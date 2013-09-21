@@ -415,7 +415,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 		WriteAll(msg);
 	}
 
-	bool hp = tile->has_power;
+	bool hp = target->has_power;
 
 	pawn->force_move(target, this, 0);
 
