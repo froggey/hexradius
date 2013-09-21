@@ -15,7 +15,7 @@ struct Scenario : boost::noncopyable {
 	std::string last_filename;
 	protocol::message saved_msg;
 
-	Scenario(Client &client);
+	Scenario();
 	Scenario(Server &server);
 	~Scenario();
 
@@ -34,7 +34,6 @@ struct Scenario : boost::noncopyable {
 	 * cannot be called again until a new scenario is loaded. */
 	GameState *init_game(std::set<PlayerColour> spawn_colours);
 private:
-	Client *client;
 	Server *server;
 };
 

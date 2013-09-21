@@ -37,10 +37,7 @@ public:
 	/** Destroy all the pawns on the given team. */
 	void destroy_team_pawns(PlayerColour colour);
 
-	virtual void add_animator(TileAnimators::Animator *animator);
 	virtual void add_animator(Animators::Generic *animator);
-	virtual bool teleport_hack(pawn_ptr pawn);
-	virtual bool grant_upgrade(pawn_ptr pawn, uint32_t upgrade);
 	virtual void add_power_notification(pawn_ptr pawn, int power);
 };
 
@@ -48,19 +45,13 @@ class ServerGameState : public GameState {
 public:
 	ServerGameState(Server &server);
 	virtual void add_animator(Animators::Generic *animator);
-	virtual void add_animator(TileAnimators::Animator *animator);
-	virtual bool teleport_hack(pawn_ptr pawn);
-	virtual bool grant_upgrade(pawn_ptr pawn, uint32_t upgrade);
+	void add_animator(TileAnimators::Animator *animator);
+	bool teleport_hack(pawn_ptr pawn);
+	bool grant_upgrade(pawn_ptr pawn, uint32_t upgrade);
 	virtual void add_power_notification(pawn_ptr pawn, int power);
+	bool set_tile_height(Tile *tile, int height);
 private:
 	Server &server;
-};
-
-class ClientGameState : public GameState {
-public:
-	ClientGameState(Client &client);
-private:
-	Client &client;
 };
 
 #endif

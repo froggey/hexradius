@@ -110,11 +110,11 @@ void Pawn::AddPower(int power) {
 	}
 }
 
-bool Pawn::UsePower(int power, Server *server, GameState *state) {
+bool Pawn::UsePower(int power, ServerGameState *state) {
 	PowerList::iterator p = powers.find(power);
 
 	// Huh?
-	if(server && p == powers.end()) {
+	if(p == powers.end()) {
 		return false;
 	}
 

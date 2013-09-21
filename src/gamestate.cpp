@@ -99,17 +99,8 @@ void GameState::destroy_team_pawns(PlayerColour colour) {
 	}
 }
 
-void GameState::add_animator(TileAnimators::Animator *ani) {
-	delete ani;
-}
 void GameState::add_animator(Animators::Generic *ani) {
 	delete ani;
-}
-bool GameState::teleport_hack(pawn_ptr) {
-	return true;
-}
-bool GameState::grant_upgrade(pawn_ptr, uint32_t) {
-	return true;
 }
 void GameState::add_power_notification(pawn_ptr, int) {
 }
@@ -197,4 +188,10 @@ bool ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
 	return false;
 }
 
-ClientGameState::ClientGameState(Client &client) : client(client) {}
+bool ServerGameState::set_tile_height(Tile *tile, int height) {
+	bool ret = tile->SetHeight(height);
+	if(ret) {
+		server.update_one_tile(tile);
+	}
+	return ret;
+}

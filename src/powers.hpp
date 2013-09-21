@@ -5,7 +5,7 @@
 
 #include "octradius.hpp"
 
-class GameState;
+class ServerGameState;
 
 const uint32_t PWR_SHIELD = 1<<0;
 const uint32_t PWR_CLIMB = 1<<1;
@@ -16,7 +16,7 @@ const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVIS
 namespace Powers {
 	struct Power {
 		const char *name;
-		bool (*func)(pawn_ptr, GameState *);
+		bool (*func)(pawn_ptr, ServerGameState *);
 		int spawn_rate;
 
 		/* Executing pawn is guarenteed to not be destroyed by power.

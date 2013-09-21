@@ -193,7 +193,7 @@ void Server::StartGame(void) {
 		colours.insert(c->colour);
 	}
 
-	game_state = scenario.init_game(colours);
+	game_state = static_cast<ServerGameState *>(scenario.init_game(colours));
 
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 	int bskip = TTF_FontLineSkip(bfont);
@@ -550,11 +550,9 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		int power = msg.pawns(0).use_power();
 
-		if(!pawn || !pawn->UsePower(power, this, game_state)) {
+		if(!pawn || !pawn->UsePower(power, game_state)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
-			WriteAll(msg);
-
 			if(!pawn->destroyed()) {
 				update_one_pawn(pawn);
 			}
@@ -585,6 +583,16 @@ void Server::update_one_pawn(pawn_ptr pawn)
 
 	update.add_pawns();
 	pawn->CopyToProto(update.mutable_pawns(0), true);
+
+	WriteAll(update);
+}
+
+void Server::update_one_tile(Tile *tile)
+{
+	protocol::message update;
+	update.set_msg(protocol::UPDATE);
+
+	tile->CopyToProto(update.add_tiles());
 
 	WriteAll(update);
 }

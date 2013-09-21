@@ -53,6 +53,7 @@ class Pawn;
 class Server;
 class Client;
 class GameState;
+class ServerGameState;
 
 typedef boost::shared_ptr<Pawn> pawn_ptr;
 
@@ -131,7 +132,7 @@ class Pawn : public boost::enable_shared_from_this<Pawn>, boost::noncopyable {
 		void force_move(Tile *new_tile, GameState *state);
 
 		void AddPower(int power);
-		bool UsePower(int power, Server *server, GameState *state);
+		bool UsePower(int power, ServerGameState *state);
 
 		/* Test if the pawn moved (or fell) onto a mine. */
 		void maybe_step_on_mine(GameState *state);

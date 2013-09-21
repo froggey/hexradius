@@ -16,7 +16,6 @@
 #include "octradius.hpp"
 #include "scenario.hpp"
 
-class GameState;
 class ServerGameState;
 
 class Server {
@@ -69,7 +68,7 @@ public:
 	Server(uint16_t port, const std::string &scenario_file);
 	~Server();
 
-	GameState *game_state;
+	ServerGameState *game_state;
 
 	private:
 		typedef std::set<Server::Client::ptr,client_compare> client_set;
@@ -115,6 +114,8 @@ public:
 
 	// Send an UPDATE message for one pawn.
 	void update_one_pawn(pawn_ptr pawn);
+	// Send an UPDATE message for one tile.
+	void update_one_tile(Tile *tile);
 };
 
 #endif /* !OR_NETWORK_HPP */

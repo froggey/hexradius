@@ -49,7 +49,7 @@ static Uint32 redraw_callback(Uint32 interval, void *) {
 Client::Client(std::string host, uint16_t port) :
 	quit(false), current_animator(NULL), game_state(0),
 	socket(io_service), redraw_timer(NULL), turn(0),
-	state(CONNECTING), scenario(*this), last_redraw(0), board(SDL_Rect()),
+	state(CONNECTING), scenario(), last_redraw(0), board(SDL_Rect()),
 	dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()),
 	pmenu_area(SDL_Rect()), lobby_gui(0, 0, 800, 600)
 {
@@ -527,21 +527,6 @@ void Client::handle_message_game(const protocol::message &msg) {
 
 				pawn->powers.insert(std::make_pair(index, num));
 			}
-		}
-	}else if(msg.msg() == protocol::USE) {
-		if(msg.pawns_size() == 1) {
-			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
-			if(!pawn) {
-				std::cerr << "Recieved USE message invalid pawn at " << msg.pawns(0).col() << "," << msg.pawns(0).col() << ". ignoring" << std::endl;
-			} else {
-				int power = msg.pawns(0).use_power();
-
-				if(!pawn->UsePower(power, NULL, game_state)) {
-					std::cerr << "Invalid USE from server?" << std::endl;
-				}
-			}
-		}else{
-			std::cerr << "Recieved USE message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
 		}
 	}else if(msg.msg() == protocol::GOVER) {
 		if(msg.is_draw()) {
