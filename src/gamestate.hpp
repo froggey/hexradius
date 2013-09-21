@@ -12,7 +12,6 @@ class GameState : boost::noncopyable {
 public:
 	GameState();
 	virtual ~GameState();
-	std::vector<uint32_t> power_rand_vals;
 	Tile::List tiles;
 
 	/** Return all the pawns on the board. */

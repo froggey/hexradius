@@ -540,12 +540,6 @@ void Client::handle_message_game(const protocol::message &msg) {
 			} else {
 				int power = msg.pawns(0).use_power();
 
-				game_state->power_rand_vals.clear();
-
-				for(int i = 0; i < msg.power_rand_vals_size(); i++) {
-					game_state->power_rand_vals.push_back(msg.power_rand_vals(i));
-				}
-
 				if(!pawn->UsePower(power, NULL, game_state)) {
 					std::cerr << "Invalid USE from server?" << std::endl;
 				}

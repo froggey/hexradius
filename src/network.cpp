@@ -550,20 +550,10 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		int power = msg.pawns(0).use_power();
 
-		game_state->power_rand_vals.clear();
-
 		if(!pawn || !pawn->UsePower(power, this, game_state)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
-			protocol::message smsg = msg;
-
-			smsg.clear_power_rand_vals();
-
-			for(std::vector<uint32_t>::iterator i = game_state->power_rand_vals.begin(); i != game_state->power_rand_vals.end(); i++) {
-				smsg.add_power_rand_vals(*i);
-			}
-
-			WriteAll(smsg);
+			WriteAll(msg);
 
 			if(!pawn->destroyed()) {
 				protocol::message update;
