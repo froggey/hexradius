@@ -195,3 +195,14 @@ bool ServerGameState::set_tile_height(Tile *tile, int height) {
 	}
 	return ret;
 }
+
+void ServerGameState::destroy_pawn(pawn_ptr target, Pawn::destroy_type reason, pawn_ptr)
+{
+	protocol::message msg;
+	msg.set_msg(protocol::DESTROY);
+	msg.add_pawns();
+	msg.mutable_pawns(0)->set_col(target->cur_tile->col);
+	msg.mutable_pawns(0)->set_row(target->cur_tile->row);
+	server.WriteAll(msg);
+	target->destroy(reason);
+}

@@ -50,6 +50,7 @@ public:
 	bool grant_upgrade(pawn_ptr pawn, uint32_t upgrade);
 	virtual void add_power_notification(pawn_ptr pawn, int power);
 	bool set_tile_height(Tile *tile, int height);
+	void destroy_pawn(pawn_ptr target, Pawn::destroy_type reason, pawn_ptr killer = pawn_ptr());
 private:
 	Server &server;
 };

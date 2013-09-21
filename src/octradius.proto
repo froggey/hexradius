@@ -29,6 +29,7 @@ enum msgtype {
         PARTICLE_ANIMATION = 27; // Play a particle animation.
         ADD_POWER_NOTIFICATION = 28; // Display a power added message.
                                      // pawn->use_power is the power. Might not be supplied.
+        DESTROY = 29;   // Destroy a pawn.
 }
 
 enum colour {

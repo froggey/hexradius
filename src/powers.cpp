@@ -31,7 +31,7 @@ static bool destroy_enemies(Tile::List area, pawn_ptr pawn, ServerGameState *sta
 
 	while(i != area.end()) {
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
-			(*i)->pawn->destroy(Pawn::PWR_DESTROY);
+			state->destroy_pawn((*i)->pawn, Pawn::PWR_DESTROY, pawn);
 			state->add_animator(new Animators::PawnPow((*i)->screen_x, (*i)->screen_y));
 			ret = true;
 		}
@@ -160,15 +160,17 @@ static bool purify(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 			(*i)->pawn->flags &= ~PWR_GOOD;
 			(*i)->pawn->range = 0;
+			state->update_pawn((*i)->pawn);
 			// Hovering pawns that fall on a mine trigger it.
 			(*i)->pawn->maybe_step_on_mine(state);
 			// And falling onto a smashed tile is bad.
 			if((*i)->smashed) {
 				state->add_animator(new Animators::PawnOhShitIFellDownAHole((*i)->screen_x, (*i)->screen_y));
-				(*i)->pawn->destroy(Pawn::FELL_OUT_OF_THE_WORLD);
+				state->destroy_pawn((*i)->pawn, Pawn::FELL_OUT_OF_THE_WORLD);
 			}
 			ret = true;
 		}
+		state->update_tile(*i);
 	}
 
 	return ret;
