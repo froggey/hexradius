@@ -25,6 +25,8 @@ enum msgtype {
 	UPDATE = 23;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
         FORCE_MOVE = 24;// Forcibly move a single pawn.
         PAWN_ANIMATION = 25; // Play a pawn animation.
+        TILE_ANIMATION = 26; // Play a tile animation.
+        PARTICLE_ANIMATION = 27; // Play a particle animation.
 }
 
 enum colour {
@@ -82,6 +84,13 @@ message scenario {
 	optional string name = 1;
 }
 
+message key_value {
+        required string key = 1;
+        optional int32 int_value = 2;
+        optional float float_value = 3;
+        optional string string_value = 4;
+}
+
 message message {
 	required msgtype msg = 1;
 
@@ -98,4 +107,5 @@ message message {
 	optional string msgtext = 14;
 
         optional string animation_name = 15;
+        repeated key_value misc = 16;
 }

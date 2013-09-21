@@ -45,6 +45,7 @@ public:
 class ServerGameState : public GameState {
 public:
 	ServerGameState(Server &server);
+	virtual void add_animator(Animators::Generic *animator);
 	virtual bool teleport_hack(pawn_ptr pawn);
 private:
 	Server &server;
@@ -54,7 +55,6 @@ class ClientGameState : public GameState {
 public:
 	ClientGameState(Client &client);
 	virtual void add_animator(TileAnimators::Animator *animator);
-	virtual void add_animator(Animators::Generic *animator);
 private:
 	Client &client;
 };

@@ -111,6 +111,12 @@ bool GameState::teleport_hack(pawn_ptr) {
 
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
+void ServerGameState::add_animator(Animators::Generic *ani) {
+	protocol::message msg = ani->serialize();
+	delete ani;
+	server.WriteAll(msg);
+}
+
 bool ServerGameState::teleport_hack(pawn_ptr pawn)
 {
 	Tile::List targets = RandomTiles(tiles, 1, false, false, false, false);
@@ -171,6 +177,3 @@ void ClientGameState::add_animator(TileAnimators::Animator *animator) {
 	}
 }
 
-void ClientGameState::add_animator(Animators::Generic *animator) {
-	client.add_animator(animator);
-}

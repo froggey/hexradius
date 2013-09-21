@@ -10,6 +10,7 @@
 #include "octradius.pb.h"
 #include "powers.hpp"
 #include "gamestate.hpp"
+#include "fontstuff.hpp"
 
 Server::Server(uint16_t port, const std::string &s) :
 	game_state(0), acceptor(io_service), scenario(*this)
@@ -193,6 +194,17 @@ void Server::StartGame(void) {
 	}
 
 	game_state = scenario.init_game(colours);
+
+	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
+	int bskip = TTF_FontLineSkip(bfont);
+
+	// Initialize tile screen positions, required for animations.
+	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
+		(*ti)->screen_x = BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
+		(*ti)->screen_y = bskip + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
+		(*ti)->screen_x += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
+		(*ti)->screen_y += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
+	}
 
 	protocol::message begin;
 	begin.set_msg(protocol::BEGIN);

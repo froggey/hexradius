@@ -584,6 +584,33 @@ void Client::handle_message_game(const protocol::message &msg) {
 		pawn->last_tile = pawn->cur_tile;
 		pawn->last_tile->render_pawn = pawn;
 		pawn->teleport_time = SDL_GetTicks();
+	} else if(msg.msg() == protocol::PARTICLE_ANIMATION) {
+		int tile_x = -1, tile_y = -1;
+		for(int i = 0; i < msg.misc_size(); i++) {
+			if(msg.misc(i).key() == "tile-x") {
+				tile_x = msg.misc(i).int_value();
+			} else if(msg.misc(i).key() == "tile-y") {
+				tile_y = msg.misc(i).int_value();
+			} else {
+				std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
+				return;
+			}
+		}
+		if(tile_x == -1 || tile_y == -1) {
+			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
+			return;
+		}
+		if(msg.animation_name() == "crush") {
+			add_animator(new Animators::PawnCrush(tile_x, tile_y));
+		} else if(msg.animation_name() == "pow") {
+			add_animator(new Animators::PawnPow(tile_x, tile_y));
+		} else if(msg.animation_name() == "boom") {
+			add_animator(new Animators::PawnBoom(tile_x, tile_y));
+		} else if(msg.animation_name() == "ohshitifelldownahole") {
+			add_animator(new Animators::PawnOhShitIFellDownAHole(tile_x, tile_y));
+		} else {
+			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
+		}
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}
