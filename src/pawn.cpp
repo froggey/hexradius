@@ -29,7 +29,7 @@ bool Pawn::destroyed() {
 	return destroyed_by != OK;
 }
 
-bool Pawn::Move(Tile *tile, GameState *state) {
+bool Pawn::Move(Tile *tile, ServerGameState *state) {
 	// Move only onto adjacent tiles or friendly landing pads.
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
@@ -61,12 +61,12 @@ bool Pawn::Move(Tile *tile, GameState *state) {
 	return true;
 }
 
-void Pawn::force_move(Tile *tile, GameState *state) {
+void Pawn::force_move(Tile *tile, ServerGameState *state) {
 	assert(tile);
 
 	if(tile->pawn) {
 		state->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
-		tile->pawn->destroy(STOMP);
+		state->destroy_pawn(tile->pawn, STOMP, shared_from_this());
 	}
 
 	Tile *last_tile = cur_tile;
@@ -85,8 +85,6 @@ void Pawn::force_move(Tile *tile, GameState *state) {
 		return;
 	}
 
-	maybe_step_on_mine(state);
-
 	if(tile->has_power) {
 		if(tile->power >= 0 && !destroyed()) {
 			// BLEAGH.
@@ -98,6 +96,8 @@ void Pawn::force_move(Tile *tile, GameState *state) {
 		}
 		tile->has_power = false;
 	}
+
+	maybe_step_on_mine(state);
 }
 
 void Pawn::AddPower(int power) {
@@ -118,6 +118,8 @@ bool Pawn::UsePower(int power, ServerGameState *state) {
 		return false;
 	}
 
+	Tile *last_tile = cur_tile;
+
 	if(!Powers::powers[power].func(shared_from_this(), state)) {
 		return false;
 	}
@@ -126,7 +128,15 @@ bool Pawn::UsePower(int power, ServerGameState *state) {
 		powers.erase(p);
 	}
 
-	power_messages.push_back(PowerMessage(power, false));
+	// Horrible hack alert, teleport uses this to tell us that the pawn has moved.
+	if(this->last_tile) {
+		last_tile = this->last_tile;
+		this->last_tile = 0;
+	}
+
+	std::swap(cur_tile, last_tile);
+	state->use_power_notification(shared_from_this(), power);
+	std::swap(cur_tile, last_tile);
 	return true;
 }
 
@@ -271,13 +281,13 @@ void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 	}
 }
 
-void Pawn::maybe_step_on_mine(GameState *state)
+void Pawn::maybe_step_on_mine(ServerGameState *state)
 {
 	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
 		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
 		cur_tile->has_mine = false;
 		if(!(flags & PWR_SHIELD)) {
-			this->destroy(MINED);
+			state->destroy_pawn(shared_from_this(), MINED);
 		}
 	}
 }

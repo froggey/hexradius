@@ -99,12 +99,6 @@ void GameState::destroy_team_pawns(PlayerColour colour) {
 	}
 }
 
-void GameState::add_animator(Animators::Generic *ani) {
-	delete ani;
-}
-void GameState::add_power_notification(pawn_ptr, int) {
-}
-
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
 void ServerGameState::add_animator(TileAnimators::Animator *ani) {
@@ -153,12 +147,18 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 		server.WriteAll(msg);
 	}
 
+	Tile *last_tile = pawn->cur_tile;
+
 	bool hp = target->has_power;
 	pawn->force_move(target, server.game_state);
 
 	if(hp) {
 		server.update_one_pawn(pawn);
+		server.update_one_tile(target);
 	}
+
+	// Horrible hack alert, let UsePower know that the pawn has moved.
+	pawn->last_tile = last_tile;
 
 	return true;
 }
@@ -175,6 +175,20 @@ void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
 		if(client->colour == SPECTATE || client->colour == pawn->colour) {
 			msg.mutable_pawns(0)->set_use_power(power);
 		}
+		client->Write(msg);
+	}
+}
+
+void ServerGameState::use_power_notification(pawn_ptr pawn, int power) {
+	for(Server::client_set::iterator i = server.clients.begin(); i != server.clients.end(); i++) {
+		Server::Client::ptr client = *i;
+		if(client->colour == NOINIT) continue;
+		protocol::message msg;
+		msg.set_msg(protocol::USE_POWER_NOTIFICATION);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_use_power(power);
 		client->Write(msg);
 	}
 }
@@ -205,4 +219,14 @@ void ServerGameState::destroy_pawn(pawn_ptr target, Pawn::destroy_type reason, p
 	msg.mutable_pawns(0)->set_row(target->cur_tile->row);
 	server.WriteAll(msg);
 	target->destroy(reason);
+}
+
+void ServerGameState::update_pawn(pawn_ptr pawn)
+{
+	server.update_one_pawn(pawn);
+}
+
+void ServerGameState::update_tile(Tile *tile)
+{
+	server.update_one_tile(tile);
 }

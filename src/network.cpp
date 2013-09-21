@@ -435,6 +435,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 
 	if(hp) {
 		update_one_pawn(pawn);
+		update_one_tile(target);
 	}
 
 }
@@ -536,8 +537,11 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		if(pawn->Move(tile, game_state)) {
 			WriteAll(msg);
 
-			if(hp && !pawn->destroyed()) {
-				update_one_pawn(pawn);
+			if(hp) {
+				update_one_tile(tile);
+				if(!pawn->destroyed()) {
+					update_one_pawn(pawn);
+				}
 			}
 
 			NextTurn();

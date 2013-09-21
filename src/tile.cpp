@@ -27,7 +27,14 @@ void Tile::CopyToProto(protocol::tile *t) {
 	t->set_col(col);
 	t->set_row(row);
 	t->set_height(height);
-	t->set_power(power >= 0 ? true : false);
+	t->set_power(has_power);
+	t->set_smashed(smashed);
+	t->set_has_mine(has_mine);
+	t->set_mine_colour(mine_colour);
+	t->set_has_landing_pad(has_landing_pad);
+	t->set_landing_pad_colour(landing_pad_colour);
+	t->set_has_black_hole(has_black_hole);
+	t->set_black_hole_power(black_hole_power);
 }
 
 Tile::List RandomTiles(Tile::List _tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied) {

@@ -478,16 +478,21 @@ void Client::handle_message_game(const protocol::message &msg) {
 		if(msg.pawns_size() == 1) {
 			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
 			Tile *tile = game_state->tile_at(msg.pawns(0).new_col(), msg.pawns(0).new_row());
-
-			if(!pawn || !tile) {
-				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
-			} else if(msg.msg() == protocol::FORCE_MOVE) {
-				pawn->force_move(tile, game_state);
-			} else if(!pawn->Move(tile, game_state)) {
-				std::cerr << "Invalid move recieved from server! Out of sync?" << std::endl;
-			}
+			assert(tile);
+			assert(pawn);
+			assert(!tile->pawn);
+			tile->pawn.swap(pawn->cur_tile->pawn);
+			pawn->cur_tile = tile;
 		}else{
 			std::cerr << "Recieved MOVE message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
+		}
+	}else if(msg.msg() == protocol::DESTROY) {
+		if(msg.pawns_size() == 1) {
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+			assert(pawn);
+			pawn->destroy((Pawn::destroy_type)(-1));
+		}else{
+			std::cerr << "Recieved DESTROY message with " << msg.pawns_size() << " pawns, ignoring" << std::endl;
 		}
 	}else if(msg.msg() == protocol::UPDATE) {
 		for(int i = 0; i < msg.tiles_size(); i++) {
@@ -499,6 +504,13 @@ void Client::handle_message_game(const protocol::message &msg) {
 
 			tile->height = msg.tiles(i).height();
 			tile->has_power = msg.tiles(i).power();
+			tile->smashed = msg.tiles(i).smashed();
+			tile->has_mine = msg.tiles(i).has_mine();
+			tile->mine_colour = (PlayerColour)msg.tiles(i).mine_colour();
+			tile->has_landing_pad = msg.tiles(i).has_landing_pad();
+			tile->landing_pad_colour = (PlayerColour)msg.tiles(i).landing_pad_colour();
+			tile->has_black_hole = msg.tiles(i).has_black_hole();
+			tile->black_hole_power = msg.tiles(i).black_hole_power();
 		}
 
 		for(int i = 0; i < msg.pawns_size(); i++) {
@@ -509,6 +521,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 			}
 
 			pawn->flags = msg.pawns(i).flags();
+			pawn->range = msg.pawns(i).range();
 			std::map<int, int> old_powers(pawn->powers);
 			pawn->powers.clear();
 
@@ -647,6 +660,13 @@ void Client::handle_message_game(const protocol::message &msg) {
 		pawn->power_messages.push_back(Pawn::PowerMessage(msg.pawns(0).has_use_power() ?
 								  msg.pawns(0).use_power() :
 								  -1, true));
+	} else if(msg.msg() == protocol::USE_POWER_NOTIFICATION) {
+		assert(msg.pawns_size() == 1);
+		pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+		assert(pawn);
+		pawn->power_messages.push_back(Pawn::PowerMessage(msg.pawns(0).has_use_power() ?
+								  msg.pawns(0).use_power() :
+								  -1, false));
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}

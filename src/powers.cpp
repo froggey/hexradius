@@ -68,12 +68,13 @@ static bool raise_tile(pawn_ptr pawn, ServerGameState *state) {
 static bool lower_tile(pawn_ptr pawn, ServerGameState *state) {
 	state->add_animator(new TileAnimators::ElevationAnimator(
 				    Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1));
-	return state->set_tile_height(pawn->cur_tile, pawn->cur_tile->height + 1);
+	return state->set_tile_height(pawn->cur_tile, pawn->cur_tile->height - 1);
 }
 
-static bool increase_range(pawn_ptr pawn, ServerGameState *) {
+static bool increase_range(pawn_ptr pawn, ServerGameState *state) {
 	if(pawn->range < 3) {
 		pawn->range++;
+		state->update_pawn(pawn);
 		return true;
 	}
 
@@ -84,10 +85,10 @@ static bool hover(pawn_ptr pawn, ServerGameState *state) {
 	return state->grant_upgrade(pawn, PWR_CLIMB);
 }
 
-static bool dig_elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state, float delay_factor, int target_elevation) {
+static bool dig_elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state, int target_elevation) {
 	bool ret = false;
 
-	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, delay_factor, TileAnimators::ABSOLUTE, target_elevation));
+	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, target_elevation));
 
 	for(Tile::List::const_iterator i = tiles.begin(); i != tiles.end(); i++) {
 		ret = state->set_tile_height(*i, target_elevation) || ret;
@@ -98,11 +99,11 @@ static bool dig_elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGame
 
 
 static bool elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state) {
-	return dig_elevate_tiles(tiles, pawn, state, 3, 2);
+	return dig_elevate_tiles(tiles, pawn, state, +2);
 }
 
 static bool dig_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state) {
-	return dig_elevate_tiles(tiles, pawn, state, -3, -2);
+	return dig_elevate_tiles(tiles, pawn, state, -2);
 }
 
 static bool elevate_row(pawn_ptr pawn, ServerGameState *state) {
@@ -196,12 +197,12 @@ static bool teleport(pawn_ptr pawn, ServerGameState *state) {
 	return state->teleport_hack(pawn);
 }
 
-static bool annihilate(Tile::List tiles, ServerGameState *state) {
+static bool annihilate(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
 	bool ret = false;
 
 	for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
 		if((*tile)->pawn) {
-			(*tile)->pawn->destroy(Pawn::PWR_ANNIHILATE);
+			state->destroy_pawn((*tile)->pawn, Pawn::PWR_ANNIHILATE, pawn);
 			state->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
 			ret = true;
 		}
@@ -211,19 +212,19 @@ static bool annihilate(Tile::List tiles, ServerGameState *state) {
 }
 
 static bool annihilate_row(pawn_ptr pawn, ServerGameState *state) {
-	return annihilate(pawn->RowTiles(), state);
+	return annihilate(pawn->RowTiles(), pawn, state);
 }
 
 static bool annihilate_radial(pawn_ptr pawn, ServerGameState *state) {
-	return annihilate(pawn->RadialTiles(), state);
+	return annihilate(pawn->RadialTiles(), pawn, state);
 }
 
 static bool annihilate_bs(pawn_ptr pawn, ServerGameState *state) {
-	return annihilate(pawn->bs_tiles(), state);
+	return annihilate(pawn->bs_tiles(), pawn, state);
 }
 
 static bool annihilate_fs(pawn_ptr pawn, ServerGameState *state) {
-	return annihilate(pawn->fs_tiles(), state);
+	return annihilate(pawn->fs_tiles(), pawn,state);
 }
 
 static bool smash(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
@@ -231,13 +232,14 @@ static bool smash(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
 
 	for(Tile::List::iterator tile = tiles.begin(); tile != tiles.end(); tile++) {
 		if((*tile)->pawn && (*tile)->pawn->colour != pawn->colour) {
-			(*tile)->pawn->destroy(Pawn::PWR_SMASH);
+			state->destroy_pawn((*tile)->pawn, Pawn::PWR_SMASH, pawn);
 			state->add_animator(new Animators::PawnPow((*tile)->screen_x, (*tile)->screen_y));
 			ret = true;
 			(*tile)->smashed = true;
 			(*tile)->has_mine = false;
 			(*tile)->has_power = false;
 			(*tile)->has_landing_pad = false;
+			state->update_tile(*tile);
 		}
 	}
 
@@ -261,7 +263,7 @@ static bool smash_fs(pawn_ptr pawn, ServerGameState *state) {
 }
 
 
-static int lay_mines(Tile::List tiles, PlayerColour colour) {
+static int lay_mines(Tile::List tiles, PlayerColour colour, ServerGameState *state) {
 	int n_mines = 0;
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		Tile *tile = *i;
@@ -269,37 +271,39 @@ static int lay_mines(Tile::List tiles, PlayerColour colour) {
 		tile->has_mine = true;
 		tile->mine_colour = colour;
 		n_mines += 1;
+		state->update_tile(tile);
 	}
 
 	return n_mines;
 }
 
-static bool mine(pawn_ptr pawn, ServerGameState *) {
-	return lay_mines(Tile::List(1, pawn->cur_tile), pawn->colour) == 1;
+static bool mine(pawn_ptr pawn, ServerGameState *state) {
+	return lay_mines(Tile::List(1, pawn->cur_tile), pawn->colour, state) == 1;
 }
 
-static bool mine_row(pawn_ptr pawn, ServerGameState *) {
-	return lay_mines(pawn->RowTiles(), pawn->colour) != 0;
+static bool mine_row(pawn_ptr pawn, ServerGameState *state) {
+	return lay_mines(pawn->RowTiles(), pawn->colour, state) != 0;
 }
 
-static bool mine_radial(pawn_ptr pawn, ServerGameState *) {
-	return lay_mines(pawn->RadialTiles(), pawn->colour) != 0;
+static bool mine_radial(pawn_ptr pawn, ServerGameState *state) {
+	return lay_mines(pawn->RadialTiles(), pawn->colour, state) != 0;
 }
 
-static bool mine_bs(pawn_ptr pawn, ServerGameState *) {
-	return lay_mines(pawn->bs_tiles(), pawn->colour) != 0;
+static bool mine_bs(pawn_ptr pawn, ServerGameState *state) {
+	return lay_mines(pawn->bs_tiles(), pawn->colour, state) != 0;
 }
 
-static bool mine_fs(pawn_ptr pawn, ServerGameState *) {
-	return lay_mines(pawn->fs_tiles(), pawn->colour) != 0;
+static bool mine_fs(pawn_ptr pawn, ServerGameState *state) {
+	return lay_mines(pawn->fs_tiles(), pawn->colour, state) != 0;
 }
 
-static bool landing_pad(pawn_ptr pawn, ServerGameState *) {
+static bool landing_pad(pawn_ptr pawn, ServerGameState *state) {
 	if(pawn->cur_tile->smashed) return false;
 	if(pawn->cur_tile->has_landing_pad && pawn->cur_tile->landing_pad_colour == pawn->colour) return false;
 	if(pawn->cur_tile->has_black_hole) return false;
 	pawn->cur_tile->has_landing_pad = true;
 	pawn->cur_tile->landing_pad_colour = pawn->colour;
+	state->update_tile(pawn->cur_tile);
 	return true;
 }
 
@@ -309,13 +313,14 @@ static bool infravision(pawn_ptr pawn, ServerGameState *state) {
 
 static bool black_hole(pawn_ptr pawn, ServerGameState *state) {
 	Tile *tile = pawn->cur_tile;
-	pawn->destroy(Pawn::BLACKHOLE);
+	state->destroy_pawn(pawn, Pawn::BLACKHOLE, pawn);
 	state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
 	tile->has_black_hole = true;
 	tile->black_hole_power = pawn->range + 1;
 	tile->has_mine = false;
 	tile->has_power = false;
 	tile->has_landing_pad = false;
+	state->update_tile(tile);
 	return true;
 }
 

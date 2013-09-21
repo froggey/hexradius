@@ -30,6 +30,8 @@ enum msgtype {
         ADD_POWER_NOTIFICATION = 28; // Display a power added message.
                                      // pawn->use_power is the power. Might not be supplied.
         DESTROY = 29;   // Destroy a pawn.
+        USE_POWER_NOTIFICATION = 30; // Display a power added message.
+                                     // pawn->use_power is the power. Might not be supplied.
 }
 
 enum colour {
@@ -52,6 +54,13 @@ message tile {
 	required uint32 row = 2;
 	optional sint32 height = 3;
 	optional bool power = 4;
+        optional bool smashed = 5;
+        optional bool has_mine = 6;
+        optional uint32 mine_colour = 7;
+        optional bool has_landing_pad = 8;
+        optional uint32 landing_pad_colour = 9;
+        optional bool has_black_hole = 10;
+	optional uint32 black_hole_power = 11;
 }
 
 message pawn {
