@@ -17,8 +17,10 @@
 #include "scenario.hpp"
 
 class GameState;
+class ServerGameState;
 
 class Server {
+	friend class ServerGameState;
 	struct Client : public boost::enable_shared_from_this<Server::Client> {
 		typedef boost::shared_ptr<Server::Client> ptr;
 		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, ptr);

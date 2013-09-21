@@ -40,13 +40,13 @@ public:
 
 	virtual void add_animator(TileAnimators::Animator *animator);
 	virtual void add_animator(Animators::Generic *animator);
-	virtual Tile *teleport_hack(pawn_ptr pawn) = 0;
+	virtual bool teleport_hack(pawn_ptr pawn);
 };
 
 class ServerGameState : public GameState {
 public:
 	ServerGameState(Server &server);
-	virtual Tile *teleport_hack(pawn_ptr pawn);
+	virtual bool teleport_hack(pawn_ptr pawn);
 private:
 	Server &server;
 };
@@ -56,7 +56,6 @@ public:
 	ClientGameState(Client &client);
 	virtual void add_animator(TileAnimators::Animator *animator);
 	virtual void add_animator(Animators::Generic *animator);
-	virtual Tile *teleport_hack(pawn_ptr pawn);
 private:
 	Client &client;
 };

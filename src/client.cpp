@@ -568,6 +568,28 @@ void Client::handle_message_game(const protocol::message &msg) {
 		game_state = 0;
 
 		ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
+	} else if(msg.msg() == protocol::PAWN_ANIMATION) {
+		if(msg.animation_name() != "teleport") {
+			std::cerr << "Unknown pawn animation " << msg.animation_name() << std::endl;
+			return;
+		}
+		if(msg.pawns_size() != 1) {
+			std::cerr << "Recieved invalid teleport animation." << std::endl;
+			return;
+		}
+		pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+		if(!pawn) {
+			std::cerr << "Recieved invalid teleport animation. No such pawn " << msg.pawns(0).col() << "," << msg.pawns(0).col() << std::endl;
+			return;
+		}
+
+		// Beware! The teleport animation message is sent before the move message.
+		// This expects that the pawn will move soon after the animation starts playing.
+		// The animation message contains source (col/row) tile and the target (new_col/new_row)
+		// tile coordinates, but these aren't used yet.
+		pawn->last_tile = pawn->cur_tile;
+		pawn->last_tile->render_pawn = pawn;
+		pawn->teleport_time = SDL_GetTicks();
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}

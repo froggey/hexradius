@@ -24,6 +24,7 @@ enum msgtype {
 	USE = 22;	// Use a power
 	UPDATE = 23;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
         FORCE_MOVE = 24;// Forcibly move a single pawn.
+        PAWN_ANIMATION = 25; // Play a pawn animation.
 }
 
 enum colour {
@@ -94,6 +95,7 @@ message message {
 
 	optional string quit_msg = 11;
 	optional bool is_draw = 12;
-	repeated uint32 power_rand_vals = 13;
 	optional string msgtext = 14;
+
+        optional string animation_name = 15;
 }

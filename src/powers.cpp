@@ -209,18 +209,7 @@ static bool purify_fs(pawn_ptr pawn, GameState *state) {
 }
 
 static bool teleport(pawn_ptr pawn, GameState *state) {
-	Tile *tile = state->teleport_hack(pawn);
-
-	tile->pawn.swap(pawn->cur_tile->pawn);
-	pawn->cur_tile = tile;
-
-	if(tile->has_power) {
-		if(tile->power >= 0) {
-			pawn->AddPower(tile->power);
-		}
-		tile->has_power = false;
-	}
-	return true;
+	return state->teleport_hack(pawn);
 }
 
 static bool annihilate(Tile::List tiles, GameState *state) {

@@ -105,16 +105,60 @@ void GameState::add_animator(TileAnimators::Animator *ani) {
 void GameState::add_animator(Animators::Generic *ani) {
 	delete ani;
 }
+bool GameState::teleport_hack(pawn_ptr) {
+	return true;
+}
 
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
-Tile *ServerGameState::teleport_hack(pawn_ptr) {
-	Tile *tile = *(RandomTiles(tiles, 1, false, false, false, false).begin());
+bool ServerGameState::teleport_hack(pawn_ptr pawn)
+{
+	Tile::List targets = RandomTiles(tiles, 1, false, false, false, false);
+	if(targets.empty()) {
+		return false;
+	}
+	Tile *target = *targets.begin();
 
-	power_rand_vals.push_back(tile->col);
-	power_rand_vals.push_back(tile->row);
+	// Play the teleport animation, then move the pawn.
+	// Small problem: Clients get sent a bad USE message after the power gets used.
+	// the pawn is no longer at the correct location after that. (wait, what?)
+	{
+		protocol::message msg;
+		msg.set_msg(protocol::PAWN_ANIMATION);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_new_col(target->col);
+		msg.mutable_pawns(0)->set_new_row(target->row);
+		msg.set_animation_name("teleport");
+		server.WriteAll(msg);
+	}
 
-	return tile;
+	{
+		protocol::message msg;
+		msg.set_msg(protocol::FORCE_MOVE);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_new_col(target->col);
+		msg.mutable_pawns(0)->set_new_row(target->row);
+		server.WriteAll(msg);
+	}
+
+	bool hp = target->has_power;
+	pawn->force_move(target, server.game_state);
+
+	if(hp) {
+		protocol::message msg;
+		msg.set_msg(protocol::UPDATE);
+
+		msg.add_pawns();
+		pawn->CopyToProto(msg.mutable_pawns(0), true);
+
+		server.WriteAll(msg);
+	}
+
+	return true;
 }
 
 ClientGameState::ClientGameState(Client &client) : client(client) {}
@@ -129,20 +173,4 @@ void ClientGameState::add_animator(TileAnimators::Animator *animator) {
 
 void ClientGameState::add_animator(Animators::Generic *animator) {
 	client.add_animator(animator);
-}
-
-Tile *ClientGameState::teleport_hack(pawn_ptr pawn) {
-	assert(power_rand_vals.size() == 2);
-
-	int col = power_rand_vals[0];
-	int row = power_rand_vals[1];
-
-	Tile *tile = tile_at(col, row);
-	assert(tile && !tile->pawn);
-
-	pawn->last_tile = pawn->cur_tile;
-	pawn->last_tile->render_pawn = pawn;
-	pawn->teleport_time = SDL_GetTicks();
-
-	return tile;
 }
