@@ -80,13 +80,8 @@ static bool increase_range(pawn_ptr pawn, GameState *) {
 	return false;
 }
 
-static bool hover(pawn_ptr pawn, GameState *) {
-	if(pawn->flags & PWR_CLIMB) {
-		return false;
-	}
-
-	pawn->flags |= PWR_CLIMB;
-	return true;
+static bool hover(pawn_ptr pawn, GameState *state) {
+	return state->grant_upgrade(pawn, PWR_CLIMB);
 }
 
 static bool elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, GameState *state) {
@@ -145,22 +140,12 @@ static bool dig_fs(pawn_ptr pawn, GameState *state) {
 	return dig_tiles(pawn->fs_tiles(), pawn, state);
 }
 
-static bool shield(pawn_ptr pawn, GameState *) {
-	if(pawn->flags & PWR_SHIELD) {
-		return false;
-	}
-
-	pawn->flags |= PWR_SHIELD;
-	return true;
+static bool shield(pawn_ptr pawn, GameState *state) {
+	return state->grant_upgrade(pawn, PWR_SHIELD);
 }
 
-static bool invisibility(pawn_ptr pawn, GameState *) {
-	if (pawn->flags & PWR_INVISIBLE) {
-		return false;
-	}
-
-	pawn->flags |= PWR_INVISIBLE;
-	return true;
+static bool invisibility(pawn_ptr pawn, GameState *state) {
+	return state->grant_upgrade(pawn, PWR_INVISIBLE);
 }
 
 static bool purify(Tile::List tiles, pawn_ptr pawn, GameState *state) {
@@ -319,13 +304,8 @@ static bool landing_pad(pawn_ptr pawn, GameState *) {
 	return true;
 }
 
-static bool infravision(pawn_ptr pawn, GameState *) {
-	if (pawn->flags & PWR_INFRAVISION) {
-		return false;
-	}
-
-	pawn->flags |= PWR_INFRAVISION;
-	return true;
+static bool infravision(pawn_ptr pawn, GameState *state) {
+	return state->grant_upgrade(pawn, PWR_INFRAVISION);
 }
 
 static bool black_hole(pawn_ptr pawn, GameState *state) {

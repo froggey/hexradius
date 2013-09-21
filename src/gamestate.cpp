@@ -108,6 +108,9 @@ void GameState::add_animator(Animators::Generic *ani) {
 bool GameState::teleport_hack(pawn_ptr) {
 	return true;
 }
+bool GameState::grant_upgrade(pawn_ptr, uint32_t) {
+	return true;
+}
 void GameState::add_power_notification(pawn_ptr, int) {
 }
 
@@ -179,6 +182,15 @@ void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
 	}
 }
 
+bool ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
+	if(pawn->flags & upgrade) {
+		return false;
+	}
+	pawn->flags |= upgrade;
+	server.update_one_pawn(pawn);
+	return false;
+}
+
 ClientGameState::ClientGameState(Client &client) : client(client) {}
 
 void ClientGameState::add_animator(TileAnimators::Animator *animator) {
@@ -188,4 +200,3 @@ void ClientGameState::add_animator(TileAnimators::Animator *animator) {
 		client.current_animator = animator;
 	}
 }
-
