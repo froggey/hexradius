@@ -157,13 +157,7 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 	pawn->force_move(target, server.game_state);
 
 	if(hp) {
-		protocol::message msg;
-		msg.set_msg(protocol::UPDATE);
-
-		msg.add_pawns();
-		pawn->CopyToProto(msg.mutable_pawns(0), true);
-
-		server.WriteAll(msg);
+		server.update_one_pawn(pawn);
 	}
 
 	return true;

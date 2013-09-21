@@ -434,13 +434,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 	pawn->force_move(target, game_state);
 
 	if(hp) {
-		protocol::message msg;
-		msg.set_msg(protocol::UPDATE);
-
-		msg.add_pawns();
-		pawn->CopyToProto(msg.mutable_pawns(0), true);
-
-		WriteAll(msg);
+		update_one_pawn(pawn);
 	}
 
 }
@@ -543,13 +537,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			WriteAll(msg);
 
 			if(hp && !pawn->destroyed()) {
-				protocol::message msg;
-				msg.set_msg(protocol::UPDATE);
-
-				msg.add_pawns();
-				pawn->CopyToProto(msg.mutable_pawns(0), true);
-
-				WriteAll(msg);
+				update_one_pawn(pawn);
 			}
 
 			NextTurn();
@@ -568,13 +556,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			WriteAll(msg);
 
 			if(!pawn->destroyed()) {
-				protocol::message update;
-				update.set_msg(protocol::UPDATE);
-
-				update.add_pawns();
-				pawn->CopyToProto(update.mutable_pawns(0), true);
-
-				WriteAll(update);
+				update_one_pawn(pawn);
 			}
 
 			client->WriteBasic(protocol::OK);
@@ -594,4 +576,15 @@ Server::Client *Server::get_client(uint16_t id) {
 	}
 
 	return NULL;
+}
+
+void Server::update_one_pawn(pawn_ptr pawn)
+{
+	protocol::message update;
+	update.set_msg(protocol::UPDATE);
+
+	update.add_pawns();
+	pawn->CopyToProto(update.mutable_pawns(0), true);
+
+	WriteAll(update);
 }

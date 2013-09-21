@@ -112,6 +112,9 @@ public:
 		bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
 
 		Server::Client *get_client(uint16_t id);
+
+	// Send an UPDATE message for one pawn.
+	void update_one_pawn(pawn_ptr pawn);
 };
 
 #endif /* !OR_NETWORK_HPP */
