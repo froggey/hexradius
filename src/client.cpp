@@ -627,7 +627,9 @@ void Client::DrawScreen() {
 			}
 
 			std::string text = (*p).name + " (";
-			if(my_colour == SPECTATE || my_colour == (*p).colour) {
+			if(visible_pawns == 0 && invisible_pawns == 0) {
+				text += "defeated";
+			} else if(my_colour == SPECTATE || my_colour == (*p).colour) {
 				text += to_string(visible_pawns + invisible_pawns);
 			} else {
 				text += to_string(visible_pawns);
