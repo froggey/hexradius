@@ -781,7 +781,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 
 		if(pawn == hpawn && pawn->colour == my_colour) {
 			frame = 10;
-		} else if(pawn->has_power()) {
+		} else if(!pawn->has_power()) {
 			frame = 0;
 		}
 
