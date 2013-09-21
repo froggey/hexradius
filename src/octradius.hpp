@@ -16,6 +16,7 @@
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/utility.hpp>
 
 #include "octradius.pb.h"
 
@@ -89,7 +90,7 @@ struct Tile {
 	void CopyToProto(protocol::tile *t);
 };
 
-class Pawn : public boost::enable_shared_from_this<Pawn> {
+class Pawn : public boost::enable_shared_from_this<Pawn>, boost::noncopyable {
 	private:
 		Tile::List &all_tiles;
 
@@ -111,31 +112,12 @@ class Pawn : public boost::enable_shared_from_this<Pawn> {
 			int power;
 			bool added;
 			float time;
-			
+
 			PowerMessage(int p, bool a) : power(p), added(a), time(2) {}
 		};
 		std::list<PowerMessage> power_messages;
 
-		Pawn(PlayerColour c, Tile::List &at, Tile *ct) : all_tiles(at) {
-			cur_tile = ct;
-
-			colour = c;
-			range = 0;
-			flags = 0;
-
-			last_tile = NULL;
-		}
-
-		Pawn(pawn_ptr pawn, Tile::List &at, Tile *ct) : all_tiles(at) {
-			cur_tile = ct;
-
-			colour = pawn->colour;
-			powers = pawn->powers;
-			range = pawn->range;
-			flags = pawn->flags;
-
-			last_tile = NULL;
-		}
+		Pawn(PlayerColour c, Tile::List &at, Tile *ct);
 
 		void destroy(destroy_type dt);
 		bool destroyed();

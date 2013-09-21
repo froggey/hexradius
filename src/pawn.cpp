@@ -5,6 +5,13 @@
 #include "octradius.pb.h"
 #include "client.hpp"
 
+Pawn::Pawn(PlayerColour c, Tile::List &at, Tile *ct) :
+	all_tiles(at), cur_tile(ct), colour(c),
+	range(0), flags(0), destroyed_by(OK),
+	last_tile(0), teleport_time(0)
+{
+}
+
 void Pawn::destroy(destroy_type dt) {
 	destroyed_by = dt;
 
