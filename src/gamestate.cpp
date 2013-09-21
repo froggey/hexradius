@@ -99,8 +99,12 @@ void GameState::destroy_team_pawns(PlayerColour colour) {
 	}
 }
 
-void GameState::add_animator(TileAnimators::Animator *) {}
-void GameState::add_animator(Animators::Generic *) {}
+void GameState::add_animator(TileAnimators::Animator *ani) {
+	delete ani;
+}
+void GameState::add_animator(Animators::Generic *ani) {
+	delete ani;
+}
 
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
