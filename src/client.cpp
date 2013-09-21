@@ -580,6 +580,54 @@ void Client::handle_message_game(const protocol::message &msg) {
 		pawn->last_tile = pawn->cur_tile;
 		pawn->last_tile->render_pawn = pawn;
 		pawn->teleport_time = SDL_GetTicks();
+	} else if(msg.msg() == protocol::TILE_ANIMATION) {
+		if(msg.animation_name() != "elevation") {
+			std::cerr << "Received unsupported animation " << msg.animation_name() << std::endl;
+			return;
+		}
+		bool got_delay_factor = false;
+		bool got_mode = false;
+		bool got_target_elevation = false;
+		float delay_factor = 0.0f;
+		TileAnimators::ElevationMode mode = TileAnimators::ABSOLUTE;
+		int target_elevation = -1;
+		for(int i = 0; i < msg.misc_size(); i++) {
+			if(msg.misc(i).key() == "delay-factor") {
+				got_delay_factor = true;
+				delay_factor = msg.misc(i).float_value();
+			} else if(msg.misc(i).key() == "mode") {
+				got_mode = true;
+				if(msg.misc(i).string_value() == "absolute") {
+					mode = TileAnimators::ABSOLUTE;
+				} else if(msg.misc(i).string_value() == "relative") {
+					mode = TileAnimators::RELATIVE;
+				} else {
+					std::cerr << "Recieved unsupported elevation animation mode " << msg.misc(i).string_value() << std::endl;
+					return;
+				}
+			} else if(msg.misc(i).key() == "target-elevation") {
+				got_target_elevation = true;
+				target_elevation = msg.misc(i).int_value();
+			} else {
+				std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
+				return;
+			}
+		}
+		if(!got_target_elevation || !got_delay_factor || !got_mode || msg.tiles_size() < 1) {
+			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
+			return;
+		}
+		Tile *center = game_state->tile_at(msg.tiles(0).col(), msg.tiles(0).row());
+		assert(center);
+		Tile::List tiles;
+		for(int i = 1; i < msg.tiles_size(); ++i) {
+			Tile *tile = game_state->tile_at(msg.tiles(i).col(), msg.tiles(i).row());
+			assert(tile);
+			tiles.push_back(tile);
+		}
+		if(!current_animator) {
+			current_animator = new TileAnimators::ElevationAnimator(tiles, center, delay_factor, mode, target_elevation);
+		}
 	} else if(msg.msg() == protocol::PARTICLE_ANIMATION) {
 		int tile_x = -1, tile_y = -1;
 		for(int i = 0; i < msg.misc_size(); i++) {

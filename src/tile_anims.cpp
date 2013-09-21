@@ -20,7 +20,7 @@ namespace TileAnimators {
 	}
 
 	ElevationAnimator::ElevationAnimator(Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation):
-		Animator(_tiles) {
+		Animator(_tiles), center(center), delay_factor(delay_factor), mode(mode), target_elevation(target_elevation) {
 		BOOST_FOREACH(Tile* t, tiles) {
 			if (!t->animating) {
 				int rx = (t->screen_x + t->height * TILE_HEIGHT_FACTOR) - (center->screen_x + center->height * TILE_HEIGHT_FACTOR);
@@ -69,4 +69,35 @@ namespace TileAnimators {
 
 		return did_stuff;
 	}
+}
+
+protocol::message TileAnimators::ElevationAnimator::serialize()
+{
+	protocol::message msg;
+	msg.set_msg(protocol::TILE_ANIMATION);
+	msg.set_animation_name("elevation");
+
+	center->CopyToProto(msg.add_tiles());
+	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); ++t) {
+		(*t)->CopyToProto(msg.add_tiles());
+	}
+
+	protocol::key_value *delay_factor_kv = msg.add_misc();
+	delay_factor_kv->set_key("delay-factor");
+	delay_factor_kv->set_float_value(delay_factor);
+	protocol::key_value *mode_kv = msg.add_misc();
+	mode_kv->set_key("mode");
+	switch(mode) {
+	case ABSOLUTE:
+		mode_kv->set_string_value("absolute");
+		break;
+	case RELATIVE:
+		mode_kv->set_string_value("relative");
+		break;
+	default: abort();
+	}
+	protocol::key_value *target_elevation_kv = msg.add_misc();
+	target_elevation_kv->set_key("target-elevation");
+	target_elevation_kv->set_int_value(target_elevation);
+	return msg;
 }

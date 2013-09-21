@@ -19,6 +19,7 @@ namespace TileAnimators {
 		// If false, the client will stop running & delete the animation.
 		virtual bool do_stuff() = 0;
 		virtual ~Animator();
+		virtual protocol::message serialize() = 0;
 	};
 
 	enum ElevationMode { ABSOLUTE, RELATIVE };
@@ -26,6 +27,12 @@ namespace TileAnimators {
 	struct ElevationAnimator: public Animator {
 		ElevationAnimator(Tile::List _tiles, Tile* center, float delay_factor, ElevationMode mode, int target_elevation);
 		virtual bool do_stuff();
+		virtual protocol::message serialize();
+
+		Tile *center;
+		float delay_factor;
+		ElevationMode mode;
+		int target_elevation;
 	};
 }
 

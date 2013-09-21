@@ -116,6 +116,12 @@ void GameState::add_power_notification(pawn_ptr, int) {
 
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
+void ServerGameState::add_animator(TileAnimators::Animator *ani) {
+	protocol::message msg = ani->serialize();
+	delete ani;
+	server.WriteAll(msg);
+}
+
 void ServerGameState::add_animator(Animators::Generic *ani) {
 	protocol::message msg = ani->serialize();
 	delete ani;
@@ -192,11 +198,3 @@ bool ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
 }
 
 ClientGameState::ClientGameState(Client &client) : client(client) {}
-
-void ClientGameState::add_animator(TileAnimators::Animator *animator) {
-	if(client.current_animator) {
-		delete animator;
-	} else {
-		client.current_animator = animator;
-	}
-}
