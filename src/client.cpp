@@ -520,10 +520,6 @@ void Client::handle_message_game(const protocol::message &msg) {
 					for (int i = num; i < old_num; i++)
 						pawn->power_messages.push_back(Pawn::PowerMessage(index, false));
 				}
-				else {
-					for (int i = old_num; i < num; i++)
-						pawn->power_messages.push_back(Pawn::PowerMessage(index, true));
-				}
 
 				if(index < 0 || index >= Powers::num_powers || num <= 0) {
 					continue;
@@ -611,6 +607,13 @@ void Client::handle_message_game(const protocol::message &msg) {
 		} else {
 			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
 		}
+	} else if(msg.msg() == protocol::ADD_POWER_NOTIFICATION) {
+		assert(msg.pawns_size() == 1);
+		pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+		assert(pawn);
+		pawn->power_messages.push_back(Pawn::PowerMessage(msg.pawns(0).has_use_power() ?
+								  msg.pawns(0).use_power() :
+								  -1, true));
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}
@@ -1069,7 +1072,7 @@ void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
 
-	bool hide = (pm.added && pawn->colour != my_colour);
+	bool hide = pm.power == -1 || (pm.added && pawn->colour != my_colour);
 
 	std::string str = hide ? "???" : Powers::powers[pm.power].name;
 	str = (pm.added ? "+ " : "- ") + str;

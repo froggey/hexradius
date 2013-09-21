@@ -108,6 +108,8 @@ void GameState::add_animator(Animators::Generic *ani) {
 bool GameState::teleport_hack(pawn_ptr) {
 	return true;
 }
+void GameState::add_power_notification(pawn_ptr, int) {
+}
 
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
@@ -165,6 +167,22 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 	}
 
 	return true;
+}
+
+void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
+	for(Server::client_set::iterator i = server.clients.begin(); i != server.clients.end(); i++) {
+		Server::Client::ptr client = *i;
+		if(client->colour == NOINIT) continue;
+		protocol::message msg;
+		msg.set_msg(protocol::ADD_POWER_NOTIFICATION);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+		if(client->colour == SPECTATE || client->colour == pawn->colour) {
+			msg.mutable_pawns(0)->set_use_power(power);
+		}
+		client->Write(msg);
+	}
 }
 
 ClientGameState::ClientGameState(Client &client) : client(client) {}

@@ -69,6 +69,7 @@ void Pawn::force_move(Tile *tile, GameState *state) {
 		tile->pawn->destroy(STOMP);
 	}
 
+	Tile *last_tile = cur_tile;
 	tile->pawn.swap(cur_tile->pawn);
 	cur_tile = tile;
 
@@ -84,13 +85,19 @@ void Pawn::force_move(Tile *tile, GameState *state) {
 		return;
 	}
 
+	maybe_step_on_mine(state);
+
 	if(tile->has_power) {
-		if(tile->power >= 0) {
+		if(tile->power >= 0 && !destroyed()) {
+			// BLEAGH.
+			// The move message is sent after this message, so pawn positions are wrong.
+			cur_tile = last_tile;
+			state->add_power_notification(shared_from_this(), tile->power);
+			cur_tile = tile;
 			AddPower(tile->power);
 		}
 		tile->has_power = false;
 	}
-	maybe_step_on_mine(state);
 }
 
 void Pawn::AddPower(int power) {

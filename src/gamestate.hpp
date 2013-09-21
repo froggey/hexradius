@@ -40,6 +40,7 @@ public:
 	virtual void add_animator(TileAnimators::Animator *animator);
 	virtual void add_animator(Animators::Generic *animator);
 	virtual bool teleport_hack(pawn_ptr pawn);
+	virtual void add_power_notification(pawn_ptr pawn, int power);
 };
 
 class ServerGameState : public GameState {
@@ -47,6 +48,7 @@ public:
 	ServerGameState(Server &server);
 	virtual void add_animator(Animators::Generic *animator);
 	virtual bool teleport_hack(pawn_ptr pawn);
+	virtual void add_power_notification(pawn_ptr pawn, int power);
 private:
 	Server &server;
 };
