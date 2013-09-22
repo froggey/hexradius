@@ -17,6 +17,7 @@
 #include "scenario.hpp"
 
 class ServerGameState;
+class Tile;
 
 class Server {
 	friend class ServerGameState;

@@ -16,6 +16,8 @@
 #include "gui.hpp"
 #include "menu.hpp"
 #include "gamestate.hpp"
+#include "tile.hpp"
+#include "pawn.hpp"
 
 const int EVENT_RDTIMER = 1;	// Redraw timer has fired
 const int EVENT_RETURN = 2;	// Client should return - i.e. leave button pressed

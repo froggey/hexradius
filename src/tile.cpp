@@ -1,5 +1,6 @@
 #include <boost/foreach.hpp>
 
+#include "tile.hpp"
 #include "octradius.hpp"
 #include "loadimage.hpp"
 

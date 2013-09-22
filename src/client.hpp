@@ -17,6 +17,7 @@
 #include "gui.hpp"
 #include "animator.hpp"
 #include "scenario.hpp"
+#include "pawn.hpp"
 
 class GameState;
 

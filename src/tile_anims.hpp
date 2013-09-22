@@ -2,11 +2,10 @@
 #define OR_TILE_ANIMS_HPP
 
 #include "octradius.hpp"
+#include "tile.hpp"
 
 #undef ABSOLUTE
 #undef RELATIVE
-
-class Client;
 
 namespace TileAnimators {
 	struct Animator {

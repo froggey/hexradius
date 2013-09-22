@@ -4,6 +4,8 @@
 #include <vector>
 #include <boost/utility.hpp>
 #include "octradius.hpp"
+#include "tile.hpp"
+#include "pawn.hpp"
 
 namespace TileAnimators { class Animator; }
 namespace Animators { class Generic; }
