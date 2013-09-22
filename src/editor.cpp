@@ -75,7 +75,7 @@ static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &)
 	
 	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end();)
 	{
-		std::map<Position,HexRadius::Map::Tile>::iterator d = ++t;
+		std::map<Position,HexRadius::Map::Tile>::iterator d = t++;
 		
 		if(d->second.pos.first >= width)
 		{
@@ -104,7 +104,7 @@ static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &)
 	
 	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end();)
 	{
-		std::map<Position,HexRadius::Map::Tile>::iterator d = ++t;
+		std::map<Position,HexRadius::Map::Tile>::iterator d = t++;
 		
 		if(d->second.pos.second >= height)
 		{
