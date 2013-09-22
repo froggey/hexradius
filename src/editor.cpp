@@ -7,26 +7,9 @@
 #include "fontstuff.hpp"
 #include "gui.hpp"
 #include "menu.hpp"
-#include "editor.hpp"
+#include "map.hpp"
 
-const int TILE_TYPE_NONE   = 0;
-const int TILE_TYPE_NORMAL = 1;
-const int TILE_TYPE_BROKEN = 2;
-const int TILE_TYPE_BHOLE  = 3;
-
-struct editor_tile
-{
-	int type;
-	int height;
-	int pawn_team;
-	int pad_team;
-	int mine_team;
-	
-	int screen_x;
-	int screen_y;
-	
-	editor_tile(): type(TILE_TYPE_NORMAL), height(0), pawn_team(0), pad_team(0), mine_team(0) {}
-};
+using HexRadius::Position;
 
 const unsigned int TOOLBAR_WIDTH  = 535;
 const unsigned int TOOLBAR_HEIGHT = 38;
@@ -35,19 +18,7 @@ static GUI::TextBox *mw_text;
 static GUI::TextBox *mh_text;
 static GUI::TextBox *mp_text;
 
-/* A vector of vectors containing editor_tile structures for each tile within
- * the map boundaries.
- *
- * Contains map_width elements in the first level and map_height in each second
- * level once resize_map has been called.
-*/
-
-static std::vector< std::vector<editor_tile> > tiles;
-
-/* Size of map, in tiles */
-
-static unsigned int map_width;
-static unsigned int map_height;
+static HexRadius::Map map;
 
 /* Screen size in pixels */
 
@@ -60,27 +31,33 @@ static unsigned int menu_bx, menu_by;
 static unsigned int menu_width, menu_height;
 static unsigned int menu_tx, menu_ty;
 
-static void resize_map(unsigned int width, unsigned int height)
+static unsigned int tile_x_pos(unsigned int tile_x, unsigned int tile_y, int tile_height)
 {
-	map_width  = width;
-	map_height = height;
-	
-	tiles.resize(map_width);
-	
-	for(std::vector< std::vector<editor_tile> >::iterator i = tiles.begin(); i != tiles.end(); ++i)
-	{
-		i->resize(map_height);
-	}
-	
+	return BOARD_OFFSET
+		+ TILE_WOFF * tile_x
+		+ (tile_y % 2) * TILE_ROFF
+		+ (-1 * tile_height) * TILE_HEIGHT_FACTOR;
+}
+
+static unsigned int tile_y_pos(unsigned int, unsigned int tile_y, int tile_height)
+{
+	return BOARD_OFFSET
+		+ TILE_HOFF * tile_y
+		+ TOOLBAR_HEIGHT
+		+ (-1 * tile_height) * TILE_HEIGHT_FACTOR;
+}
+
+static void map_resized()
+{
 	screen_width = std::max(
-		2 * BOARD_OFFSET + (map_width  - 1) * TILE_WOFF + TILE_WIDTH + TILE_ROFF,
+		2 * BOARD_OFFSET + (map.width() - 1) * TILE_WOFF + TILE_WIDTH + TILE_ROFF,
 		TOOLBAR_WIDTH
 	);
 	
-	screen_height = TOOLBAR_HEIGHT + 2 * BOARD_OFFSET + (map_height - 1) * TILE_HOFF + TILE_HEIGHT;
+	screen_height = TOOLBAR_HEIGHT + 2 * BOARD_OFFSET + (map.height() - 1) * TILE_HOFF + TILE_HEIGHT;
 	
-	mw_text->set_text(to_string(map_width));
-	mh_text->set_text(to_string(map_height));
+	mw_text->set_text(to_string(map.width()));
+	mh_text->set_text(to_string(map.height()));
 	
 	ImgStuff::set_mode(screen_width, screen_height);
 }
@@ -94,120 +71,74 @@ static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &)
 {
 	int width = atoi(text.text.c_str());
 	
-	if(width > 0 && width < 256)
+	/* Delete any tiles which are beyond the new right edge */
+	
+	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end();)
 	{
-		resize_map(width, map_height);
+		std::map<Position,HexRadius::Map::Tile>::iterator d = ++t;
+		
+		if(d->second.pos.first >= width)
+		{
+			map.tiles.erase(d);
+		}
 	}
+	
+	/* Populate any new columns with blank tiles */
+	
+	for(int x = map.width(); x < width; ++x)
+	{
+		for(unsigned int y = 0; y < map.width(); ++y)
+		{
+			map.touch_tile(Position(x, y));
+		}
+	}
+	
+	map_resized();
 }
 
 static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &)
 {
 	int height = atoi(text.text.c_str());
 	
-	if(height > 0 && height < 256)
+	/* Delete any tiles which are beyond the new bottom edge */
+	
+	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end();)
 	{
-		resize_map(map_width, height);
+		std::map<Position,HexRadius::Map::Tile>::iterator d = ++t;
+		
+		if(d->second.pos.second >= height)
+		{
+			map.tiles.erase(d);
+		}
 	}
+	
+	/* Populate any new rows with blank tiles */
+	
+	for(int y = map.height(); y < height; ++y)
+	{
+		for(unsigned int x = 0; x < map.width(); ++x)
+		{
+			map.touch_tile(Position(x, y));
+		}
+	}
+	
+	map_resized();
 }
 
 static void load_map_cb(const GUI::TextButton &, const SDL_Event &)
 {
 	std::string path = "scenario/" + mp_text->text;
 	
-	FILE *fh = fopen(path.c_str(), "rb");
-	if(!fh)
+	try {
+		map.load(path);
+	}
+	catch(const std::runtime_error &e)
 	{
-		fprintf(stderr, "Could not read %s\n", path.c_str());
+		fprintf(stderr, "%s\n", e.what());
 		return;
 	}
 	
-	std::vector<hr_map_cmd> cmds;
-	hr_map_cmd cmd;
-	
-	int new_w = 0;
-	int new_h = 0;
-	
-	while(fread(&cmd, sizeof(cmd), 1, fh))
-	{
-		cmds.push_back(cmd);
-	}
-	
-	for(std::vector<hr_map_cmd>::iterator cmd = cmds.begin(); cmd != cmds.end(); ++cmd)
-	{
-		if(cmd->cmd == HR_MAP_CMD_TILE)
-		{
-			new_w = std::max(new_w, (int)(cmd->x + 1));
-			new_h = std::max(new_h, (int)(cmd->y + 1));
-		}
-	}
-	
-	tiles.clear();
-	resize_map(new_w, new_h);
-	
-	for(unsigned int x = 0; x < map_width; ++x)
-	{
-		for(unsigned int y = 0; y < map_height; ++y)
-		{
-			tiles[x][y].type = TILE_TYPE_NONE;
-		}
-	}
-	
-	for(std::vector<hr_map_cmd>::iterator cmd = cmds.begin(); cmd != cmds.end(); ++cmd)
-	{
-		if(cmd->x >= map_width || cmd->y >= map_height)
-		{
-			printf("Ignoring command %d with bad position %d,%d\n", (int)(cmd->cmd), (int)(cmd->x), (int)(cmd->y));
-			continue;
-		}
-		
-		switch(cmd->cmd)
-		{
-			case HR_MAP_CMD_TILE:
-			{
-				tiles[cmd->x][cmd->y].type   = TILE_TYPE_NORMAL;
-				tiles[cmd->x][cmd->y].height = std::max(-2, std::min(2, (int)(cmd->extra)));
-				break;
-			}
-			
-			case HR_MAP_CMD_BREAK:
-			{
-				tiles[cmd->x][cmd->y].type = TILE_TYPE_BROKEN;
-				break;
-			}
-			
-			case HR_MAP_CMD_BHOLE:
-			{
-				tiles[cmd->x][cmd->y].type = TILE_TYPE_BHOLE;
-				break;
-			}
-			
-			case HR_MAP_CMD_PAWN:
-			{
-				tiles[cmd->x][cmd->y].pawn_team = cmd->extra + 1;
-				break;
-			}
-			
-			case HR_MAP_CMD_PAD:
-			{
-				tiles[cmd->x][cmd->y].pad_team = cmd->extra + 1;
-				break;
-			}
-			
-			case HR_MAP_CMD_MINE:
-			{
-				tiles[cmd->x][cmd->y].mine_team = cmd->extra + 1;
-				break;
-			}
-			
-			default:
-			{
-				printf("Ignoring unknown command %d\n", (int)(cmd->cmd));
-				break;
-			}
-		}
-	}
-	
-	fclose(fh);
+	map_resized();
 	
 	printf("Loaded map from %s\n", path.c_str());
 }
@@ -216,64 +147,38 @@ static void save_map_cb(const GUI::TextButton &, const SDL_Event &)
 {
 	std::string path = "scenario/" + mp_text->text;
 	
-	FILE *fh = fopen(path.c_str(), "wb");
-	if(!fh)
+	try {
+		map.save(path);
+	}
+	catch(const std::runtime_error &e)
 	{
-		fprintf(stderr, "Could not write to %s\n", path.c_str());
+		fprintf(stderr, "%s\n", e.what());
 		return;
 	}
 	
-	for(unsigned int x = 0; x < map_width; ++x)
-	{
-		for(unsigned int y = 0; y < map_width; ++y)
-		{
-			if(tiles[x][y].type != TILE_TYPE_NONE)
-			{
-				hr_map_cmd cmd(HR_MAP_CMD_TILE, x, y, tiles[x][y].height);
-				fwrite(&cmd, sizeof(cmd), 1, fh);
-			}
-			
-			if(tiles[x][y].type == TILE_TYPE_BROKEN)
-			{
-				hr_map_cmd cmd(HR_MAP_CMD_BREAK, x, y);
-				fwrite(&cmd, sizeof(cmd), 1, fh);
-			}
-			else if(tiles[x][y].type == TILE_TYPE_BHOLE)
-			{
-				hr_map_cmd cmd(HR_MAP_CMD_BHOLE, x, y);
-				fwrite(&cmd, sizeof(cmd), 1, fh);
-			}
-			
-			if(tiles[x][y].pawn_team)
-			{
-				hr_map_cmd cmd(HR_MAP_CMD_PAWN, x, y, tiles[x][y].pawn_team - 1);
-				fwrite(&cmd, sizeof(cmd), 1, fh);
-			}
-			
-			if(tiles[x][y].pad_team)
-			{
-				hr_map_cmd cmd(HR_MAP_CMD_PAD, x, y, tiles[x][y].pad_team - 1);
-				fwrite(&cmd, sizeof(cmd), 1, fh);
-			}
-			
-			if(tiles[x][y].mine_team)
-			{
-				hr_map_cmd cmd(HR_MAP_CMD_MINE, x, y, tiles[x][y].mine_team - 1);
-				fwrite(&cmd, sizeof(cmd), 1, fh);
-			}
-		}
-	}
-	
-	fclose(fh);
-	
 	printf("Saved map to %s\n", path.c_str());
+}
+
+static const SDL_Color active_text_colour = { 255, 0,   0, 0 };
+static const SDL_Color normal_text_colour = { 0,   255, 0, 0 };
+
+static void _draw_team_list(TTF_Font *font, int fh, SDL_Rect &rect, bool has, int is)
+{
+	FontStuff::BlitText(screen, rect, font, (has ? active_text_colour : normal_text_colour), "None");
+	rect.y += fh;
+	
+	for(int i = 0; i < 6; ++i)
+	{
+		FontStuff::BlitText(screen, rect, font, (has && is == i ? active_text_colour : normal_text_colour), std::string("Team " + to_string(i + 1)).c_str());
+		rect.y += fh;
+	}
 }
 
 static void redraw()
 {
 	/* Load images */
 	
-	SDL_Surface *tile              = ImgStuff::GetImage("graphics/hextile.png");
+	SDL_Surface *tile_img          = ImgStuff::GetImage("graphics/hextile.png");
 	SDL_Surface *smashed_tile      = ImgStuff::GetImage("graphics/hextile-broken.png");
 	SDL_Surface *tint_tile         = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
 	SDL_Surface *smashed_tint_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,100,0));
@@ -296,62 +201,61 @@ static void redraw()
 	
 	/* Draw the tiles/pawns */
 	
-	for(unsigned int tx = 0; tx < tiles.size(); ++tx)
+	for(unsigned int tx = 0; tx < map.width(); ++tx)
 	{
-		for(unsigned int ty = 0; ty < tiles[tx].size(); ++ty)
+		for(unsigned int ty = 0; ty < map.height(); ++ty)
 		{
+			HexRadius::Map::Tile *tile = map.get_tile(Position(tx, ty));
+			if(!tile)
+			{
+				continue;
+			}
+			
 			SDL_Rect rect;
-			rect.x = BOARD_OFFSET + TILE_WOFF * tx + ((ty % 2) * TILE_ROFF);
-			rect.y = BOARD_OFFSET + TILE_HOFF * ty + TOOLBAR_HEIGHT;
+			rect.x = tile_x_pos(tx, ty, tile->height);
+			rect.y = tile_y_pos(tx, ty, tile->height);
 			rect.w = rect.h = 0;
-			
-			rect.x += (-1 * tiles[tx][ty].height) * TILE_HEIGHT_FACTOR;
-			rect.y += (-1 * tiles[tx][ty].height) * TILE_HEIGHT_FACTOR;
-			
-			tiles[tx][ty].screen_x = rect.x;
-			tiles[tx][ty].screen_y = rect.y;
 			
 			bool highlight = (menu_open && menu_tx == tx && menu_ty == ty);
 			
-			if(tiles[tx][ty].type == TILE_TYPE_BROKEN)
+			if(tile->type == HexRadius::Map::Tile::BROKEN)
 			{
 				ensure_SDL_BlitSurface(highlight ? smashed_tint_tile : smashed_tile, NULL, screen, &rect);
 			}
-			else if(tiles[tx][ty].type != TILE_TYPE_NONE)
-			{
-				ensure_SDL_BlitSurface(highlight ? tint_tile : tile, NULL, screen, &rect);
+			else{
+				ensure_SDL_BlitSurface(highlight ? tint_tile : tile_img, NULL, screen, &rect);
 			}
 			
-			if(tiles[tx][ty].type == TILE_TYPE_BHOLE)
+			if(tile->type == HexRadius::Map::Tile::BHOLE)
 			{
 				ensure_SDL_BlitSurface(blackhole, NULL, screen, &rect);
 			}
 			
-			if(tiles[tx][ty].mine_team)
+			if(tile->has_mine)
 			{
 				SDL_Rect s;
 				s.x = 0;
-				s.y = (tiles[tx][ty].mine_team - 1) * 50;
+				s.y = tile->mine_colour * 50;
 				s.w = s.h = 50;
 				
 				ensure_SDL_BlitSurface(mine, &s, screen, &rect);
 			}
 			
-			if(tiles[tx][ty].pad_team)
+			if(tile->has_landing_pad)
 			{
 				SDL_Rect s;
 				s.x = 0;
-				s.y = (tiles[tx][ty].pad_team - 1) * 50;
+				s.y = tile->landing_pad_colour * 50;
 				s.w = s.h = 50;
 				
 				ensure_SDL_BlitSurface(landing_pad, &s, screen, &rect);
 			}
 			
-			if(tiles[tx][ty].pawn_team)
+			if(tile->has_pawn)
 			{
 				SDL_Rect s;
 				s.x = 0;
-				s.y = (tiles[tx][ty].pawn_team - 1) * 50;
+				s.y = tile->pawn_colour * 50;
 				s.w = s.h = 50;
 				
 				ensure_SDL_BlitSurface(pawns, &s, screen, &rect);
@@ -363,24 +267,23 @@ static void redraw()
 	
 	if(menu_open)
 	{
-		int tile_type   = tiles[menu_tx][menu_ty].type;
-		int tile_height = tiles[menu_tx][menu_ty].height;
+		HexRadius::Map::Tile *tile = map.get_tile(Position(menu_tx, menu_ty));
 		
 		/* Calculate the size of the menu area */
 		
 		int menu_w = strlen("Black hole");
 		int menu_h = 6;
 		
-		if(tiles[menu_tx][menu_ty].type)
+		if(tile)
 		{
 			menu_w += strlen(" | Height");
 			menu_h += 1;
-		}
-		
-		if(tiles[menu_tx][menu_ty].type == TILE_TYPE_NORMAL)
-		{
-			menu_w += strlen(" | Spawn  | Landing pad  |       ");
-			menu_h += 2;
+			
+			if(tile->type == HexRadius::Map::Tile::NORMAL)
+			{
+				menu_w += strlen(" | Spawn  | Landing pad  |       ");
+				menu_h += 2;
+			}
 		}
 		
 		menu_width  = menu_w * fw;
@@ -390,9 +293,6 @@ static void redraw()
 		menu_by = std::min(menu_by, screen_height - menu_height);
 		
 		SDL_Rect rect = { menu_bx, menu_by, menu_width, menu_height };
-		
-		SDL_Color active_text_colour = { 255, 0,   0, 0 };
-		SDL_Color normal_text_colour = { 0,   255, 0, 0 };
 		
 		ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178);
 		
@@ -404,20 +304,20 @@ static void redraw()
 			FontStuff::BlitText(screen, t_rect, bfont, normal_text_colour, "Tile type");
 			t_rect.y += 2 * fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_type == TILE_TYPE_NONE ? active_text_colour : normal_text_colour), "None");
+			FontStuff::BlitText(screen, t_rect, font, (!tile ? active_text_colour : normal_text_colour), "None");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_type == TILE_TYPE_NORMAL ? active_text_colour : normal_text_colour), "Normal");
+			FontStuff::BlitText(screen, t_rect, font, (tile && tile->type == HexRadius::Map::Tile::NORMAL ? active_text_colour : normal_text_colour), "Normal");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_type == TILE_TYPE_BROKEN ? active_text_colour : normal_text_colour), "Broken");
+			FontStuff::BlitText(screen, t_rect, font, (tile && tile->type == HexRadius::Map::Tile::BROKEN ? active_text_colour : normal_text_colour), "Broken");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_type == TILE_TYPE_BHOLE ? active_text_colour : normal_text_colour), "Black hole");
+			FontStuff::BlitText(screen, t_rect, font, (tile && tile->type == HexRadius::Map::Tile::BHOLE ? active_text_colour : normal_text_colour), "Black hole");
 			t_rect.y += fh;
 		}
 		
-		if(tile_type)
+		if(tile)
 		{
 			SDL_Rect t_rect = rect;
 			t_rect.x += fw * strlen("Tile type  ");
@@ -436,23 +336,23 @@ static void redraw()
 			FontStuff::BlitText(screen, t_rect, bfont, normal_text_colour, "Height");
 			t_rect.y += 2 * fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_height == 2 ? active_text_colour : normal_text_colour), "+ 2");
+			FontStuff::BlitText(screen, t_rect, font, (tile->height == 2 ? active_text_colour : normal_text_colour), "+ 2");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_height == 1 ? active_text_colour : normal_text_colour), "+ 1");
+			FontStuff::BlitText(screen, t_rect, font, (tile->height == 1 ? active_text_colour : normal_text_colour), "+ 1");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_height == 0 ? active_text_colour : normal_text_colour), "  0");
+			FontStuff::BlitText(screen, t_rect, font, (tile->height == 0 ? active_text_colour : normal_text_colour), "  0");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_height == -1 ? active_text_colour : normal_text_colour), "- 1");
+			FontStuff::BlitText(screen, t_rect, font, (tile->height == -1 ? active_text_colour : normal_text_colour), "- 1");
 			t_rect.y += fh;
 			
-			FontStuff::BlitText(screen, t_rect, font, (tile_height == -2 ? active_text_colour : normal_text_colour), "- 2");
+			FontStuff::BlitText(screen, t_rect, font, (tile->height == -2 ? active_text_colour : normal_text_colour), "- 2");
 			t_rect.y += fh;
 		}
 		
-		if(tile_type == TILE_TYPE_NORMAL)
+		if(tile && tile->type == HexRadius::Map::Tile::NORMAL)
 		{
 			SDL_Rect t_rect = rect;
 			t_rect.x += fw * strlen("Tile type  | Height ");
@@ -471,11 +371,7 @@ static void redraw()
 			FontStuff::BlitText(screen, t_rect, bfont, normal_text_colour, "Spawn");
 			t_rect.y += 2 * fh;
 			
-			for(int i = 0; i <= 6; ++i)
-			{
-				FontStuff::BlitText(screen, t_rect, font, (tiles[menu_tx][menu_ty].pawn_team == i ? active_text_colour : normal_text_colour), (i == 0 ? "None" : std::string("Team " + to_string(i)).c_str()));
-				t_rect.y += fh;
-			}
+			_draw_team_list(font, fh, t_rect, tile->has_pawn, tile->pawn_colour);
 			
 			/* Landing pad */
 			
@@ -485,11 +381,7 @@ static void redraw()
 			FontStuff::BlitText(screen, t_rect, bfont, normal_text_colour, "Landing pad");
 			t_rect.y += 2 * fh;
 			
-			for(int i = 0; i <= 6; ++i)
-			{
-				FontStuff::BlitText(screen, t_rect, font, (tiles[menu_tx][menu_ty].pad_team == i ? active_text_colour : normal_text_colour), (i == 0 ? "None" : std::string("Team " + to_string(i)).c_str()));
-				t_rect.y += fh;
-			}
+			_draw_team_list(font, fh, t_rect, tile->has_landing_pad, tile->landing_pad_colour);
 			
 			/* Mine */
 			
@@ -499,44 +391,42 @@ static void redraw()
 			FontStuff::BlitText(screen, t_rect, bfont, normal_text_colour, "Mine");
 			t_rect.y += 2 * fh;
 			
-			for(int i = 0; i <= 6; ++i)
-			{
-				FontStuff::BlitText(screen, t_rect, font, (tiles[menu_tx][menu_ty].mine_team == i ? active_text_colour : normal_text_colour), (i == 0 ? "None" : std::string("Team " + to_string(i)).c_str()));
-				t_rect.y += fh;
-			}
+			_draw_team_list(font, fh, t_rect, tile->has_mine, tile->mine_colour);
 		}
 	}
 }
 
 static std::pair<int,int> tile_by_screen(int screen_x, int screen_y)
 {
-	SDL_Surface *tile = ImgStuff::GetImage("graphics/hextile.png");
-	ensure_SDL_LockSurface(tile);
+	SDL_Surface *tile_img = ImgStuff::GetImage("graphics/hextile.png");
+	ensure_SDL_LockSurface(tile_img);
 	
-	for(int y = map_height - 1; y >= 0; --y)
+	for(int y = map.height() - 1; y >= 0; --y)
 	{
-		for(int x = map_width - 1; x >= 0; --x)
+		for(int x = map.width() - 1; x >= 0; --x)
 		{
-			int tx = tiles[x][y].screen_x;
-			int ty = tiles[x][y].screen_y;
+			HexRadius::Map::Tile *tile = map.get_tile(Position(x, y));
+			
+			int tx = tile_x_pos(x, y, tile ? tile->height : 0);
+			int ty = tile_y_pos(x, y, tile ? tile->height : 0);
 			
 			if(tx <= screen_x && tx + (int)TILE_WIDTH > screen_x && ty <= screen_y && ty + (int)TILE_HEIGHT > screen_y)
 			{
 				Uint8 alpha, blah;
-				Uint32 pixel = ImgStuff::GetPixel(tile, screen_x - tx, screen_y - ty);
+				Uint32 pixel = ImgStuff::GetPixel(tile_img, screen_x - tx, screen_y - ty);
 				
-				SDL_GetRGBA(pixel, tile->format, &blah, &blah, &blah, &alpha);
+				SDL_GetRGBA(pixel, tile_img->format, &blah, &blah, &blah, &alpha);
 				
 				if(alpha)
 				{
-					SDL_UnlockSurface(tile);
+					SDL_UnlockSurface(tile_img);
 					return std::make_pair(x, y);
 				}
 			}
 		}
 	}
 	
-	SDL_UnlockSurface(tile);
+	SDL_UnlockSurface(tile_img);
 	return std::make_pair(-1, -1);
 }
 
@@ -607,21 +497,29 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 
 				int row = (mouse_y - menu_by) / fh;
 
+				/* Pointer to the Tile that the menu was opened
+				 * on. Will be NULL for tiles of type "None".
+				*/
+				HexRadius::Map::Tile *tile = map.get_tile(Position(menu_tx, menu_ty));
+
 				if((unsigned int)mouse_x < menu_bx + fw * strlen("Black hole") &&
 				   row >= 2 && row <= 5)
 				{
-					tiles[menu_tx][menu_ty].type = row - 2;
-					
-					if(tiles[menu_tx][menu_ty].type == TILE_TYPE_NONE)
+					if(row == 2)
 					{
-						tiles[menu_tx][menu_ty].height    = 0;
+						map.tiles.erase(Position(menu_tx, menu_ty));
 					}
-					
-					if(tiles[menu_tx][menu_ty].type != TILE_TYPE_NORMAL)
-					{
-						tiles[menu_tx][menu_ty].pawn_team = 0;
-						tiles[menu_tx][menu_ty].pad_team  = 0;
-						tiles[menu_tx][menu_ty].mine_team = 0;
+					else{
+						HexRadius::Map::Tile *tile = map.touch_tile(Position(menu_tx, menu_ty));
+						
+						tile->type = (HexRadius::Map::Tile::Type)(row - 3);
+						
+						if(tile->type != HexRadius::Map::Tile::NORMAL)
+						{
+							tile->has_pawn        = false;
+							tile->has_landing_pad = false;
+							tile->has_mine        = false;
+						}
 					}
 					
 					menu_open = false;
@@ -630,27 +528,39 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 					(unsigned int)mouse_x < menu_bx + fw * strlen("Black hole | Height ") &&
 					row >= 2 && row <= 6)
 				{
-					tiles[menu_tx][menu_ty].height = -1 * (row - 4);
+					tile->height = -1 * (row - 4);
 					menu_open = false;
 				}
 				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole | Height |") &&
 					(unsigned int)mouse_x < menu_bx + fw * strlen("Black hole | Height | Spawn  ") &&
 					row >= 2)
 				{
-					tiles[menu_tx][menu_ty].pawn_team = row - 2;
+					if((tile->has_pawn = row > 2))
+					{
+						tile->pawn_colour = (PlayerColour)(row - 3);
+					}
+					
 					menu_open = false;
 				}
 				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole | Height | Spawn  |") &&
 					(unsigned int)mouse_x < menu_bx + fw * strlen("Black hole | Height | Spawn  | Landing pad ") &&
 					row >= 2)
 				{
-					tiles[menu_tx][menu_ty].pad_team = row - 2;
+					if((tile->has_landing_pad = row > 2))
+					{
+						tile->landing_pad_colour = (PlayerColour)(row - 3);
+					}
+					
 					menu_open = false;
 				}
 				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole | Height | Spawn  | Landing pad |") &&
 					row >= 2)
 				{
-					tiles[menu_tx][menu_ty].mine_team = row - 2;
+					if((tile->has_mine = row > 2))
+					{
+						tile->mine_colour = (PlayerColour)(row - 3);
+					}
+					
 					menu_open = false;
 				}
 			}

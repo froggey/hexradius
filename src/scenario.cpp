@@ -5,7 +5,9 @@
 #include "scenario.hpp"
 #include "powers.hpp"
 #include "gamestate.hpp"
-#include "editor.hpp"
+#include "map.hpp"
+
+using HexRadius::Position;
 
 Scenario::Scenario(Server &server) :
 	game_state(0), server(&server)
@@ -31,81 +33,41 @@ void Scenario::load_file(std::string filename) {
 		new GameState;
 	colours.clear();
 
-	FILE *fh = fopen(filename.c_str(), "rb");
-	if(!fh)
-	{
-		throw std::runtime_error("Unable to open scenario file");
-	}
+	HexRadius::Map map;
+	map.load(filename);
 
-	hr_map_cmd cmd;
-	
-	while(fread(&cmd, sizeof(cmd), 1, fh))
+	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end(); ++t)
 	{
-		PlayerColour colour = (PlayerColour)(cmd.extra);
+		game_state->tiles.push_back(new Tile(t->second.pos.first, t->second.pos.second, t->second.height));
+		Tile *tile = game_state->tile_at(t->second.pos.first, t->second.pos.second);
 		
-		Tile *tile = game_state->tile_at(cmd.x, cmd.y);
-		
-		if(cmd.cmd != HR_MAP_CMD_TILE && !tile)
+		if(t->second.type == HexRadius::Map::Tile::BROKEN)
 		{
-			printf("Ignoring command %d with bad position %d,%d\n", (int)(cmd.cmd), (int)(cmd.x), (int)(cmd.y));
-			continue;
+			tile->smashed = true;
+		}
+		else if(t->second.type == HexRadius::Map::Tile::BHOLE)
+		{
+			tile->has_black_hole   = true;
+			tile->black_hole_power = 1;
 		}
 		
-		switch(cmd.cmd)
+		if(t->second.has_pawn)
 		{
-			case HR_MAP_CMD_TILE:
-			{
-				game_state->tiles.push_back(new Tile(cmd.x, cmd.y, cmd.extra));
-				break;
-			}
-			
-			case HR_MAP_CMD_BREAK:
-			{
-				tile->smashed = true;
-				break;
-			}
-			
-			case HR_MAP_CMD_BHOLE:
-			{
-				tile->has_black_hole   = true;
-				tile->black_hole_power = 1;
-				break;
-			}
-			
-			case HR_MAP_CMD_PAWN:
-			{
-				tile->pawn = pawn_ptr(new Pawn(colour, game_state->tiles, tile));
-				colours.insert(colour);
-				break;
-			}
-			
-			case HR_MAP_CMD_PAD:
-			{
-				tile->has_landing_pad    = true;
-				tile->landing_pad_colour = colour;
-				break;
-			}
-			
-			case HR_MAP_CMD_MINE:
-			{
-				tile->has_mine    = true;
-				tile->mine_colour = colour;
-				break;
-			}
-			
-			default:
-			{
-				printf("Ignoring unknown command %d\n", (int)(cmd.cmd));
-				break;
-			}
+			tile->pawn = pawn_ptr(new Pawn(t->second.pawn_colour, game_state->tiles, tile));
+			colours.insert(t->second.pawn_colour);
 		}
-	}
-	
-	fclose(fh);
-	
-	if(game_state->tiles.empty())
-	{
-		throw std::runtime_error(filename + ": No HR_MAP_CMD_TILE command used");
+		
+		if(t->second.has_landing_pad)
+		{
+			tile->has_landing_pad    = true;
+			tile->landing_pad_colour = t->second.landing_pad_colour;
+		}
+		
+		if(t->second.has_mine)
+		{
+			tile->has_mine    = true;
+			tile->mine_colour = t->second.mine_colour;
+		}
 	}
 }
 
