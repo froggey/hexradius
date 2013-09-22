@@ -199,7 +199,7 @@ bool ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
 	}
 	pawn->flags |= upgrade;
 	server.update_one_pawn(pawn);
-	return false;
+	return true;
 }
 
 bool ServerGameState::set_tile_height(Tile *tile, int height) {
