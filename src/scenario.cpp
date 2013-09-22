@@ -78,7 +78,8 @@ void Scenario::load_file(std::string filename) {
 			
 			case HR_MAP_CMD_BHOLE:
 			{
-				tile->has_black_hole = true;
+				tile->has_black_hole   = true;
+				tile->black_hole_power = 1;
 				break;
 			}
 			
@@ -150,6 +151,19 @@ void Scenario::load_proto(const protocol::message &msg) {
 
 	for(int i = 0; i < msg.tiles_size(); i++) {
 		game_state->tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
+		
+		Tile *tile = game_state->tile_at(msg.tiles(i).col(), msg.tiles(i).row());
+		
+		tile->smashed = msg.tiles(i).smashed();
+		
+		tile->has_mine    = msg.tiles(i).has_mine();
+		tile->mine_colour = (PlayerColour)(msg.tiles(i).mine_colour());
+		
+		tile->has_landing_pad    = msg.tiles(i).has_landing_pad();
+		tile->landing_pad_colour = (PlayerColour)(msg.tiles(i).landing_pad_colour());
+		
+		tile->has_black_hole   = msg.tiles(i).has_black_hole();
+		tile->black_hole_power = msg.tiles(i).black_hole_power();
 	}
 
 	for(int i = 0; i < msg.pawns_size(); i++) {
