@@ -501,7 +501,7 @@ static void redraw()
 			
 			for(int i = 0; i <= 6; ++i)
 			{
-				FontStuff::BlitText(screen, t_rect, font, (tiles[menu_tx][menu_ty].pad_team == i ? active_text_colour : normal_text_colour), (i == 0 ? "None" : std::string("Team " + to_string(i)).c_str()));
+				FontStuff::BlitText(screen, t_rect, font, (tiles[menu_tx][menu_ty].mine_team == i ? active_text_colour : normal_text_colour), (i == 0 ? "None" : std::string("Team " + to_string(i)).c_str()));
 				t_rect.y += fh;
 			}
 		}
