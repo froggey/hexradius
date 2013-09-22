@@ -2,6 +2,7 @@
 #define OR_POWERS_HPP
 
 #include <stdint.h>
+#include <boost/function.hpp>
 
 #include "octradius.hpp"
 
@@ -16,7 +17,10 @@ const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVIS
 namespace Powers {
 	struct Power {
 		const char *name;
-		bool (*func)(pawn_ptr, ServerGameState *);
+		// Acually use the power.
+		void (*func)(pawn_ptr, ServerGameState *);
+		// Verify that the power can be used and will do something.
+		boost::function<bool(pawn_ptr, ServerGameState *)> can_use;
 		int spawn_rate;
 
 		/* Executing pawn is guarenteed to not be destroyed by power.

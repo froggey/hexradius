@@ -113,12 +113,10 @@ void ServerGameState::add_animator(Animators::Generic *ani) {
 	server.WriteAll(msg);
 }
 
-bool ServerGameState::teleport_hack(pawn_ptr pawn)
+void ServerGameState::teleport_hack(pawn_ptr pawn)
 {
 	Tile::List targets = RandomTiles(tiles, 1, false, false, false, false);
-	if(targets.empty()) {
-		return false;
-	}
+	assert(!targets.empty());
 	Tile *target = *targets.begin();
 
 	// Play the teleport animation, then move the pawn.
@@ -135,11 +133,6 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 	}
 
 	move_pawn_to(pawn, target);
-
-	// Horrible hack alert, let UsePower know that the pawn has moved.
-	pawn->last_tile = target;
-
-	return true;
 }
 
 void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
@@ -172,21 +165,16 @@ void ServerGameState::use_power_notification(pawn_ptr pawn, int power) {
 	}
 }
 
-bool ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
-	if(pawn->flags & upgrade) {
-		return false;
-	}
+void ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
+	assert((pawn->flags & upgrade) == 0);
 	pawn->flags |= upgrade;
 	server.update_one_pawn(pawn);
-	return true;
 }
 
-bool ServerGameState::set_tile_height(Tile *tile, int height) {
-	bool ret = tile->SetHeight(height);
-	if(ret) {
-		server.update_one_tile(tile);
-	}
-	return ret;
+void ServerGameState::set_tile_height(Tile *tile, int height) {
+	bool tile_did_move = tile->SetHeight(height);
+	assert(tile_did_move);
+	server.update_one_tile(tile);
 }
 
 void ServerGameState::destroy_pawn(pawn_ptr target, Pawn::destroy_type reason, pawn_ptr)

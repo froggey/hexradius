@@ -116,29 +116,18 @@ bool Pawn::UsePower(int power, ServerGameState *state) {
 		return false;
 	}
 
-	Tile *last_tile = cur_tile;
-
-	if(!Powers::powers[power].func(shared_from_this(), state)) {
+	if(!Powers::powers[power].can_use(shared_from_this(), state)) {
 		return false;
 	}
+
+	state->use_power_notification(shared_from_this(), power);
+
+	Powers::powers[power].func(shared_from_this(), state);
 
 	if(p != powers.end() && --p->second == 0) {
 		powers.erase(p);
 	}
 
-	// Bleh, this happens when using the black hole. There's no
-	// way to pin the notification on a dead pawn yet.
-	if(destroyed()) return true;
-
-	// Horrible hack alert, teleport uses this to tell us that the pawn has moved.
-	if(this->last_tile) {
-		last_tile = this->last_tile;
-		this->last_tile = 0;
-	}
-
-	std::swap(cur_tile, last_tile);
-	state->use_power_notification(shared_from_this(), power);
-	std::swap(cur_tile, last_tile);
 	return true;
 }
 
