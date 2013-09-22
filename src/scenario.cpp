@@ -7,17 +7,6 @@
 #include "gamestate.hpp"
 #include "editor.hpp"
 
-static char *next_value(char *str) {
-	char *r = str+strcspn(str, "\t ");
-
-	if(r[0]) {
-		r[0] = '\0';
-		r += strspn(r+1, "\t ")+1;
-	}
-
-	return r;
-}
-
 Scenario::Scenario(Server &server) :
 	game_state(0), server(&server)
 {

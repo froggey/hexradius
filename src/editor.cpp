@@ -85,12 +85,12 @@ static void resize_map(unsigned int width, unsigned int height)
 	ImgStuff::set_mode(screen_width, screen_height);
 }
 
-static bool change_map_size_cb(const GUI::TextBox &text, const SDL_Event &event)
+static bool change_map_size_cb(const GUI::TextBox &, const SDL_Event &event)
 {
 	return isdigit(event.key.keysym.sym);
 }
 
-static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &event)
+static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &)
 {
 	int width = atoi(text.text.c_str());
 	
@@ -100,7 +100,7 @@ static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &event)
 	}
 }
 
-static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &event)
+static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &)
 {
 	int height = atoi(text.text.c_str());
 	
@@ -110,7 +110,7 @@ static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &event)
 	}
 }
 
-static void load_map_cb(const GUI::TextButton &btn, const SDL_Event &event)
+static void load_map_cb(const GUI::TextButton &, const SDL_Event &)
 {
 	std::string path = "scenario/" + mp_text->text;
 	
@@ -212,7 +212,7 @@ static void load_map_cb(const GUI::TextButton &btn, const SDL_Event &event)
 	printf("Loaded map from %s\n", path.c_str());
 }
 
-static void save_map_cb(const GUI::TextButton &btn, const SDL_Event &event)
+static void save_map_cb(const GUI::TextButton &, const SDL_Event &)
 {
 	std::string path = "scenario/" + mp_text->text;
 	
@@ -540,7 +540,7 @@ static std::pair<int,int> tile_by_screen(int screen_x, int screen_y)
 	return std::make_pair(-1, -1);
 }
 
-void editor_main(const GUI::TextButton &button, const SDL_Event &ign_event)
+void editor_main(const GUI::TextButton &, const SDL_Event &)
 {
 	/* Get size of a character in the menu */
 	
@@ -596,14 +596,19 @@ void editor_main(const GUI::TextButton &button, const SDL_Event &ign_event)
 		{
 			int mouse_x, mouse_y;
 			SDL_GetMouseState(&mouse_x, &mouse_y);
-			
-			if(menu_open && mouse_x >= menu_bx && mouse_x < menu_bx + menu_width && mouse_y >= menu_by && mouse_y < menu_by + menu_height)
+
+			if(menu_open &&
+			   (unsigned int)mouse_x >= menu_bx &&
+			   (unsigned int)mouse_x < menu_bx + menu_width &&
+			   (unsigned int)mouse_y >= menu_by &&
+			   (unsigned int)mouse_y < menu_by + menu_height)
 			{
 				/* Click within the menu boundaries */
-				
+
 				int row = (mouse_y - menu_by) / fh;
-				
-				if(mouse_x < menu_bx + fw * strlen("Black hole") && row >= 2 && row <= 5)
+
+				if((unsigned int)mouse_x < menu_bx + fw * strlen("Black hole") &&
+				   row >= 2 && row <= 5)
 				{
 					tiles[menu_tx][menu_ty].type = row - 2;
 					
@@ -621,22 +626,29 @@ void editor_main(const GUI::TextButton &button, const SDL_Event &ign_event)
 					
 					menu_open = false;
 				}
-				else if(mouse_x >= menu_bx + fw * strlen("Black hole |") && mouse_x < menu_bx + fw * strlen("Black hole | Height ") && row >= 2 && row <= 6)
+				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole |") &&
+					(unsigned int)mouse_x < menu_bx + fw * strlen("Black hole | Height ") &&
+					row >= 2 && row <= 6)
 				{
 					tiles[menu_tx][menu_ty].height = -1 * (row - 4);
 					menu_open = false;
 				}
-				else if(mouse_x >= menu_bx + fw * strlen("Black hole | Height |") && mouse_x < menu_bx + fw * strlen("Black hole | Height | Spawn  ") && row >= 2)
+				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole | Height |") &&
+					(unsigned int)mouse_x < menu_bx + fw * strlen("Black hole | Height | Spawn  ") &&
+					row >= 2)
 				{
 					tiles[menu_tx][menu_ty].pawn_team = row - 2;
 					menu_open = false;
 				}
-				else if(mouse_x >= menu_bx + fw * strlen("Black hole | Height | Spawn  |") && mouse_x < menu_bx + fw * strlen("Black hole | Height | Spawn  | Landing pad ") && row >= 2)
+				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole | Height | Spawn  |") &&
+					(unsigned int)mouse_x < menu_bx + fw * strlen("Black hole | Height | Spawn  | Landing pad ") &&
+					row >= 2)
 				{
 					tiles[menu_tx][menu_ty].pad_team = row - 2;
 					menu_open = false;
 				}
-				else if(mouse_x >= menu_bx + fw * strlen("Black hole | Height | Spawn  | Landing pad |") && row >= 2)
+				else if((unsigned int)mouse_x >= menu_bx + fw * strlen("Black hole | Height | Spawn  | Landing pad |") &&
+					row >= 2)
 				{
 					tiles[menu_tx][menu_ty].mine_team = row - 2;
 					menu_open = false;
