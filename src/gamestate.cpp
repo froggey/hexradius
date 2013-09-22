@@ -147,7 +147,7 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 		server.WriteAll(msg);
 	}
 
-	Tile *last_tile = pawn->cur_tile;
+	Tile *last_tile = target;
 
 	bool hp = target->has_power;
 	pawn->force_move(target, server.game_state);
