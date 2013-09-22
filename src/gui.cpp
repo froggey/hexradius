@@ -44,6 +44,11 @@ void GUI::poll(bool read_events) {
 		handle_event(event);
 	}
 
+	redraw();
+}
+
+void GUI::redraw()
+{
 	if(bgimg) {
 		SDL_Rect rect = {0,0,0,0};
 		SDL_Rect srect = rect;

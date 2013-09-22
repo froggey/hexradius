@@ -12,8 +12,9 @@
 #include "gui.hpp"
 #include "scenario.hpp"
 
-static bool running, submenu;
+bool running, submenu;
 
+void editor_main(const GUI::TextButton &button, const SDL_Event &event);
 static void options_main(const GUI::TextButton &button, const SDL_Event &event);
 
 static void main_join_cb(const GUI::TextButton &, const SDL_Event &) {
@@ -47,8 +48,9 @@ MainMenu::MainMenu() :
 
 	join_btn(gui, 332, 235, 135, 35, 1, "Join game", &main_join_cb),
 	host_btn(gui, 332, 280, 135, 35, 2, "Host game", &main_host_cb),
-	options_btn(gui, 332, 325, 135, 35, 3, "Options", &options_main),
-	quit_btn(gui, 332, 370, 135, 35, 4, "Quit", &quit_cb)
+	edit_btn(gui, 332, 325, 135, 35, 3, "Map editor", &editor_main),
+	options_btn(gui, 332, 370, 135, 35, 4, "Options", &options_main),
+	quit_btn(gui, 332, 415, 135, 35, 5, "Quit", &quit_cb)
 {
 	gui.set_bg_image(ImgStuff::GetImage("graphics/menu/background.png"));
 	gui.set_quit_callback(&app_quit_cb);
@@ -141,7 +143,7 @@ static void host_cb(const GUI::TextButton &, const SDL_Event &, HostMenu *menu) 
 		return;
 	}
 
-	Server server(port, scenario);
+	Server server(port, "scenario/" + scenario);
 
 	Client client("127.0.0.1", port);
 
@@ -181,7 +183,7 @@ HostMenu::HostMenu() :
 	port_input.set_input_callback(&port_input_filter);
 
 	scenario_label.align(GUI::RIGHT);
-	scenario_input.set_text("scenario/hex_2p.txt");
+	scenario_input.set_text("hex_2p");
 	scenario_input.set_enter_callback(boost::bind(host_textbox_enter, _1, _2, this));
 }
 

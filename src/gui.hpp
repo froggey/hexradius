@@ -217,6 +217,7 @@ public:
 	void set_quit_callback(callback_t callback);
 
 	void poll(bool read_events);
+	void redraw();
 	void handle_event(const SDL_Event &event);
 
 private:

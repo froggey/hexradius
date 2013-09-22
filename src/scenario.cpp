@@ -5,6 +5,7 @@
 #include "scenario.hpp"
 #include "powers.hpp"
 #include "gamestate.hpp"
+#include "editor.hpp"
 
 static char *next_value(char *str) {
 	char *r = str+strcspn(str, "\t ");
@@ -41,107 +42,80 @@ void Scenario::load_file(std::string filename) {
 		new GameState;
 	colours.clear();
 
-	std::fstream file(filename.c_str(), std::fstream::in);
-	if(!file.is_open()) {
+	FILE *fh = fopen(filename.c_str(), "rb");
+	if(!fh)
+	{
 		throw std::runtime_error("Unable to open scenario file");
 	}
 
-	char buf[1024], *bp;
-	unsigned int lnum = 0;
-
-	while(file.good()) {
-		file.getline(buf, sizeof(buf));
-		buf[strcspn(buf, "\n")] = '\0';
-		lnum++;
-
-		bp = next_value(buf);
-		std::string name = buf;
-
-		if(bp[0] == '#' || bp[0] == '\0') {
+	hr_map_cmd cmd;
+	
+	while(fread(&cmd, sizeof(cmd), 1, fh))
+	{
+		PlayerColour colour = (PlayerColour)(cmd.extra);
+		
+		Tile *tile = game_state->tile_at(cmd.x, cmd.y);
+		
+		if(cmd.cmd != HR_MAP_CMD_TILE && !tile)
+		{
+			printf("Ignoring command %d with bad position %d,%d\n", (int)(cmd.cmd), (int)(cmd.x), (int)(cmd.y));
 			continue;
 		}
-
-		if(name == "GRID") {
-			int cols = atoi(bp);
-			int rows = atoi(next_value(bp));
-
-			if(cols <= 0 || rows <= 0) {
-				LINE_ERR("Grid size must be greater than 0x0");
+		
+		switch(cmd.cmd)
+		{
+			case HR_MAP_CMD_TILE:
+			{
+				game_state->tiles.push_back(new Tile(cmd.x, cmd.y, cmd.extra));
+				break;
 			}
-
-			for(int r = 0; r < rows; r++) {
-				for(int c = 0; c < cols; c++) {
-					game_state->tiles.push_back(new Tile(c, r, 0));
-				}
+			
+			case HR_MAP_CMD_BREAK:
+			{
+				tile->smashed = true;
+				break;
 			}
-		}else if(name == "SPAWN") {
-			/* SPAWN x y c */
-
-			int x = atoi(bp);
-			int y = atoi((bp = next_value(bp)));
-			int c = atoi((bp = next_value(bp)));
-
-			Tile *tile = game_state->tile_at(x, y);
-
-			if(!tile) {
-				LINE_ERR("Tile not found (" + to_string(x) + "," + to_string(y) + ")");
+			
+			case HR_MAP_CMD_BHOLE:
+			{
+				tile->has_black_hole = true;
+				break;
 			}
-			if(tile->pawn) {
-				LINE_ERR("Cannot spawn multiple pawns on the same tile");
+			
+			case HR_MAP_CMD_PAWN:
+			{
+				tile->pawn = pawn_ptr(new Pawn(colour, game_state->tiles, tile));
+				colours.insert(colour);
+				break;
 			}
-			if(c < BLUE || c > ORANGE) {
-				LINE_ERR("Invalid pawn colour");
+			
+			case HR_MAP_CMD_PAD:
+			{
+				tile->has_landing_pad    = true;
+				tile->landing_pad_colour = colour;
+				break;
 			}
-
-			tile->pawn = pawn_ptr(new Pawn((PlayerColour)c, game_state->tiles, tile));
-			colours.insert((PlayerColour)c);
-		}else if(name == "HOLE") {
-			int x = atoi(bp);
-			int y = atoi(next_value(bp));
-
-			Tile::List::iterator i = game_state->tiles.begin();
-
-			while(i != game_state->tiles.end()) {
-				if((*i)->col == x && (*i)->row == y) {
-					delete *i;
-					game_state->tiles.erase(i);
-
-					break;
-				}
-
-				i++;
+			
+			case HR_MAP_CMD_MINE:
+			{
+				tile->has_mine    = true;
+				tile->mine_colour = colour;
+				break;
 			}
-		}else if(name == "POWER") {
-			int i = atoi(bp);
-			int p = atoi(next_value(bp));
-
-			if(i < 0 || i >= Powers::num_powers) {
-				LINE_ERR("Unknown power (" + to_string(i) + ")");
+			
+			default:
+			{
+				printf("Ignoring unknown command %d\n", (int)(cmd.cmd));
+				break;
 			}
-
-			Powers::powers[i].spawn_rate = p;
-		}else if(name == "HEIGHT") {
-			int x = atoi(bp);
-			int y = atoi((bp = next_value(bp)));
-			int h = atoi((bp = next_value(bp)));
-
-			Tile *tile = game_state->tile_at(x, y);
-
-			if(!tile) {
-				LINE_ERR("Tile not found (" + to_string(x) + "," + to_string(y) + ")");
-			}
-			if(h > 2 || h < -2) {
-				LINE_ERR("Tile height must be in the range -2 ... 2");
-			}
-
-			tile->height = h;
-		}else{
-			LINE_ERR("Unknown directive '" + name + "'");
 		}
 	}
-
-	if(game_state->tiles.empty()) {
-		throw std::runtime_error(filename + ": No GRID directive used");
+	
+	fclose(fh);
+	
+	if(game_state->tiles.empty())
+	{
+		throw std::runtime_error(filename + ": No HR_MAP_CMD_TILE command used");
 	}
 }
 
