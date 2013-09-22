@@ -432,6 +432,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 	bool hp = target->has_power;
 
 	pawn->force_move(target, game_state);
+	pawn->maybe_step_on_mine(game_state);
 
 	if(hp) {
 		update_one_pawn(pawn);
@@ -536,6 +537,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 
 		if(pawn->Move(tile, game_state)) {
 			WriteAll(msg);
+			pawn->maybe_step_on_mine(game_state);
 
 			if(hp) {
 				update_one_tile(tile);

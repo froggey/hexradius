@@ -96,8 +96,6 @@ void Pawn::force_move(Tile *tile, ServerGameState *state) {
 		}
 		tile->has_power = false;
 	}
-
-	maybe_step_on_mine(state);
 }
 
 void Pawn::AddPower(int power) {
@@ -286,6 +284,7 @@ void Pawn::maybe_step_on_mine(ServerGameState *state)
 	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
 		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
 		cur_tile->has_mine = false;
+		state->update_tile(cur_tile);
 		if(!(flags & PWR_SHIELD)) {
 			state->destroy_pawn(shared_from_this(), MINED);
 		}
