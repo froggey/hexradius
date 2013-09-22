@@ -136,6 +136,9 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 
 	move_pawn_to(pawn, target);
 
+	// Horrible hack alert, let UsePower know that the pawn has moved.
+	pawn->last_tile = target;
+
 	return true;
 }
 
