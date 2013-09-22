@@ -71,6 +71,31 @@ static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &)
 {
 	int width = atoi(text.text.c_str());
 	
+	/* Don't allow the map to grow beyond what can be stored */
+	
+	if(width > 255)
+	{
+		return;
+	}
+	
+	/* Don't allow the map to shrink if it will remove all the tiles */
+	
+	bool found = false;
+	
+	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end(); ++t)
+	{
+		if(t->second.pos.first < width)
+		{
+			found = true;
+			break;
+		}
+	}
+	
+	if(!found)
+	{
+		return;
+	}
+	
 	/* Delete any tiles which are beyond the new right edge */
 	
 	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end();)
@@ -99,6 +124,31 @@ static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &)
 static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &)
 {
 	int height = atoi(text.text.c_str());
+	
+	/* Don't allow the map to grow beyond what can be stored */
+	
+	if(height > 255)
+	{
+		return;
+	}
+	
+	/* Don't allow the map to shrink if it will remove all the tiles */
+	
+	bool found = false;
+	
+	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end(); ++t)
+	{
+		if(t->second.pos.second < height)
+		{
+			found = true;
+			break;
+		}
+	}
+	
+	if(!found)
+	{
+		return;
+	}
 	
 	/* Delete any tiles which are beyond the new bottom edge */
 	
