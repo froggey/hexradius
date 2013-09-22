@@ -126,6 +126,10 @@ bool Pawn::UsePower(int power, ServerGameState *state) {
 		powers.erase(p);
 	}
 
+	// Bleh, this happens when using the black hole. There's no
+	// way to pin the notification on a dead pawn yet.
+	if(destroyed()) return true;
+
 	// Horrible hack alert, teleport uses this to tell us that the pawn has moved.
 	if(this->last_tile) {
 		last_tile = this->last_tile;
