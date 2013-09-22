@@ -35,16 +35,13 @@ public:
 
 	void CopyToProto(protocol::pawn *p, bool copy_powers);
 
-	bool Move(Tile *new_tile, ServerGameState *state);
+	bool can_move(Tile *new_tile);
 	// Perform a move without performing the move checks.
 	// Moving on to a friendly pawn will still smash it!
 	void force_move(Tile *new_tile, ServerGameState *state);
 
 	void AddPower(int power);
 	bool UsePower(int power, ServerGameState *state);
-
-	/* Test if the pawn moved (or fell) onto a mine. */
-	void maybe_step_on_mine(ServerGameState *state);
 
 	Tile::List RowTiles(void);
 	Tile::List RadialTiles(void);

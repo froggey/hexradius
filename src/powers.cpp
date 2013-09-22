@@ -162,13 +162,8 @@ static bool purify(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
 			(*i)->pawn->flags &= ~PWR_GOOD;
 			(*i)->pawn->range = 0;
 			state->update_pawn((*i)->pawn);
-			// Hovering pawns that fall on a mine trigger it.
-			(*i)->pawn->maybe_step_on_mine(state);
-			// And falling onto a smashed tile is bad.
-			if((*i)->smashed) {
-				state->add_animator(new Animators::PawnOhShitIFellDownAHole((*i)->screen_x, (*i)->screen_y));
-				state->destroy_pawn((*i)->pawn, Pawn::FELL_OUT_OF_THE_WORLD);
-			}
+			// This pawn got changed, rerun the tile effects.
+			state->move_pawn_to((*i)->pawn, (*i)->pawn->cur_tile);
 			ret = true;
 		}
 		state->update_tile(*i);

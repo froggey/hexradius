@@ -53,6 +53,8 @@ public:
 	void destroy_pawn(pawn_ptr target, Pawn::destroy_type reason, pawn_ptr killer = pawn_ptr());
 	void update_pawn(pawn_ptr pawn);
 	void update_tile(Tile *tile);
+	// Move a pawn onto the target tile, for effect.
+	void move_pawn_to(pawn_ptr pawn, Tile *target);
 
 private:
 	Server &server;

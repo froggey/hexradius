@@ -122,8 +122,6 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 	Tile *target = *targets.begin();
 
 	// Play the teleport animation, then move the pawn.
-	// Small problem: Clients get sent a bad USE message after the power gets used.
-	// the pawn is no longer at the correct location after that. (wait, what?)
 	{
 		protocol::message msg;
 		msg.set_msg(protocol::PAWN_ANIMATION);
@@ -136,29 +134,7 @@ bool ServerGameState::teleport_hack(pawn_ptr pawn)
 		server.WriteAll(msg);
 	}
 
-	{
-		protocol::message msg;
-		msg.set_msg(protocol::FORCE_MOVE);
-		msg.add_pawns();
-		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
-		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
-		msg.mutable_pawns(0)->set_new_col(target->col);
-		msg.mutable_pawns(0)->set_new_row(target->row);
-		server.WriteAll(msg);
-	}
-
-	Tile *last_tile = target;
-
-	bool hp = target->has_power;
-	pawn->force_move(target, server.game_state);
-
-	if(hp) {
-		server.update_one_pawn(pawn);
-		server.update_one_tile(target);
-	}
-
-	// Horrible hack alert, let UsePower know that the pawn has moved.
-	pawn->last_tile = last_tile;
+	move_pawn_to(pawn, target);
 
 	return true;
 }
@@ -229,4 +205,39 @@ void ServerGameState::update_pawn(pawn_ptr pawn)
 void ServerGameState::update_tile(Tile *tile)
 {
 	server.update_one_tile(tile);
+}
+
+void ServerGameState::move_pawn_to(pawn_ptr pawn, Tile *target)
+{
+	// Do smashy smashy before moving the pawn.
+	// move_pawn_to is also called to recheck tile effects when a pawn's upgrade state changes.
+	if(pawn->cur_tile != target) {
+		if(target->pawn) {
+			add_animator(new Animators::PawnCrush(target->screen_x, target->screen_y));
+			destroy_pawn(target->pawn, Pawn::STOMP, pawn);
+		}
+
+		// Notify clients of the move.
+		protocol::message msg;
+		msg.set_msg(protocol::FORCE_MOVE);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_new_col(target->col);
+		msg.mutable_pawns(0)->set_new_row(target->row);
+		server.WriteAll(msg);
+	}
+
+	bool hp = target->has_power;
+
+	// Move the pawn on our end. This also performs various
+	// tile-related effects.
+	pawn->force_move(target, this);
+
+	if(hp) {
+		server.update_one_tile(target);
+		if(!pawn->destroyed()) {
+			server.update_one_pawn(pawn);
+		}
+	}
 }

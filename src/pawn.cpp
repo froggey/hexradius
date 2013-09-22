@@ -29,7 +29,7 @@ bool Pawn::destroyed() {
 	return destroyed_by != OK;
 }
 
-bool Pawn::Move(Tile *tile, ServerGameState *state) {
+bool Pawn::can_move(Tile *tile) {
 	// Move only onto adjacent tiles or friendly landing pads.
 	if(
 		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
@@ -56,45 +56,45 @@ bool Pawn::Move(Tile *tile, ServerGameState *state) {
 		return false;
 	}
 
-	force_move(tile, state);
-
 	return true;
 }
 
 void Pawn::force_move(Tile *tile, ServerGameState *state) {
 	assert(tile);
 
-	if(tile->pawn) {
-		state->add_animator(new Animators::PawnCrush(tile->screen_x, tile->screen_y));
-		state->destroy_pawn(tile->pawn, STOMP, shared_from_this());
+	// force_move is also called to recheck tile effects when a pawn's upgrade state changes.
+	if(cur_tile != tile) {
+		tile->pawn.swap(cur_tile->pawn);
+		cur_tile = tile;
 	}
 
-	Tile *last_tile = cur_tile;
-	tile->pawn.swap(cur_tile->pawn);
-	cur_tile = tile;
-
 	if(tile->has_black_hole) {
-		destroy(Pawn::BLACKHOLE);
+		state->destroy_pawn(shared_from_this(), Pawn::BLACKHOLE);
 		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
 		return;
 	}
 
 	if(tile->smashed && !(flags & PWR_CLIMB)) {
-		destroy(Pawn::FELL_OUT_OF_THE_WORLD);
+		state->destroy_pawn(shared_from_this(), Pawn::FELL_OUT_OF_THE_WORLD);
 		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
 		return;
 	}
 
 	if(tile->has_power) {
 		if(tile->power >= 0 && !destroyed()) {
-			// BLEAGH.
-			// The move message is sent after this message, so pawn positions are wrong.
-			cur_tile = last_tile;
 			state->add_power_notification(shared_from_this(), tile->power);
-			cur_tile = tile;
 			AddPower(tile->power);
 		}
 		tile->has_power = false;
+	}
+
+	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
+		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
+		cur_tile->has_mine = false;
+		state->update_tile(cur_tile);
+		if(!(flags & PWR_SHIELD)) {
+			state->destroy_pawn(shared_from_this(), MINED);
+		}
 	}
 }
 
@@ -279,18 +279,6 @@ void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 
 			p->mutable_powers(index)->set_index(i->first);
 			p->mutable_powers(index)->set_num(i->second);
-		}
-	}
-}
-
-void Pawn::maybe_step_on_mine(ServerGameState *state)
-{
-	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
-		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
-		cur_tile->has_mine = false;
-		state->update_tile(cur_tile);
-		if(!(flags & PWR_SHIELD)) {
-			state->destroy_pawn(shared_from_this(), MINED);
 		}
 	}
 }

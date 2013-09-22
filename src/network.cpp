@@ -417,32 +417,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 		return;
 	}
 
-	// Notify clients.
-	{
-		protocol::message msg;
-		msg.set_msg(protocol::FORCE_MOVE);
-		msg.add_pawns();
-		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
-		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
-		msg.mutable_pawns(0)->set_new_col(target->col);
-		msg.mutable_pawns(0)->set_new_row(target->row);
-		WriteAll(msg);
-	}
-
-	bool hp = target->has_power;
-
-	pawn->force_move(target, game_state);
-	if(!pawn->destroyed()) {
-		pawn->maybe_step_on_mine(game_state);
-	}
-
-	if(hp) {
-		if(!pawn->destroyed()) {
-			update_one_pawn(pawn);
-		}
-		update_one_tile(target);
-	}
-
+	game_state->move_pawn_to(pawn, target);
 }
 
 bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg) {
@@ -537,21 +512,9 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			return true;
 		}
 
-		bool hp = tile->has_power;
 
-		if(pawn->Move(tile, game_state)) {
-			WriteAll(msg);
-			if(!pawn->destroyed()) {
-				pawn->maybe_step_on_mine(game_state);
-			}
-
-			if(hp) {
-				update_one_tile(tile);
-				if(!pawn->destroyed()) {
-					update_one_pawn(pawn);
-				}
-			}
-
+		if(pawn->can_move(tile)) {
+			game_state->move_pawn_to(pawn, tile);
 			NextTurn();
 		}else{
 			client->WriteBasic(protocol::BADMOVE);
