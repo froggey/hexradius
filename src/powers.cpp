@@ -8,14 +8,16 @@
 #undef ABSOLUTE
 #undef RELATIVE
 
+using namespace Powers;
+
 int Powers::RandomPower(void) {
 	int total = 0;
-	for (int i = 0; i < Powers::num_powers; i++) {
+	for (size_t i = 0; i < powers.size(); i++) {
 		total += Powers::powers[i].spawn_rate;
 	}
 
 	int n = rand() % total;
-	for (int i = 0; i < Powers::num_powers; i++) {
+	for (size_t i = 0; i < powers.size(); i++) {
 		if(n < Powers::powers[i].spawn_rate) {
 			return i;
 		}
@@ -25,6 +27,22 @@ int Powers::RandomPower(void) {
 
 	abort();
 }
+
+/// Functions for getting a list of tiles from a pawn.
+typedef boost::function<Tile::List(pawn_ptr)> tile_area_function;
+
+// Return the pawn's current tile, a single point.
+static Tile::List point_tile(pawn_ptr pawn)
+{
+	return Tile::List(1, pawn->cur_tile);
+}
+
+// Return the surrounding radial tiles.
+static tile_area_function radial_tiles = boost::bind(&Pawn::RadialTiles, _1);
+// Functions that deal with the 3 linear directions.
+static tile_area_function row_tiles = boost::bind(&Pawn::RowTiles, _1);
+static tile_area_function fs_tiles = boost::bind(&Pawn::fs_tiles, _1);
+static tile_area_function bs_tiles = boost::bind(&Pawn::bs_tiles, _1);
 
 static void destroy_enemies(Tile::List area, pawn_ptr pawn, ServerGameState *state, Pawn::destroy_type dt, bool enemies_only, bool smash_tile) {
 	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
@@ -51,123 +69,61 @@ static bool can_destroy_enemies(Tile::List area, pawn_ptr pawn, ServerGameState 
 	return false;
 }
 
-static void destroy_row(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->RowTiles(), pawn, state, Pawn::PWR_DESTROY, true, false);
+/// Destroy: Nice & simple, just destroy enemy pawns in the target area.
+static bool test_destroy_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state)
+{
+	return can_destroy_enemies(area_fn(pawn), pawn, state, true);
 }
 
-static void destroy_radial(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->RadialTiles(), pawn, state, Pawn::PWR_DESTROY, true, false);
+static void use_destroy_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state)
+{
+	destroy_enemies(area_fn(pawn), pawn, state, Pawn::PWR_DESTROY, true, false);
 }
 
-static void destroy_bs(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->bs_tiles(), pawn, state, Pawn::PWR_DESTROY, true, false);
+/// Annihilate: Destroy *all* pawns in the target area.
+static bool test_annihilate_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	return can_destroy_enemies(area_fn(pawn), pawn, state, false);
 }
 
-static void destroy_fs(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->fs_tiles(), pawn, state, Pawn::PWR_DESTROY, true, false);
+static void use_annihilate_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	destroy_enemies(area_fn(pawn), pawn, state, Pawn::PWR_ANNIHILATE, false, false);
 }
 
-static bool can_destroy_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->RowTiles(), pawn, state, true);
+/// Smash: Destroy enemy pawns in the target area and smash the tiles they're on.
+static bool test_smash_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	return can_destroy_enemies(area_fn(pawn), pawn, state, true);
 }
 
-static bool can_destroy_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->RadialTiles(), pawn, state, true);
+static void use_smash_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	destroy_enemies(area_fn(pawn), pawn, state, Pawn::PWR_SMASH, true, true);
 }
 
-static bool can_destroy_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->bs_tiles(), pawn, state, true);
-}
-
-static bool can_destroy_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->fs_tiles(), pawn, state, true);
-}
-
-
+/// Raise Tile: Raise the pawn's current tile up one level.
 static void raise_tile(pawn_ptr pawn, ServerGameState *state) {
 	state->add_animator(new TileAnimators::ElevationAnimator(
 				    Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, +1));
 	state->set_tile_height(pawn->cur_tile, pawn->cur_tile->height + 1);
 }
 
+static bool can_raise_tile(pawn_ptr pawn, ServerGameState *) {
+	return pawn->cur_tile->height != 2;
+}
+
+/// Lower Tile: Lower the pawn's current tile down one level.
 static void lower_tile(pawn_ptr pawn, ServerGameState *state) {
 	state->add_animator(new TileAnimators::ElevationAnimator(
 				    Tile::List(1, pawn->cur_tile), pawn->cur_tile, 3.0, TileAnimators::RELATIVE, -1));
 	state->set_tile_height(pawn->cur_tile, pawn->cur_tile->height - 1);
 }
 
-static bool can_raise_tile(pawn_ptr pawn, ServerGameState *) {
-	return pawn->cur_tile->height != 2;
-}
-
 static bool can_lower_tile(pawn_ptr pawn, ServerGameState *) {
 	return pawn->cur_tile->height != -2;
 }
 
+// Common test function for dig & elevate.
+static bool can_dig_elevate_tiles(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *, int target_elevation) {
+	Tile::List tiles = area_fn(pawn);
 
-static void increase_range(pawn_ptr pawn, ServerGameState *state) {
-	assert(pawn->range < 3);
-	pawn->range++;
-	state->update_pawn(pawn);
-}
-
-static bool can_increase_range(pawn_ptr pawn, ServerGameState *) {
-	return (pawn->range < 3);
-}
-
-static void hover(pawn_ptr pawn, ServerGameState *state) {
-	state->grant_upgrade(pawn, PWR_CLIMB);
-}
-
-static void dig_elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state, int target_elevation) {
-	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, target_elevation));
-
-	for(Tile::List::const_iterator i = tiles.begin(); i != tiles.end(); i++) {
-		state->set_tile_height(*i, target_elevation);
-	}
-}
-
-static void elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state) {
-	dig_elevate_tiles(tiles, pawn, state, +2);
-}
-
-static void dig_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state) {
-	dig_elevate_tiles(tiles, pawn, state, -2);
-}
-
-static void elevate_row(pawn_ptr pawn, ServerGameState *state) {
-	elevate_tiles(pawn->RowTiles(), pawn, state);
-}
-
-static void elevate_radial(pawn_ptr pawn, ServerGameState *state) {
-	elevate_tiles(pawn->RadialTiles(), pawn, state);
-}
-
-static void elevate_bs(pawn_ptr pawn, ServerGameState *state) {
-	elevate_tiles(pawn->bs_tiles(), pawn, state);
-}
-
-static void elevate_fs(pawn_ptr pawn, ServerGameState *state) {
-	elevate_tiles(pawn->fs_tiles(), pawn, state);
-}
-
-static void dig_row(pawn_ptr pawn, ServerGameState *state) {
-	dig_tiles(pawn->RowTiles(), pawn, state);
-}
-
-static void dig_radial(pawn_ptr pawn, ServerGameState *state) {
-	dig_tiles(pawn->RadialTiles(), pawn, state);
-}
-
-static void dig_bs(pawn_ptr pawn, ServerGameState *state) {
-	dig_tiles(pawn->bs_tiles(), pawn, state);
-}
-
-static void dig_fs(pawn_ptr pawn, ServerGameState *state) {
-	dig_tiles(pawn->fs_tiles(), pawn, state);
-}
-
-static bool can_dig_elevate_tiles(const Tile::List &tiles, pawn_ptr, ServerGameState *, int target_elevation) {
 	for(Tile::List::const_iterator i = tiles.begin(); i != tiles.end(); i++) {
 		if((*i)->height != target_elevation) {
 			return true;
@@ -177,55 +133,39 @@ static bool can_dig_elevate_tiles(const Tile::List &tiles, pawn_ptr, ServerGameS
 	return false;
 }
 
-static bool can_elevate_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state) {
-	return can_dig_elevate_tiles(tiles, pawn, state, +2);
+// Common use function for dig & elevate.
+static void dig_elevate_tiles(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state, int target_elevation) {
+	Tile::List tiles = area_fn(pawn);
+
+	state->add_animator(new TileAnimators::ElevationAnimator(tiles, pawn->cur_tile, 3.0, TileAnimators::ABSOLUTE, target_elevation));
+
+	for(Tile::List::const_iterator i = tiles.begin(); i != tiles.end(); i++) {
+		state->set_tile_height(*i, target_elevation);
+	}
 }
 
-static bool can_dig_tiles(const Tile::List &tiles, pawn_ptr pawn, ServerGameState *state) {
-	return can_dig_elevate_tiles(tiles, pawn, state, -2);
+/// Elevate: Raise the tiles up to the maximum elevation.
+static void use_elevate_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	dig_elevate_tiles(area_fn, pawn, state, +2);
 }
 
-static bool can_elevate_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_elevate_tiles(pawn->RowTiles(), pawn, state);
+static bool test_elevate_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	return can_dig_elevate_tiles(area_fn, pawn, state, +2);
 }
 
-static bool can_elevate_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_elevate_tiles(pawn->RadialTiles(), pawn, state);
+/// Dig: Lower the tiles down to the minimum elevation.
+static void use_dig_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	dig_elevate_tiles(area_fn, pawn, state, -2);
 }
 
-static bool can_elevate_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_elevate_tiles(pawn->bs_tiles(), pawn, state);
+static bool test_dig_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	return can_dig_elevate_tiles(area_fn, pawn, state, -2);
 }
 
-static bool can_elevate_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_elevate_tiles(pawn->fs_tiles(), pawn, state);
-}
+/// Purify: Clear bad upgrades from friendly pawns, good upgrades from enemy pawns and remove enemy tile modifications.
+static void use_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List tiles = area_fn(pawn);
 
-static bool can_dig_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_dig_tiles(pawn->RowTiles(), pawn, state);
-}
-
-static bool can_dig_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_dig_tiles(pawn->RadialTiles(), pawn, state);
-}
-
-static bool can_dig_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_dig_tiles(pawn->bs_tiles(), pawn, state);
-}
-
-static bool can_dig_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_dig_tiles(pawn->fs_tiles(), pawn, state);
-}
-
-static void shield(pawn_ptr pawn, ServerGameState *state) {
-	state->grant_upgrade(pawn, PWR_SHIELD);
-}
-
-static void invisibility(pawn_ptr pawn, ServerGameState *state) {
-	state->grant_upgrade(pawn, PWR_INVISIBLE);
-}
-
-static void purify(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
 		if((*i)->has_mine && (*i)->mine_colour != pawn->colour) {
 			(*i)->has_mine = false;
@@ -244,23 +184,9 @@ static void purify(Tile::List tiles, pawn_ptr pawn, ServerGameState *state) {
 	}
 }
 
-static void purify_row(pawn_ptr pawn, ServerGameState *state) {
-	purify(pawn->RowTiles(), pawn, state);
-}
+static bool test_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *) {
+	Tile::List tiles = area_fn(pawn);
 
-static void purify_radial(pawn_ptr pawn, ServerGameState *state) {
-	purify(pawn->RadialTiles(), pawn, state);
-}
-
-static void purify_bs(pawn_ptr pawn, ServerGameState *state) {
-	purify(pawn->bs_tiles(), pawn, state);
-}
-
-static void purify_fs(pawn_ptr pawn, ServerGameState *state) {
-	purify(pawn->fs_tiles(), pawn, state);
-}
-
-static bool can_purify(Tile::List tiles, pawn_ptr pawn, ServerGameState *) {
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
 		if((*i)->has_mine && (*i)->mine_colour != pawn->colour) {
 			return true;
@@ -272,25 +198,11 @@ static bool can_purify(Tile::List tiles, pawn_ptr pawn, ServerGameState *) {
 			return true;
 		}
 	}
+
 	return false;
 }
 
-static bool can_purify_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_purify(pawn->RowTiles(), pawn, state);
-}
-
-static bool can_purify_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_purify(pawn->RadialTiles(), pawn, state);
-}
-
-static bool can_purify_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_purify(pawn->bs_tiles(), pawn, state);
-}
-
-static bool can_purify_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_purify(pawn->fs_tiles(), pawn, state);
-}
-
+/// Teleport: Move to a random location on the board, will not land on a mine, smashed/black hole tile or existing pawn.
 static void teleport(pawn_ptr pawn, ServerGameState *state) {
 	state->teleport_hack(pawn);
 }
@@ -300,134 +212,35 @@ static bool can_teleport(pawn_ptr, ServerGameState *state) {
 	return !targets.empty();
 }
 
-static void annihilate_row(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->RowTiles(), pawn, state, Pawn::PWR_ANNIHILATE, false, false);
-}
+/// Mine: Add a mine modification to the targeted area.
+static bool test_mine_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *) {
+	Tile::List tiles = area_fn(pawn);
 
-static void annihilate_radial(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->RadialTiles(), pawn, state, Pawn::PWR_ANNIHILATE, false, false);
-}
-
-static void annihilate_bs(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->bs_tiles(), pawn, state, Pawn::PWR_ANNIHILATE, false, false);
-}
-
-static void annihilate_fs(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->fs_tiles(), pawn, state, Pawn::PWR_ANNIHILATE, false, false);
-}
-
-static bool can_annihilate_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->RowTiles(), pawn, state, false);
-}
-
-static bool can_annihilate_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->RadialTiles(), pawn, state, false);
-}
-
-static bool can_annihilate_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->bs_tiles(), pawn, state, false);
-}
-
-static bool can_annihilate_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->fs_tiles(), pawn, state, false);
-}
-
-
-static void smash_row(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->RowTiles(), pawn, state, Pawn::PWR_SMASH, true, true);
-}
-
-static void smash_radial(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->RadialTiles(), pawn, state, Pawn::PWR_SMASH, true, true);
-}
-
-static void smash_bs(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->bs_tiles(), pawn, state, Pawn::PWR_SMASH, true, true);
-}
-
-static void smash_fs(pawn_ptr pawn, ServerGameState *state) {
-	destroy_enemies(pawn->fs_tiles(), pawn, state, Pawn::PWR_SMASH, true, true);
-}
-
-static bool can_smash_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->RowTiles(), pawn, state, true);
-}
-
-static bool can_smash_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->RadialTiles(), pawn, state, true);
-}
-
-static bool can_smash_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->bs_tiles(), pawn, state, true);
-}
-
-static bool can_smash_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_destroy_enemies(pawn->fs_tiles(), pawn, state, true);
-}
-
-
-
-static void lay_mines(Tile::List tiles, PlayerColour colour, ServerGameState *state) {
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		Tile *tile = *i;
-		if(tile->has_mine || tile->smashed || tile->has_black_hole) continue;
+		if(tile->has_mine) continue;
+		if(tile->smashed) continue;
+		if(tile->has_black_hole) continue;
+		return true;
+	}
+
+	return false;
+}
+
+static void use_mine_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List tiles = area_fn(pawn);
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		Tile *tile = *i;
+		assert(!(tile->has_mine || tile->smashed || tile->has_black_hole));
 		tile->has_mine = true;
-		tile->mine_colour = colour;
+		tile->mine_colour = pawn->colour;
 		state->update_tile(tile);
 	}
 }
 
-static void mine(pawn_ptr pawn, ServerGameState *state) {
-	lay_mines(Tile::List(1, pawn->cur_tile), pawn->colour, state);
-}
-
-static void mine_row(pawn_ptr pawn, ServerGameState *state) {
-	lay_mines(pawn->RowTiles(), pawn->colour, state);
-}
-
-static void mine_radial(pawn_ptr pawn, ServerGameState *state) {
-	lay_mines(pawn->RadialTiles(), pawn->colour, state);
-}
-
-static void mine_bs(pawn_ptr pawn, ServerGameState *state) {
-	lay_mines(pawn->bs_tiles(), pawn->colour, state);
-}
-
-static void mine_fs(pawn_ptr pawn, ServerGameState *state) {
-	lay_mines(pawn->fs_tiles(), pawn->colour, state);
-}
-
-static int can_lay_mines(Tile::List tiles, PlayerColour, ServerGameState *) {
-	int n_mines = 0;
-	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
-		Tile *tile = *i;
-		if(tile->has_mine || tile->smashed || tile->has_black_hole) continue;
-		n_mines += 1;
-	}
-
-	return n_mines;
-}
-
-static bool can_mine(pawn_ptr pawn, ServerGameState *state) {
-	return can_lay_mines(Tile::List(1, pawn->cur_tile), pawn->colour, state) == 1;
-}
-
-static bool can_mine_row(pawn_ptr pawn, ServerGameState *state) {
-	return can_lay_mines(pawn->RowTiles(), pawn->colour, state) != 0;
-}
-
-static bool can_mine_radial(pawn_ptr pawn, ServerGameState *state) {
-	return can_lay_mines(pawn->RadialTiles(), pawn->colour, state) != 0;
-}
-
-static bool can_mine_bs(pawn_ptr pawn, ServerGameState *state) {
-	return can_lay_mines(pawn->bs_tiles(), pawn->colour, state) != 0;
-}
-
-static bool can_mine_fs(pawn_ptr pawn, ServerGameState *state) {
-	return can_lay_mines(pawn->fs_tiles(), pawn->colour, state) != 0;
-}
-
+/// Landing Pad: Add a landing pad modification to the current tile.
+/// Pawns can move to landing pads from anywhere on the board.
 static void landing_pad(pawn_ptr pawn, ServerGameState *state) {
 	pawn->cur_tile->has_landing_pad = true;
 	pawn->cur_tile->landing_pad_colour = pawn->colour;
@@ -441,10 +254,9 @@ static bool can_landing_pad(pawn_ptr pawn, ServerGameState *) {
 	return true;
 }
 
-static void infravision(pawn_ptr pawn, ServerGameState *state) {
-	state->grant_upgrade(pawn, PWR_INFRAVISION);
-}
-
+/// Black Hole: Overload the pawn's warp core to create a dangerous gravitational anomaly.
+/// Black holes will pull pawns in from far & wide, and gain power when
+/// created by a pawn with increased range.
 static void black_hole(pawn_ptr pawn, ServerGameState *state) {
 	Tile *tile = pawn->cur_tile;
 	state->destroy_pawn(pawn, Pawn::BLACKHOLE, pawn);
@@ -461,58 +273,99 @@ static bool can_black_hole(pawn_ptr, ServerGameState *) {
 	return true;
 }
 
+/// Increase Range: Power up a pawn and increase the range of various powers.
+static void increase_range(pawn_ptr pawn, ServerGameState *state) {
+	assert(pawn->range < 3);
+	pawn->range++;
+	state->update_pawn(pawn);
+}
+
+static bool can_increase_range(pawn_ptr pawn, ServerGameState *) {
+	return (pawn->range < 3);
+}
+
 static bool can_use_upgrade(pawn_ptr pawn, ServerGameState *, uint32_t upgrade)
 {
 	return !(pawn->flags & upgrade);
 }
 
-Powers::Power Powers::powers[] = {
-	{"Destroy", &destroy_row, can_destroy_row, 50, true, Powers::Power::row},
-	{"Destroy", &destroy_radial, can_destroy_radial, 50, true, Powers::Power::radial},
-	{"Destroy", &destroy_bs, can_destroy_bs, 50, true, Powers::Power::nw_se},
-	{"Destroy", &destroy_fs, can_destroy_fs, 50, true, Powers::Power::ne_sw},
+static void use_upgrade_power(pawn_ptr pawn, ServerGameState *state, uint32_t upgrade)
+{
+	state->grant_upgrade(pawn, upgrade);
+}
 
-	{"Raise Tile", &raise_tile, can_raise_tile, 50, true, Powers::Power::undirected},
-	{"Lower Tile", &lower_tile, can_lower_tile, 50, true, Powers::Power::undirected},
-	{"Increase Range", &increase_range, can_increase_range, 20, true, Powers::Power::undirected},
-	{"Hover", &hover, boost::bind(can_use_upgrade, _1, _2, PWR_CLIMB), 30, true, Powers::Power::undirected},
-	{"Shield", &shield, boost::bind(can_use_upgrade, _1, _2, PWR_SHIELD), 30, true, Powers::Power::undirected},
-	{"Invisibility", &invisibility, boost::bind(can_use_upgrade, _1, _2, PWR_INVISIBLE), 40, true, Powers::Power::undirected},
-	{"Infravision", &infravision, boost::bind(can_use_upgrade, _1, _2, PWR_INFRAVISION), 40, true, Powers::Power::undirected},
-	{"Teleport", &teleport, can_teleport, 60, true, Powers::Power::undirected},
-	{"Landing Pad", &landing_pad, can_landing_pad, 60, true, Powers::Power::undirected},
-	{"Black Hole", &black_hole, can_black_hole, 15, true, Powers::Power::undirected},
+static void def_power(const char *name,
+		      boost::function<void(pawn_ptr, ServerGameState *)> use_fn,
+		      boost::function<bool(pawn_ptr, ServerGameState *)> test_fn,
+		      int probability, Power::Directionality direction)
+{
+	powers.push_back((Power){name, use_fn, test_fn, probability, direction});
+}
 
-	{"Elevate", &elevate_row, can_elevate_row, 35, true, Powers::Power::row},
-	{"Elevate", &elevate_radial, can_elevate_radial, 35, true, Powers::Power::radial},
-	{"Elevate", &elevate_bs, can_elevate_bs, 35, true, Powers::Power::nw_se},
-	{"Elevate", &elevate_fs, can_elevate_fs, 35, true, Powers::Power::ne_sw},
 
-	{"Dig", &dig_row, can_dig_row, 35, true, Powers::Power::row},
-	{"Dig", &dig_radial, can_dig_radial, 35, true, Powers::Power::radial},
-	{"Dig", &dig_bs, can_dig_bs, 35, true, Powers::Power::nw_se},
-	{"Dig", &dig_fs, can_dig_fs, 35, true, Powers::Power::ne_sw},
+// Define powers for each direction.
+static void def_directional_power(const char *name,
+				  boost::function<void(tile_area_function, pawn_ptr, ServerGameState *)> use_fn,
+				  boost::function<bool(tile_area_function, pawn_ptr, ServerGameState *)> test_fn,
+				  int radial_probability,
+				  int linear_probability)
+{
+	def_power(name,
+		  boost::bind(use_fn, radial_tiles, _1, _2),
+		  boost::bind(test_fn, radial_tiles, _1, _2),
+		  radial_probability,
+		  Powers::Power::radial);
+	def_power(name,
+		  boost::bind(use_fn, row_tiles, _1, _2),
+		  boost::bind(test_fn, row_tiles, _1, _2),
+		  linear_probability,
+		  Powers::Power::row);
+	def_power(name,
+		  boost::bind(use_fn, bs_tiles, _1, _2),
+		  boost::bind(test_fn, bs_tiles, _1, _2),
+		  linear_probability,
+		  Powers::Power::nw_se);
+	def_power(name,
+		  boost::bind(use_fn, fs_tiles, _1, _2),
+		  boost::bind(test_fn, fs_tiles, _1, _2),
+		  linear_probability,
+		  Powers::Power::ne_sw);
+}
 
-	{"Purify", &purify_row, can_purify_row, 50, true, Powers::Power::row},
-	{"Purify", &purify_radial, can_purify_radial, 50, true, Powers::Power::radial},
-	{"Purify", &purify_bs, can_purify_bs, 50, true, Powers::Power::nw_se},
-	{"Purify", &purify_fs, can_purify_fs, 50, true, Powers::Power::ne_sw},
+static void def_upgrade_power(const char *name, uint32_t upgrade, int probabiliy)
+{
+	def_power(name,
+		  boost::bind(use_upgrade_power, _1, _2, upgrade),
+		  boost::bind(can_use_upgrade, _1, _2, upgrade),
+		  probabiliy,
+		  Powers::Power::undirected);
+}
 
-	{"Annihilate", &annihilate_row, can_annihilate_row, 50, false, Powers::Power::row},
-	{"Annihilate", &annihilate_radial, can_annihilate_radial, 50, false, Powers::Power::radial},
-	{"Annihilate", &annihilate_bs, can_annihilate_bs, 50, false, Powers::Power::nw_se},
-	{"Annihilate", &annihilate_fs, can_annihilate_fs, 50, false, Powers::Power::ne_sw},
+std::vector<Powers::Power> Powers::powers;
+void Powers::init_powers()
+{
+	def_directional_power("Destroy", use_destroy_power, test_destroy_power, 50, 50);
+	def_directional_power("Annihilate", use_annihilate_power, test_annihilate_power, 50, 50);
+	def_directional_power("Smash", use_smash_power, test_smash_power, 50, 50);
+	def_directional_power("Elevate", use_elevate_power, test_elevate_power, 35, 35);
+	def_directional_power("Dig", use_dig_power, test_dig_power, 35, 35);
+	def_directional_power("Purify", use_purify_power, test_purify_power, 50, 50);
+	def_directional_power("Mine", use_mine_power, test_mine_power, 40, 20);
+	def_power("Mine",
+		  boost::bind(use_mine_power, point_tile, _1, _2),
+		  boost::bind(test_mine_power, point_tile, _1, _2),
+		  60,
+		  Powers::Power::undirected);
 
-	{"Mine", &mine, can_mine, 60, true, Powers::Power::undirected},
-	{"Mine", &mine_row, can_mine_row, 20, false, Powers::Power::row},
-	{"Mine", &mine_radial, can_mine_radial, 40, false, Powers::Power::radial},
-	{"Mine", &mine_bs, can_mine_bs, 20, false, Powers::Power::nw_se},
-	{"Mine", &mine_fs, can_mine_fs, 20, false, Powers::Power::ne_sw},
+	def_upgrade_power("Hover", PWR_CLIMB, 30);
+	def_upgrade_power("Shield", PWR_SHIELD, 30);
+	def_upgrade_power("Invisibility", PWR_INVISIBLE, 40);
+	def_upgrade_power("Infravision", PWR_INFRAVISION, 40);
 
-	{"Smash", &smash_row, can_smash_row, 50, false, Powers::Power::row},
-	{"Smash", &smash_radial, can_smash_radial, 50, false, Powers::Power::radial},
-	{"Smash", &smash_bs, can_smash_bs, 50, false, Powers::Power::nw_se},
-	{"Smash", &smash_fs, can_smash_fs, 50, false, Powers::Power::ne_sw},
-};
-
-const int Powers::num_powers = sizeof(Powers::powers) / sizeof(Powers::Power);
+	def_power("Raise Tile", &raise_tile, can_raise_tile, 50, Powers::Power::undirected);
+	def_power("Lower Tile", &lower_tile, can_lower_tile, 50, Powers::Power::undirected);
+	def_power("Increase Range", &increase_range, can_increase_range, 20, Powers::Power::undirected);
+	def_power("Teleport", &teleport, can_teleport, 60, Powers::Power::undirected);
+	def_power("Landing Pad", &landing_pad, can_landing_pad, 60, Powers::Power::undirected);
+	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
+}

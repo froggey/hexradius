@@ -528,7 +528,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 			pawn->powers.clear();
 
 			for(int p = 0; p < msg.pawns(i).powers_size(); p++) {
-				int index = msg.pawns(i).powers(p).index();
+				unsigned int index = msg.pawns(i).powers(p).index();
 				int num = msg.pawns(i).powers(p).num();
 				int old_num = old_powers[index];
 				if (num < old_num) {
@@ -536,7 +536,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 						pawn->power_messages.push_back(Pawn::PowerMessage(index, false));
 				}
 
-				if(index < 0 || index >= Powers::num_powers || num <= 0) {
+				if(index >= Powers::powers.size() || num <= 0) {
 					continue;
 				}
 

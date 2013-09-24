@@ -18,25 +18,20 @@ namespace Powers {
 	struct Power {
 		const char *name;
 		// Acually use the power.
-		void (*func)(pawn_ptr, ServerGameState *);
+		boost::function<void(pawn_ptr, ServerGameState *)> func;
 		// Verify that the power can be used and will do something.
 		boost::function<bool(pawn_ptr, ServerGameState *)> can_use;
 		int spawn_rate;
 
-		/* Executing pawn is guarenteed to not be destroyed by power.
-		 * This must be true if the pawn may be moved to another tile.
-		*/
-
-		bool pawn_survive;
 		enum Directionality {
 			undirected, row, radial, nw_se, ne_sw
 		} direction;
 	};
 
-	extern Power powers[];
-	extern const int num_powers;
+extern std::vector<Power> powers;
+void init_powers();
 
-	int RandomPower(void);
+int RandomPower(void);
 }
 
 #endif /* !OR_POWERS_HPP */

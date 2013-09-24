@@ -27,6 +27,7 @@
 #include "menu.hpp"
 #include "gui.hpp"
 #include "scenario.hpp"
+#include "powers.hpp"
 
 namespace po = boost::program_options;
 
@@ -45,6 +46,7 @@ struct options options;
 
 int main(int argc, char **argv) {
 	srand(time(NULL));
+	Powers::init_powers();
 
 	options.load("options.txt");
 	options.save("options.txt");
