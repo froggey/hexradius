@@ -172,8 +172,7 @@ void ServerGameState::grant_upgrade(pawn_ptr pawn, uint32_t upgrade) {
 }
 
 void ServerGameState::set_tile_height(Tile *tile, int height) {
-	bool tile_did_move = tile->SetHeight(height);
-	assert(tile_did_move);
+	tile->SetHeight(height);
 	server.update_one_tile(tile);
 }
 
