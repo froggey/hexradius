@@ -213,15 +213,20 @@ static bool can_teleport(pawn_ptr, ServerGameState *state) {
 }
 
 /// Mine: Add a mine modification to the targeted area.
+static bool can_mine_tile(Tile *tile) {
+	if(tile->has_mine) return false;
+	if(tile->smashed) return false;
+	if(tile->has_black_hole) return false;
+	return true;
+}
+
 static bool test_mine_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *) {
 	Tile::List tiles = area_fn(pawn);
 
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
-		Tile *tile = *i;
-		if(tile->has_mine) continue;
-		if(tile->smashed) continue;
-		if(tile->has_black_hole) continue;
-		return true;
+		if(can_mine_tile(*i)) {
+			return true;
+		}
 	}
 
 	return false;
@@ -232,7 +237,7 @@ static void use_mine_power(tile_area_function area_fn, pawn_ptr pawn, ServerGame
 
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		Tile *tile = *i;
-		assert(!(tile->has_mine || tile->smashed || tile->has_black_hole));
+		if(!can_mine_tile(*i)) continue;
 		tile->has_mine = true;
 		tile->mine_colour = pawn->colour;
 		state->update_tile(tile);
