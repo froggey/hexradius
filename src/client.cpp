@@ -685,6 +685,8 @@ void Client::DrawScreen() {
 	SDL_Surface *smashed_tile = ImgStuff::GetImage("graphics/hextile-broken.png");
 	SDL_Surface *tint_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
 	SDL_Surface *smashed_tint_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,100,0));
+	SDL_Surface *jump_candidate_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,0,100));
+	SDL_Surface *smashed_jump_candidate_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,0,100));
 	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *smashed_line_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
@@ -765,6 +767,11 @@ void Client::DrawScreen() {
 		}
 	}
 
+	Tile::List jump_tiles;
+	if(hpawn && (hpawn->flags & PWR_JUMP)) {
+		jump_tiles = hpawn->move_tiles();
+	}
+
 	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
 		if((*ti)->pawn) {
 			assert(!(*ti)->pawn->destroyed());
@@ -790,7 +797,9 @@ void Client::DrawScreen() {
 
 		if(htile == *ti) {
 			tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
-		}else if(htile && options.show_lines) {
+		} else if(std::find(jump_tiles.begin(), jump_tiles.end(), *ti) != jump_tiles.end()) {
+			tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
+		} else if(htile && options.show_lines) {
 			if(diag_row != (*ti)->row) {
 				diag_cols(htile, (*ti)->row, bs_col, fs_col);
 				diag_row = (*ti)->row;
@@ -1072,12 +1081,17 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 		pawn->cur_tile->screen_x+TILE_WIDTH,
 		pawn->cur_tile->screen_y,
 		0,
-		pawn->powers.size() * fh
+		pawn->powers.size() * fh + ((pawn->flags & PWR_JUMP) ? fh+1 : 0)
 	};
 
-	Pawn::PowerList::iterator i = pawn->powers.begin();
+	if(pawn->flags & PWR_JUMP) {
+		int w = FontStuff::TextWidth(font, "Jump");
+		if(w > rect.w) {
+			rect.w = w;
+		}
+	}
 
-	for(; i != pawn->powers.end(); i++) {
+	for(Pawn::PowerList::iterator i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
 		int w = FontStuff::TextWidth(font, Powers::powers[i->first].name);
 		w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[i->first].direction]);
 		if(w > rect.w) {
@@ -1085,7 +1099,9 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 		}
 	}
 
-	rect.w += fw*3;
+	if(!pawn->powers.empty()) {
+		rect.w += fw*3;
+	}
 
 	if(rect.x+rect.w > screen_w) {
 		rect.x = pawn->cur_tile->screen_x-rect.w;
@@ -1101,7 +1117,18 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 
 	SDL_Color font_colour = {0,255,0, 0};
 
-	for(i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
+	if(pawn->flags & PWR_JUMP) {
+		// ?????
+		if(mouse_x >= rect.x && mouse_x < rect.x+rect.w && mouse_y >= rect.y && mouse_y < rect.y+rect.h) {
+			ImgStuff::draw_rect(rect, ImgStuff::Colour(90,90,0), 178);
+		}
+		// Have this centered?
+		FontStuff::BlitText(screen, rect, font, font_colour, "Jump");
+		rect.y += fh+1;
+		// Would like to draw a line seperating transient upgrades from powers, but whatever.
+	}
+
+	for(Pawn::PowerList::iterator i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
 		pmenu_entry foobar = {rect, i->first};
 		pmenu.push_back(foobar);
 

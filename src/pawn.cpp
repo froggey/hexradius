@@ -29,15 +29,15 @@ bool Pawn::destroyed() {
 	return destroyed_by != OK;
 }
 
+Tile::List Pawn::move_tiles() {
+	return RadialTiles((flags & PWR_JUMP) ? range + 1 : 0);
+}
+
 bool Pawn::can_move(Tile *tile) {
 	// Move only onto adjacent tiles or friendly landing pads.
-	if(
-		!(tile->row == cur_tile->row && (tile->col == cur_tile->col+1 || tile->col == cur_tile->col-1)) &&
-		!((tile->row == cur_tile->row+1 || tile->row == cur_tile->row-1) &&
-		  (tile->col == cur_tile->col + (cur_tile->row % 2) ||
-		   tile->col+1 == cur_tile->col + (cur_tile->row % 2))) &&
-		!(tile->has_landing_pad && tile->landing_pad_colour == colour)
-	) {
+	Tile::List adjacent_tiles = move_tiles();
+	if((std::find(adjacent_tiles.begin(), adjacent_tiles.end(), tile) == adjacent_tiles.end()) &&
+	   !(tile->has_landing_pad && tile->landing_pad_colour == colour)) {
 		return false;
 	}
 
@@ -163,7 +163,7 @@ static void radial_loop(Tile::List &all, tile_set &tiles, Tile *base) {
 	}
 }
 
-Tile::List Pawn::RadialTiles(void) {
+Tile::List Pawn::RadialTiles(int range) {
 	tile_set tiles;
 	radial_loop(all_tiles, tiles, cur_tile);
 

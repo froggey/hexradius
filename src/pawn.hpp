@@ -39,12 +39,15 @@ public:
 	// Perform a move without performing the move checks.
 	// Moving on to a friendly pawn will still smash it!
 	void force_move(Tile *new_tile, ServerGameState *state);
+	// A list of tiles that the pawn can reach when moving.
+	Tile::List move_tiles();
 
 	void AddPower(int power);
 	bool UsePower(int power, ServerGameState *state);
 
 	Tile::List RowTiles(void);
-	Tile::List RadialTiles(void);
+	Tile::List RadialTiles() { return RadialTiles(this->range); }
+	Tile::List RadialTiles(int range);
 	Tile::List bs_tiles();
 	Tile::List fs_tiles();
 

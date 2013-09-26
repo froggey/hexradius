@@ -10,9 +10,10 @@ class ServerGameState;
 
 const uint32_t PWR_SHIELD = 1<<0;
 const uint32_t PWR_CLIMB = 1<<1;
+const uint32_t PWR_JUMP = 1<<2;
 const uint32_t PWR_INVISIBLE = 1<<3;
 const uint32_t PWR_INFRAVISION = 1<<4;
-const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVISION);
+const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVISION | PWR_JUMP);
 
 namespace Powers {
 	struct Power {

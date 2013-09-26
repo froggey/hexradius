@@ -361,6 +361,7 @@ void Powers::init_powers()
 	def_upgrade_power("Shield", PWR_SHIELD, 30);
 	def_upgrade_power("Invisibility", PWR_INVISIBLE, 40);
 	def_upgrade_power("Infravision", PWR_INFRAVISION, 40);
+	def_upgrade_power("Jump", PWR_JUMP, 50);
 
 	def_power("Raise Tile", &raise_tile, can_raise_tile, 50, Powers::Power::undirected);
 	def_power("Lower Tile", &lower_tile, can_lower_tile, 50, Powers::Power::undirected);
