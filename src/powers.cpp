@@ -202,6 +202,59 @@ static bool test_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 	return false;
 }
 
+/// Pick Up: Pick up all orbs from the area.
+static void use_pickup_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List tiles = area_fn(pawn);
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
+		if((*i)->has_power) {
+			state->add_power_notification(pawn, (*i)->power);
+			pawn->AddPower((*i)->power);
+			(*i)->has_power = false;
+			state->update_tile(*i);
+		}
+	}
+}
+
+static bool test_pickup_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *) {
+	Tile::List tiles = area_fn(pawn);
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
+		if((*i)->has_power) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/// Repaint: Change the color of all colored terrain features (mines, landing pads) to the user's color.
+static void use_repaint_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List tiles = area_fn(pawn);
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
+		if ((*i)->has_mine)
+			(*i)->mine_colour = pawn->colour;
+		if ((*i)->has_landing_pad)
+			(*i)->landing_pad_colour = pawn->colour;
+		
+		state->update_tile(*i);
+	}
+}
+
+static bool test_repaint_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *) {
+	Tile::List tiles = area_fn(pawn);
+
+	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); i++) {
+		if ((*i)->has_mine && (*i)->mine_colour != pawn->colour)
+			return true;
+		if ((*i)->has_landing_pad && (*i)->landing_pad_colour != pawn->colour)
+			return true;
+	}
+
+	return false;
+}
+
 /// Teleport: Move to a random location on the board, will not land on a mine, smashed/black hole tile or existing pawn.
 static void teleport(pawn_ptr pawn, ServerGameState *state) {
 	state->teleport_hack(pawn);
@@ -356,6 +409,8 @@ void Powers::init_powers()
 	def_directional_power("Dig", use_dig_power, test_dig_power, 35, 35);
 	def_directional_power("Purify", use_purify_power, test_purify_power, 50, 50);
 	def_directional_power("Mine", use_mine_power, test_mine_power, 40, 20);
+	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 50, 50);
+	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 50, 50);
 	def_power("Mine",
 		  boost::bind(use_mine_power, point_tile, _1, _2),
 		  boost::bind(test_mine_power, point_tile, _1, _2),

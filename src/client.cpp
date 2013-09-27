@@ -863,7 +863,7 @@ void Client::DrawScreen() {
 	if(mpawn) {
 		draw_pmenu(mpawn);
 	}
-	else if (hpawn && hpawn->colour == my_colour) {
+	else if (!dpawn && hpawn && hpawn->colour == my_colour) {
 		draw_pmenu(hpawn);
 	}
 
@@ -1168,7 +1168,7 @@ void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
 		rect.w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[pm.power].direction]);
 	rect.w += fw;
 	rect.h = fh;
-	rect.x = pawn->cur_tile->screen_x - rect.w / 2;
+	rect.x = pawn->cur_tile->screen_x - rect.w / 2 + TILE_WIDTH / 2;
 	rect.y = pawn->cur_tile->screen_y - 32 + 16 * pm.time;
 
 	ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178 * std::min(pm.time, 1.0f));
