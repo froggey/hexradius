@@ -363,26 +363,23 @@ void Server::black_hole_suck() {
 	// Chance is inversely proportional to the square of the euclidean distance
 	// and increased by the black hole's power.
 	for(std::set<Tile *>::iterator bh = black_holes.begin(); bh != black_holes.end(); ++bh) {
+		float bx = (*bh)->col + (((*bh)->row % 2) * 0.5f);
+		float by = (*bh)->row * 0.5f;
 		for(std::set<pawn_ptr>::iterator p = pawns.begin(); p != pawns.end(); ++p) {
 			if((*p)->destroyed()) {
 				continue;
 			}
-			float col_distance = sqrt(((*bh)->col - (*p)->cur_tile->col) * ((*bh)->col - (*p)->cur_tile->col));
-			float row_distance = sqrt(((*bh)->row - (*p)->cur_tile->row) * ((*bh)->row - (*p)->cur_tile->row));
-			float distance = sqrt(col_distance * col_distance + row_distance * row_distance);
-			float chance = 1.0f / pow(distance, 2.0f) * (*bh)->black_hole_power;
+			float px = (*p)->cur_tile->col + (((*p)->cur_tile->row % 2) * 0.5f);
+			float py = (*p)->cur_tile->row * 0.5f;
+			float dx = bx - px, dy = by - py;
+			float distance = sqrt(dx * dx + dy * dy);
+			float chance = (*bh)->black_hole_power / (distance * distance);
 			if(rand() % 100 < (chance * 100)) {
 				// OM NOM NOM.
 				black_hole_suck_pawn(*bh, *p);
 			}
 		}
 	}
-}
-
-static int move_towards(int target, int current) {
-	if(target > current) return current+1;
-	if(target < current) return current-1;
-	return current;
 }
 
 // Return true if pawn can be pulled onto the tile.
@@ -394,30 +391,31 @@ static bool can_pull_on_to(Tile *tile, pawn_ptr pawn) {
 }
 
 void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
-	Tile *target_1, *target_2;
 	Tile *target;
-
-	// Figure out what tile the pawn should be pulled onto.
-	target_1 = game_state->tile_at(move_towards(tile->col, pawn->cur_tile->col), pawn->cur_tile->row);
-	target_2 = game_state->tile_at(pawn->cur_tile->col, move_towards(tile->row, pawn->cur_tile->row));
-
-	if(target_1 && !can_pull_on_to(target_1, pawn)) {
-		target_1 = 0;
-	}
-	if(target_2 && !can_pull_on_to(target_2, pawn)) {
-		target_2 = 0;
-	}
-	if(target_1 && target_2) {
-		target = (rand() & 1) ? target_1 : target_2;
-	} else if(target_1) {
-		target = target_1;
-	} else if(target_2) {
-		target = target_2;
-	} else {
-		return;
-	}
-
-	game_state->move_pawn_to(pawn, target);
+	
+	float bx = tile->col + ((tile->row % 2) * 0.5f);
+	float by = tile->row * 0.5f;
+	float px = pawn->cur_tile->col + ((pawn->cur_tile->row % 2) * 0.5f);
+	float py = pawn->cur_tile->row * 0.5f;
+	float angle = atan2(py - by, px - bx);
+	
+	if (angle > -M_PI / 6 && angle <= M_PI / 6) // approaching from right
+		target = game_state->tile_at(pawn->cur_tile->col - 1, pawn->cur_tile->row);
+	else if (angle > M_PI / 6 && angle <= M_PI / 2) // from bottom right
+		target = game_state->tile_at(pawn->cur_tile->col - !(pawn->cur_tile->row % 2), pawn->cur_tile->row - 1);
+	else if (angle > M_PI / 2 && angle <= 5 * M_PI / 6) // from bottom left
+		target = game_state->tile_at(pawn->cur_tile->col + (pawn->cur_tile->row % 2), pawn->cur_tile->row - 1);
+	else if (angle < -M_PI / 6 && angle >= -M_PI / 2) // from top right
+		target = game_state->tile_at(pawn->cur_tile->col - !(pawn->cur_tile->row % 2), pawn->cur_tile->row + 1);
+	else if (angle < -M_PI / 2 && angle >= -5 * M_PI / 6) // from top left
+		target = game_state->tile_at(pawn->cur_tile->col + (pawn->cur_tile->row % 2), pawn->cur_tile->row + 1);
+	else if (angle > 5 * M_PI / 6 || angle < -5 * M_PI / 6) // from left
+		target = game_state->tile_at(pawn->cur_tile->col + 1, pawn->cur_tile->row);
+	else
+		target = NULL;
+	
+	if (target && can_pull_on_to(target, pawn))
+		game_state->move_pawn_to(pawn, target);
 }
 
 bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg) {
