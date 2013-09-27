@@ -863,7 +863,7 @@ void Client::DrawScreen() {
 	if(mpawn) {
 		draw_pmenu(mpawn);
 	}
-	else if (hpawn && hpawn->colour == my_colour) {
+	else if (!dpawn && hpawn && hpawn->colour == my_colour) {
 		draw_pmenu(hpawn);
 	}
 
