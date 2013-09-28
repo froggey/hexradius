@@ -647,28 +647,31 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 			else if (use_keyboard_controls) {
 				int mouse_x, mouse_y;
 				SDL_GetMouseState(&mouse_x, &mouse_y);
-				if (event.key.keysym.unicode == 'd') {
-					std::pair<int,int> tile_coords = tile_by_screen(mouse_x, mouse_y);
-					HexRadius::Map::Tile *tile = map.get_tile(Position(tile_coords.first, tile_coords.second));
-					if (tile)
-						map.tiles.erase(Position(tile_coords.first, tile_coords.second));
-				}
-				else if (event.key.keysym.unicode == 'a') {
-					std::pair<int,int> tile_coords = tile_by_screen(mouse_x, mouse_y);
-					HexRadius::Map::Tile *tile = map.touch_tile(Position(tile_coords.first, tile_coords.second));
-					
-					tile->type = HexRadius::Map::Tile::NORMAL;
-					tile->has_pawn        = false;
-					tile->has_landing_pad = false;
-					tile->has_mine        = false;
-				}
-				else if (event.key.keysym.unicode >= '0' && event.key.keysym.unicode <= '6') {
-					int t = event.key.keysym.unicode - '0';
-					std::pair<int,int> tile_coords = tile_by_screen(mouse_x, mouse_y);
-					HexRadius::Map::Tile *tile = map.touch_tile(Position(tile_coords.first, tile_coords.second));
-					
-					tile->has_pawn = !!t;
-					tile->pawn_colour = (PlayerColour)(t - 1);
+				std::pair<int,int> tile_coords = tile_by_screen(mouse_x, mouse_y);
+				if (tile_coords.first >= 0) {
+					if (event.key.keysym.unicode == 'd') {
+						HexRadius::Map::Tile *tile = map.get_tile(Position(tile_coords.first, tile_coords.second));
+						if (tile)
+							map.tiles.erase(Position(tile_coords.first, tile_coords.second));
+					}
+					else if (event.key.keysym.unicode == 'a') {
+						std::pair<int,int> tile_coords = tile_by_screen(mouse_x, mouse_y);
+						HexRadius::Map::Tile *tile = map.touch_tile(Position(tile_coords.first, tile_coords.second));
+						
+						tile->type = HexRadius::Map::Tile::NORMAL;
+						tile->has_pawn        = false;
+						tile->has_landing_pad = false;
+						tile->has_mine        = false;
+					}
+					else if (event.key.keysym.unicode >= '0' && event.key.keysym.unicode <= '6') {
+						int t = event.key.keysym.unicode - '0';
+						std::pair<int,int> tile_coords = tile_by_screen(mouse_x, mouse_y);
+						HexRadius::Map::Tile *tile = map.get_tile(Position(tile_coords.first, tile_coords.second));
+						if (tile) {
+							tile->has_pawn = !!t;
+							tile->pawn_colour = (PlayerColour)(t - 1);
+						}
+					}
 				}
 			}
 		}
