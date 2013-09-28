@@ -259,13 +259,14 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	}
 
 	server.clients.erase(shared_from_this());
+	
+	server.CheckForGameOver();
 }
 
 void Server::Client::FinishQuit(const boost::system::error_code &, ptr /*cptr*/) {}
 
-void Server::NextTurn(void) {
+void Server::NextTurn() {
 	client_set::iterator last = turn;
-	bool allow_end = !getenv("HR_DONT_END_GAME");
 
 	black_hole_suck();
 
@@ -278,39 +279,10 @@ void Server::NextTurn(void) {
 			}
 		}
 
-		if(allow_end && turn == last) {
-			state = LOBBY;
-
-			turn = clients.end();
-
-			protocol::message gover;
-			gover.set_msg(protocol::GOVER);
-			gover.set_is_draw(true);
-
-			WriteAll(gover);
-
-			return;
-		}
-
 		if((*turn)->colour != SPECTATE &&
 		   !game_state->player_pawns((*turn)->colour).empty()) {
 				break;
 		}
-	}
-
-	if(allow_end && turn == last) {
-		state = LOBBY;
-
-		protocol::message gover;
-		gover.set_msg(protocol::GOVER);
-		gover.set_is_draw(false);
-		gover.set_player_id((*turn)->id);
-
-		turn = clients.end();
-
-		WriteAll(gover);
-
-		return;
 	}
 
 	if(--pspawn_turns == 0) {
@@ -324,7 +296,40 @@ void Server::NextTurn(void) {
 	WriteAll(tmsg);
 }
 
-void Server::SpawnPowers(void) {
+bool Server::CheckForGameOver() {
+	if (getenv("HR_DONT_END_GAME"))
+		return false;
+	
+	int alive = 0;
+	uint16_t winner_id;
+	for (client_set::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (game_state->player_pawns((*it)->colour).size()) {
+			alive++;
+			winner_id = (*it)->id;
+		}
+	}
+	
+	if (alive <= 1) {
+		state = LOBBY;
+		
+		protocol::message gover;
+		gover.set_msg(protocol::GOVER);
+		gover.set_is_draw(alive == 0);
+		if (alive > 0)
+			gover.set_player_id(winner_id);
+		
+		turn = clients.end();
+		
+		WriteAll(gover);
+		
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void Server::SpawnPowers() {
 	Tile::List stiles = RandomTiles(game_state->tiles, pspawn_num, true, true, false, false);
 
 	protocol::message msg;
@@ -517,7 +522,8 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				pawn->flags &= ~PWR_JUMP;
 				game_state->update_pawn(pawn);
 			}
-			NextTurn();
+			if (!CheckForGameOver())
+				NextTurn();
 		}else{
 			client->WriteBasic(protocol::BADMOVE);
 		}
@@ -535,6 +541,8 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			}
 
 			client->WriteBasic(protocol::OK);
+			
+			CheckForGameOver();
 		}
 	}
 

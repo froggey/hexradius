@@ -71,47 +71,48 @@ public:
 
 	ServerGameState *game_state;
 
-	private:
-		typedef std::set<Server::Client::ptr,client_compare> client_set;
-		typedef client_set::iterator client_iterator;
+private:
+	typedef std::set<Server::Client::ptr,client_compare> client_set;
+	typedef client_set::iterator client_iterator;
 
-		boost::asio::io_service io_service;
-		boost::asio::ip::tcp::acceptor acceptor;
-		boost::thread worker;
+	boost::asio::io_service io_service;
+	boost::asio::ip::tcp::acceptor acceptor;
+	boost::thread worker;
 
-		client_set clients;
-		uint16_t idcounter;
+	client_set clients;
+	uint16_t idcounter;
 
-		Scenario scenario;
+	Scenario scenario;
 
-		client_iterator turn;
-		enum { LOBBY, GAME } state;
+	client_iterator turn;
+	enum { LOBBY, GAME } state;
 
-		int pspawn_turns;
-		int pspawn_num;
+	int pspawn_turns;
+	int pspawn_num;
 
-		void worker_main();
+	void worker_main();
 
-		void StartAccept(void);
-		void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
-		bool HandleMessage(Server::Client::ptr client, const protocol::message &msg);
+	void StartAccept();
+	void HandleAccept(Server::Client::ptr client, const boost::system::error_code& err);
+	bool HandleMessage(Server::Client::ptr client, const protocol::message &msg);
 
-		typedef boost::shared_array<char> wbuf_ptr;
+	typedef boost::shared_array<char> wbuf_ptr;
 
-		void WriteAll(const protocol::message &msg, Server::Client *exempt = NULL);
+	void WriteAll(const protocol::message &msg, Server::Client *exempt = NULL);
 
-		void StartGame(void);
+	void StartGame();
+	bool CheckForGameOver();
 
-		void NextTurn(void);
-		void SpawnPowers(void);
-		void black_hole_suck();
-		// Suck pawn towards the black hole's tile.
-		void black_hole_suck_pawn(Tile *tile, pawn_ptr pawn);
+	void NextTurn();
+	void SpawnPowers();
+	void black_hole_suck();
+	// Suck pawn towards the black hole's tile.
+	void black_hole_suck_pawn(Tile *tile, pawn_ptr pawn);
 
-		bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
-		bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
+	bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
+	bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
 
-		Server::Client *get_client(uint16_t id);
+	Server::Client *get_client(uint16_t id);
 
 	// Send an UPDATE message for one pawn.
 	void update_one_pawn(pawn_ptr pawn);
