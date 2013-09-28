@@ -20,6 +20,8 @@ static GUI::TextBox *mp_text;
 
 static HexRadius::Map map;
 
+static unsigned int map_width, map_height;
+
 /* Screen size in pixels */
 
 static unsigned int screen_width, screen_height;
@@ -50,14 +52,14 @@ static unsigned int tile_y_pos(unsigned int, unsigned int tile_y, int tile_heigh
 static void map_resized()
 {
 	screen_width = std::max(
-		2 * BOARD_OFFSET + (map.width() - 1) * TILE_WOFF + TILE_WIDTH + TILE_ROFF,
+		2 * BOARD_OFFSET + (map_width - 1) * TILE_WOFF + TILE_WIDTH + TILE_ROFF,
 		TOOLBAR_WIDTH
 	);
 	
-	screen_height = TOOLBAR_HEIGHT + 2 * BOARD_OFFSET + (map.height() - 1) * TILE_HOFF + TILE_HEIGHT;
+	screen_height = TOOLBAR_HEIGHT + 2 * BOARD_OFFSET + (map_height - 1) * TILE_HOFF + TILE_HEIGHT;
 	
-	mw_text->set_text(to_string(map.width()));
-	mh_text->set_text(to_string(map.height()));
+	mw_text->set_text(to_string(map_width));
+	mh_text->set_text(to_string(map_height));
 	
 	ImgStuff::set_mode(screen_width, screen_height);
 }
@@ -110,13 +112,15 @@ static void set_map_width_cb(const GUI::TextBox &text, const SDL_Event &)
 	
 	/* Populate any new columns with blank tiles */
 	
-	for(int x = map.width(); x < width; ++x)
+	for(int x = map_width; x < width; ++x)
 	{
-		for(unsigned int y = 0; y < map.width(); ++y)
+		for(unsigned int y = 0; y < map_height; ++y)
 		{
 			map.touch_tile(Position(x, y));
 		}
 	}
+	
+	map_width = width;
 	
 	map_resized();
 }
@@ -164,13 +168,15 @@ static void set_map_height_cb(const GUI::TextBox &text, const SDL_Event &)
 	
 	/* Populate any new rows with blank tiles */
 	
-	for(int y = map.height(); y < height; ++y)
+	for(int y = map_height; y < height; ++y)
 	{
-		for(unsigned int x = 0; x < map.width(); ++x)
+		for(unsigned int x = 0; x < map_width; ++x)
 		{
 			map.touch_tile(Position(x, y));
 		}
 	}
+	
+	map_height = height;
 	
 	map_resized();
 }
@@ -187,6 +193,9 @@ static void load_map_cb(const GUI::TextButton &, const SDL_Event &)
 		fprintf(stderr, "%s\n", e.what());
 		return;
 	}
+	
+	map_width  = map.width();
+	map_height = map.height();
 	
 	map_resized();
 	
