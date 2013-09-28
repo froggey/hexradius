@@ -50,6 +50,19 @@ Tile *GameState::tile_at(int column, int row) {
 	return 0;
 }
 
+Tile *GameState::tile_left_of_coords(int column, int row) { return tile_at(column - 1, row); }
+Tile *GameState::tile_right_of_coords(int column, int row) { return tile_at(column + 1, row); }
+Tile *GameState::tile_ne_of_coords(int column, int row) { return tile_at(column + (row % 2), row - 1); }
+Tile *GameState::tile_nw_of_coords(int column, int row) { return tile_at(column - !(row % 2), row - 1); }
+Tile *GameState::tile_se_of_coords(int column, int row) { return tile_at(column + (row % 2), row + 1); }
+Tile *GameState::tile_sw_of_coords(int column, int row) { return tile_at(column - !(row % 2), row + 1); }
+Tile *GameState::tile_left_of(Tile *t) { return tile_left_of_coords(t->col, t->row); }
+Tile *GameState::tile_right_of(Tile *t) { return tile_right_of_coords(t->col, t->row); }
+Tile *GameState::tile_ne_of(Tile *t) { return tile_ne_of_coords(t->col, t->row); }
+Tile *GameState::tile_nw_of(Tile *t) { return tile_nw_of_coords(t->col, t->row); }
+Tile *GameState::tile_se_of(Tile *t) { return tile_se_of_coords(t->col, t->row); }
+Tile *GameState::tile_sw_of(Tile *t) { return tile_sw_of_coords(t->col, t->row); }
+
 pawn_ptr GameState::pawn_at(int column, int row)
 {
 	Tile *tile = tile_at(column, row);

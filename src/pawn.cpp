@@ -33,9 +33,34 @@ Tile::List Pawn::move_tiles() {
 	return RadialTiles((flags & PWR_JUMP) ? range + 1 : 0);
 }
 
-bool Pawn::can_move(Tile *tile) {
+static Tile* line_end(Tile* start, boost::function<Tile*(Tile*)> move_fn) {
+	Tile* rv = start;
+	for (;;) {
+		Tile* temp = move_fn(rv);
+		if (temp)
+			rv = temp;
+		else
+			return rv;
+	}
+}
+
+bool Pawn::can_move(Tile *tile, ServerGameState *state) {
 	// Move only onto adjacent tiles or friendly landing pads.
 	Tile::List adjacent_tiles = move_tiles();
+	
+	if (cur_tile->wrap & (1 << Tile::WRAP_LEFT))
+		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_right_of, state, _1)));
+	if (cur_tile->wrap & (1 << Tile::WRAP_RIGHT))
+		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_left_of, state, _1)));
+	if (cur_tile->wrap & (1 << Tile::WRAP_UP_LEFT))
+		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_se_of, state, _1)));
+	if (cur_tile->wrap & (1 << Tile::WRAP_DOWN_LEFT))
+		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_ne_of, state, _1)));
+	if (cur_tile->wrap & (1 << Tile::WRAP_UP_RIGHT))
+		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_sw_of, state, _1)));
+	if (cur_tile->wrap & (1 << Tile::WRAP_DOWN_RIGHT))
+		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_nw_of, state, _1)));
+	
 	if((std::find(adjacent_tiles.begin(), adjacent_tiles.end(), tile) == adjacent_tiles.end()) &&
 	   !(tile->has_landing_pad && tile->landing_pad_colour == colour)) {
 		return false;

@@ -39,7 +39,7 @@ namespace ImgStuff {
 		}
 	};
 
-	SDL_Surface *GetImage(std::string filename, const TintValues &tint = TintValues(0,0,0,255));
+	SDL_Surface *GetImage(std::string filename, const TintValues &tint = TintValues(0, 0, 0, 255));
 	SDL_Surface *GetImageNC(std::string filename);
 	void FreeImages(void);
 	Uint32 GetPixel(SDL_Surface *surface, int x, int y);
