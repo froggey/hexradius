@@ -124,7 +124,7 @@ options::options() {
 	char *user = getenv("USER");
 	#endif
 
-	username = user ? user : "Game losing mingebag";
+	username = user ? user : "Unnamed player";
 
 	show_lines = true;
 }
