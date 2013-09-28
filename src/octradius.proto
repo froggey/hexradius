@@ -23,15 +23,15 @@ enum msgtype {
 	MOVE = 21;	// Move a single pawn
 	USE = 22;	// Use a power
 	UPDATE = 23;	// Update {pawn,tile}(s) attributes (flags, powers, etc)
-        FORCE_MOVE = 24;// Forcibly move a single pawn.
-        PAWN_ANIMATION = 25; // Play a pawn animation.
-        TILE_ANIMATION = 26; // Play a tile animation.
-        PARTICLE_ANIMATION = 27; // Play a particle animation.
-        ADD_POWER_NOTIFICATION = 28; // Display a power added message.
-                                     // pawn->use_power is the power. Might not be supplied.
-        DESTROY = 29;   // Destroy a pawn.
-        USE_POWER_NOTIFICATION = 30; // Display a power added message.
-                                     // pawn->use_power is the power. Might not be supplied.
+	FORCE_MOVE = 24;// Forcibly move a single pawn.
+	PAWN_ANIMATION = 25; // Play a pawn animation.
+	TILE_ANIMATION = 26; // Play a tile animation.
+	PARTICLE_ANIMATION = 27; // Play a particle animation.
+	ADD_POWER_NOTIFICATION = 28; // Display a power added message.
+									// pawn->use_power is the power. Might not be supplied.
+	DESTROY = 29;   // Destroy a pawn.
+	USE_POWER_NOTIFICATION = 30; // Display a power added message.
+									// pawn->use_power is the power. Might not be supplied.
 }
 
 enum colour {
@@ -54,13 +54,14 @@ message tile {
 	required uint32 row = 2;
 	optional sint32 height = 3;
 	optional bool power = 4;
-        optional bool smashed = 5;
-        optional bool has_mine = 6;
-        optional uint32 mine_colour = 7;
-        optional bool has_landing_pad = 8;
-        optional uint32 landing_pad_colour = 9;
-        optional bool has_black_hole = 10;
+	optional bool smashed = 5;
+	optional bool has_mine = 6;
+	optional uint32 mine_colour = 7;
+	optional bool has_landing_pad = 8;
+	optional uint32 landing_pad_colour = 9;
+	optional bool has_black_hole = 10;
 	optional uint32 black_hole_power = 11;
+	optional uint32 wrap = 12;
 }
 
 message pawn {
@@ -97,10 +98,10 @@ message scenario {
 }
 
 message key_value {
-        required string key = 1;
-        optional int32 int_value = 2;
-        optional float float_value = 3;
-        optional string string_value = 4;
+	required string key = 1;
+	optional int32 int_value = 2;
+	optional float float_value = 3;
+	optional string string_value = 4;
 }
 
 message message {
@@ -118,6 +119,6 @@ message message {
 	optional bool is_draw = 12;
 	optional string msgtext = 14;
 
-        optional string animation_name = 15;
-        repeated key_value misc = 16;
+	optional string animation_name = 15;
+	repeated key_value misc = 16;
 }

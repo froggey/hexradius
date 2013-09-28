@@ -25,6 +25,20 @@ public:
 	/** Return the tile at given board column & row,
 	 * or null if there is no tile at that location. */
 	Tile *tile_at(int column, int row);
+	
+	Tile *tile_left_of_coords(int column, int row);
+	Tile *tile_right_of_coords(int column, int row);
+	Tile *tile_ne_of_coords(int column, int row);
+	Tile *tile_nw_of_coords(int column, int row);
+	Tile *tile_se_of_coords(int column, int row);
+	Tile *tile_sw_of_coords(int column, int row);
+	Tile *tile_left_of(Tile *t);
+	Tile *tile_right_of(Tile *t);
+	Tile *tile_ne_of(Tile *t);
+	Tile *tile_nw_of(Tile *t);
+	Tile *tile_se_of(Tile *t);
+	Tile *tile_sw_of(Tile *t);
+	
 	/** Return the pawn at given board column & row,
 	 * or null if there is no pawn at that location. */
 	pawn_ptr pawn_at(int column, int row);

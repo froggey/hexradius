@@ -516,7 +516,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		}
 
 
-		if(pawn->can_move(tile)) {
+		if(pawn->can_move(tile, game_state)) {
 			game_state->move_pawn_to(pawn, tile);
 			if(pawn->flags & PWR_JUMP) {
 				pawn->flags &= ~PWR_JUMP;

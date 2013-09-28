@@ -513,6 +513,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 			tile->landing_pad_colour = (PlayerColour)msg.tiles(i).landing_pad_colour();
 			tile->has_black_hole = msg.tiles(i).has_black_hole();
 			tile->black_hole_power = msg.tiles(i).black_hole_power();
+			tile->wrap = msg.tiles(i).wrap();
 		}
 
 		for(int i = 0; i < msg.pawns_size(); i++) {
@@ -693,6 +694,7 @@ void Client::DrawScreen() {
 	SDL_Surface *mine = ImgStuff::GetImage("graphics/mines.png");
 	SDL_Surface *landing_pad = ImgStuff::GetImage("graphics/landingpad.png");
 	SDL_Surface *blackhole = ImgStuff::GetImage("graphics/blackhole.png");
+	SDL_Surface *wrap = ImgStuff::GetImage("graphics/wrap.png");
 
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
@@ -832,6 +834,16 @@ void Client::DrawScreen() {
 
 		if((*ti)->has_power) {
 			ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
+		}
+		
+		for (int wd = 0; wd < 6; wd++) {
+			if ((*ti)->wrap & (1 << wd)) {
+				SDL_Rect s;
+				s.x = 0;
+				s.y = wd * 50;
+				s.w = s.h = 50;
+				ensure_SDL_BlitSurface(wrap, &s, screen, &rect);
+			}
 		}
 
 		if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {

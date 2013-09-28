@@ -255,6 +255,60 @@ static bool test_repaint_power(tile_area_function area_fn, pawn_ptr pawn, Server
 	return false;
 }
 
+/// Wrap: Allow jumping from one side of the board to the other.
+static void use_wrap_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state, Powers::Power::Directionality direction) {
+	Tile::List tiles = area_fn(pawn);
+	
+	for (Tile::List::iterator it = tiles.begin(); it != tiles.end(); it++) {
+		if (direction == Powers::Power::row) {
+			if (!state->tile_left_of(*it))
+				(*it)->wrap |= 1 << Tile::WRAP_LEFT;
+			if (!state->tile_right_of(*it))
+				(*it)->wrap |= 1 << Tile::WRAP_RIGHT;
+		}
+		else if (direction == Powers::Power::nw_se) {
+			if (!state->tile_nw_of(*it))
+				(*it)->wrap |= 1 << Tile::WRAP_UP_LEFT;
+			if (!state->tile_se_of(*it))
+				(*it)->wrap |= 1 << Tile::WRAP_DOWN_RIGHT;
+		}
+		else {
+			if (!state->tile_ne_of(*it))
+				(*it)->wrap |= 1 << Tile::WRAP_UP_RIGHT;
+			if (!state->tile_sw_of(*it))
+				(*it)->wrap |= 1 << Tile::WRAP_DOWN_LEFT;
+		}
+		
+		state->update_tile(*it);
+	}
+}
+
+static bool test_wrap_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state, Powers::Power::Directionality direction) {
+	Tile::List tiles = area_fn(pawn);
+	
+	for (Tile::List::iterator it = tiles.begin(); it != tiles.end(); it++) {
+		if (direction == Powers::Power::row) {
+			if (!state->tile_left_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_LEFT)))
+				return true;
+			if (!state->tile_right_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_RIGHT)))
+				return true;
+		}
+		else if (direction == Powers::Power::nw_se) {
+			if (!state->tile_nw_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_UP_LEFT)))
+				return true;
+			if (!state->tile_se_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_DOWN_RIGHT)))
+				return true;
+		}
+		else {
+			if (!state->tile_ne_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_UP_RIGHT)))
+				return true;
+			if (!state->tile_sw_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_DOWN_LEFT)))
+				return true;
+		}
+	}
+	return false;
+}
+
 /// Teleport: Move to a random location on the board, will not land on a mine, smashed/black hole tile or existing pawn.
 static void teleport(pawn_ptr pawn, ServerGameState *state) {
 	state->teleport_hack(pawn);
@@ -411,6 +465,22 @@ void Powers::init_powers()
 	def_directional_power("Mine", use_mine_power, test_mine_power, 40, 20);
 	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 50, 50);
 	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 50, 50);
+	def_power("Wrap",
+		  boost::bind(use_wrap_power, row_tiles, _1, _2, Powers::Power::row),
+		  boost::bind(test_wrap_power, row_tiles, _1, _2, Powers::Power::row),
+		  50,
+		  Powers::Power::row);
+	def_power("Wrap",
+		  boost::bind(use_wrap_power, bs_tiles, _1, _2, Powers::Power::nw_se),
+		  boost::bind(test_wrap_power, bs_tiles, _1, _2, Powers::Power::nw_se),
+		  50,
+		  Powers::Power::nw_se);
+	def_power("Wrap",
+		  boost::bind(use_wrap_power, fs_tiles, _1, _2, Powers::Power::ne_sw),
+		  boost::bind(test_wrap_power, fs_tiles, _1, _2, Powers::Power::ne_sw),
+		  50,
+		  Powers::Power::ne_sw);
+	
 	def_power("Mine",
 		  boost::bind(use_mine_power, point_tile, _1, _2),
 		  boost::bind(test_mine_power, point_tile, _1, _2),

@@ -35,7 +35,7 @@ public:
 
 	void CopyToProto(protocol::pawn *p, bool copy_powers);
 
-	bool can_move(Tile *new_tile);
+	bool can_move(Tile *new_tile, ServerGameState *state);
 	// Perform a move without performing the move checks.
 	// Moving on to a friendly pawn will still smash it!
 	void force_move(Tile *new_tile, ServerGameState *state);

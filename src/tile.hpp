@@ -31,6 +31,9 @@ struct Tile {
 
 	bool has_black_hole;
 	int black_hole_power;
+	
+	uint32_t wrap;
+	enum wrap_direction { WRAP_RIGHT, WRAP_LEFT, WRAP_UP_RIGHT, WRAP_DOWN_RIGHT, WRAP_UP_LEFT, WRAP_DOWN_LEFT };
 
 	Tile(int c, int r, int h);
 
