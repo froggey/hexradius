@@ -868,6 +868,19 @@ void Client::DrawScreen() {
 		DrawPawn(dpawn, rect, base, std::set<Tile *>());
 	}
 
+	std::vector<pawn_ptr> all_pawns = game_state->all_pawns();
+	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
+	for(std::vector<pawn_ptr>::iterator pi = all_pawns.begin(); pi != all_pawns.end(); ++pi) {
+		pawn_ptr pawn = *pi;
+		for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); ++i) {
+			i->time -= dt;
+			if (i->time > 0)
+				draw_power_message(pawn, *i);
+			else
+				i = pawn->power_messages.erase(i);
+		}
+	}
+
 	pmenu.clear();
 	pmenu_area.w = 0;
 	pmenu_area.h = 0;
@@ -887,7 +900,6 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 	bool hide = invis &&
 		(pawn->colour != my_colour) &&
 		(infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end());
-	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
 
 	if (!hide) {
 		const ImgStuff::TintValues tint(0, 0, 0, invis ? 128 : 255);
@@ -924,13 +936,6 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 			ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 		if(pawn->flags & PWR_INFRAVISION)
 			ensure_SDL_BlitSurface(infravision, &base, screen, &rect);
-	}
-	for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); i++) {
-		i->time -= dt;
-		if (i->time > 0)
-			draw_power_message(pawn, *i);
-		else
-			i = pawn->power_messages.erase(i);
 	}
 }
 
