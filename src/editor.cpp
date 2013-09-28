@@ -460,9 +460,9 @@ static std::pair<int,int> tile_by_screen(int screen_x, int screen_y)
 	SDL_Surface *tile_img = ImgStuff::GetImage("graphics/hextile.png");
 	ensure_SDL_LockSurface(tile_img);
 	
-	for(int y = map.height() - 1; y >= 0; --y)
+	for(int y = map_height - 1; y >= 0; --y)
 	{
-		for(int x = map.width() - 1; x >= 0; --x)
+		for(int x = map_width - 1; x >= 0; --x)
 		{
 			HexRadius::Map::Tile *tile = map.get_tile(Position(x, y));
 			
