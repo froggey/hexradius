@@ -39,7 +39,7 @@ namespace HexRadius
 					bool has_mine;
 					PlayerColour mine_colour;
 					
-					Tile(const Position &_pos);
+					Tile(const Position &_pos, int _height = 0);
 			};
 			
 			std::map<Position,Tile> tiles;

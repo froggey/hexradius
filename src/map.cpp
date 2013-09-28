@@ -107,7 +107,13 @@ void HexRadius::Map::load(const std::string &filename)
 		{
 			case MAP_OP_TILE:
 			{
-				new_tiles.insert(std::make_pair(Position(op.x, op.y), Tile(Position(op.x, op.y))));
+				if(op.extra < -2 || op.extra > 2)
+				{
+					fprintf(stderr, "Ignoring tile with bad height\n");
+					break;
+				}
+				
+				new_tiles.insert(std::make_pair(Position(op.x, op.y), Tile(Position(op.x, op.y), op.extra)));
 				break;
 			}
 			
@@ -210,9 +216,9 @@ void HexRadius::Map::save(const std::string &filename) const
 	fclose(fh);
 }
 
-HexRadius::Map::Tile::Tile(const Position &_pos): pos(_pos)
+HexRadius::Map::Tile::Tile(const Position &_pos, int _height): pos(_pos)
 {
-	height = 0;
+	height = _height;
 	type   = NORMAL;
 	
 	has_pawn        = false;
