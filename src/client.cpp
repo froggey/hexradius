@@ -886,8 +886,9 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 		SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png", tint);
 
 		unsigned int frame = torus_frame;
-
-		ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
+		
+		if (pawn != dpawn)
+			ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
 		if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 			rect.x -= climb_offset;
