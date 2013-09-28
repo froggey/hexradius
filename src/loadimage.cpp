@@ -158,14 +158,8 @@ void ImgStuff::SetPixel(SDL_Surface *surface, int x, int y, Uint32 pixel) {
 	}
 }
 
-#define FOOBAR(v) \
-	if((int)v + tint.v > 255) { \
-		v = 255; \
-	}else if((int)v + tint.v < 0) { \
-		v = 0; \
-	}else{ \
-		v += tint.v; \
-	}
+#define FOOBAR1(v) std::max(0, std::min(255, (v)))
+#define FOOBAR(v) FOOBAR1(v + tint.v)
 
 void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
 	ensure_SDL_LockSurface(surface);
@@ -176,11 +170,11 @@ void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
 
 			Uint8 r, g, b, a;
 			SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
-
-			FOOBAR(r);
-			FOOBAR(g);
-			FOOBAR(b);
-			FOOBAR(a);
+			
+			r = FOOBAR(r);
+			g = FOOBAR(g);
+			b = FOOBAR(b);
+			a = FOOBAR1((a * tint.a) / 255);
 
 			pixel = SDL_MapRGBA(surface->format, r, g, b, a);
 

@@ -871,23 +871,23 @@ void Client::DrawScreen() {
 }
 
 void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::set<Tile *> &infravision_tiles) {
-	bool hide = (pawn->flags & PWR_INVISIBLE) &&
+	bool invis = !!(pawn->flags & PWR_INVISIBLE);
+	bool hide = invis &&
 		(pawn->colour != my_colour) &&
 		(infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end());
 	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
 
 	if (!hide) {
-		SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png");
-		SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png");
-		SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png");
-		SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png");
-		SDL_Surface *invisible = ImgStuff::GetImage("graphics/upgrades/invisible.png");
-		SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png");
+		const ImgStuff::TintValues tint(0, 0, 0, invis ? 128 : 255);
+		SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png", tint);
+		SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png", tint);
+		SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png", tint);
+		SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png", tint);
+		SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png", tint);
 
 		unsigned int frame = torus_frame;
 
-		if (!(pawn->flags & PWR_INVISIBLE))
-			ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
+		ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
 		if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
 			rect.x -= climb_offset;
@@ -909,8 +909,6 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 
 		if(pawn->flags & PWR_SHIELD)
 			ensure_SDL_BlitSurface(shield, &base, screen, &rect);
-		if(pawn->flags & PWR_INVISIBLE)
-			ensure_SDL_BlitSurface(invisible, &base, screen, &rect);
 		if(pawn->flags & PWR_INFRAVISION)
 			ensure_SDL_BlitSurface(infravision, &base, screen, &rect);
 	}

@@ -10,14 +10,14 @@ namespace ImgStuff {
 	struct TintValues {
 		int r, g, b, a;
 
-		TintValues() : r(0), g(0), b(0), a(0) {}
-		TintValues(int ar, int ag, int ab, int aa = 0) : r(ar), g(ag), b(ab), a(aa) {}
+		TintValues() : r(0), g(0), b(0), a(255) {}
+		TintValues(int ar, int ag, int ab, int aa = 255) : r(ar), g(ag), b(ab), a(aa) {}
 
-		void Tint(int ar, int ag, int ab, int aa = 0) {
+		void Tint(int ar, int ag, int ab, int aa = 255) {
 			r += ar;
 			g += ag;
 			b += ab;
-			a += aa;
+			a = aa * a / 255;
 		}
 
 		void Tint(TintValues &t) {
@@ -25,7 +25,7 @@ namespace ImgStuff {
 		}
 
 		bool HazTint(void) const {
-			return (r || g || b || a);
+			return (r || g || b || (a != 255));
 		}
 	};
 
@@ -39,7 +39,7 @@ namespace ImgStuff {
 		}
 	};
 
-	SDL_Surface *GetImage(std::string filename, const TintValues &tint = TintValues(0,0,0,0));
+	SDL_Surface *GetImage(std::string filename, const TintValues &tint = TintValues(0,0,0,255));
 	SDL_Surface *GetImageNC(std::string filename);
 	void FreeImages(void);
 	Uint32 GetPixel(SDL_Surface *surface, int x, int y);
