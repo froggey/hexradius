@@ -172,45 +172,58 @@ Tile::List Pawn::RowTiles(void) {
 	return tiles;
 }
 
-typedef std::set<Tile*> tile_set;
-
-static void radial_loop(Tile::List &all, tile_set &tiles, Tile *base) {
-	int c_min = base->col - 1 + (base->row % 2) * 1;
-	int c_max = base->col + (base->row % 2) * 1;
-	int c_extra = base->col + (base->row % 2 ? -1 : 1);
-	int r_min = base->row-1;
-	int r_max = base->row+1;
-
-	for(Tile::List::iterator i = all.begin(); i != all.end(); i++) {
-		if(((*i)->col >= c_min && (*i)->col <= c_max && (*i)->row >= r_min && (*i)->row <= r_max) || ((*i)->row == base->row && (*i)->col == c_extra)) {
-			tiles.insert(*i);
+Tile::List Pawn::RadialTiles(int range)
+{
+	/* Build a set of coordinates that fall within the pawn's radial power
+	 * area by initialising the set with the current tile and then
+	 * calculating the surrounding coordinates of each pair repeatedly
+	 * until the pawn's range has been satisfied.
+	*/
+	
+	std::set< std::pair<int,int> > coords;
+	
+	coords.insert(std::make_pair(cur_tile->col, cur_tile->row));
+	
+	for(int i = 0; i <= range; ++i)
+	{
+		std::set< std::pair<int,int> > new_coords = coords;
+		
+		for(std::set< std::pair<int,int> >::iterator ci = coords.begin(); ci != coords.end(); ++ci)
+		{
+			int c_min   = ci->first  - 1 + (ci->second % 2) * 1;
+			int c_max   = ci->first  + (ci->second % 2) * 1;
+			int c_extra = ci->first  + (ci->second % 2 ? -1 : 1);
+			int r_min   = ci->second - 1;
+			int r_max   = ci->second + 1;
+			
+			for(int c = c_min; c <= c_max; ++c)
+			{
+				for(int r = r_min; r <= r_max; ++r)
+				{
+					new_coords.insert(std::make_pair(c, r));
+				}
+			}
+			
+			new_coords.insert(std::make_pair(c_extra, ci->second));
 		}
+		
+		coords.insert(new_coords.begin(), new_coords.end());
 	}
-}
-
-Tile::List Pawn::RadialTiles(int range) {
-	tile_set tiles;
-	radial_loop(all_tiles, tiles, cur_tile);
-
-	tile_set outer = tiles;
-
-	for(int i = 0; i < range; i++) {
-		tile_set new_outer;
-
-		for(tile_set::iterator t = outer.begin(); t != outer.end(); t++) {
-			radial_loop(all_tiles, new_outer, *t);
-		}
-
-		tiles.insert(new_outer.begin(), new_outer.end());
-		outer = new_outer;
-	}
-
+	
+	/* Build a list of any tiles that fall within the set of coordinates to
+	 * be returned.
+	*/
+	
 	Tile::List ret;
-
-	for(tile_set::iterator t = tiles.begin(); t != tiles.end(); t++) {
-		ret.push_back(*t);
+	
+	for(Tile::List::iterator ti = all_tiles.begin(); ti != all_tiles.end(); ++ti)
+	{
+		if(coords.find(std::make_pair((*ti)->col, (*ti)->row)) != coords.end())
+		{
+			ret.push_back(*ti);
+		}
 	}
-
+	
 	return ret;
 }
 
