@@ -69,7 +69,6 @@ class Client {
 		player_set players;
 		enum { CONNECTING, LOBBY, GAME } state;
 		Scenario scenario;
-		boost::shared_ptr<GUI::TextButton> start_button;
 
 		int screen_w, screen_h;
 		unsigned int last_redraw;
