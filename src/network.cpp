@@ -299,6 +299,8 @@ void Server::NextTurn() {
 bool Server::CheckForGameOver() {
 	if (getenv("HR_DONT_END_GAME"))
 		return false;
+	if (!game_state)
+		return false;
 	
 	int alive = 0;
 	uint16_t winner_id;

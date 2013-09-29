@@ -431,8 +431,9 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		lobby_buttons.push_back(pc);
 
 		if(my_id == ADMIN_ID) {
-			boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", boost::bind(start_cb, _1, _2, this)));
-			lobby_buttons.push_back(sg);
+			start_button.reset(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", boost::bind(start_cb, _1, _2, this)));
+			start_button->enabled = false;
+			lobby_buttons.push_back(start_button);
 		}
 
 		boost::shared_ptr<GUI::TextButton> lg(new GUI::TextButton(lobby_gui, 645, 384, 135, 35, 2, "Leave Game", leave_cb));
@@ -1010,6 +1011,28 @@ void Client::lobby_regen() {
 		}
 
 		y += 40;
+	}
+		
+	if (start_button) {
+		if (getenv("HR_DONT_END_GAME")) {
+			// probably someone testing something in 1p mode, just let them do it
+			start_button->enabled = true;
+		}
+		else {
+			
+			int distinct_colours = 0;
+			for (int i = 0; i < 6; i++) {
+				for (player_set::iterator p = players.begin(); p != players.end(); p++) {
+					if (p->colour == i) {
+						distinct_colours++;
+						break;
+					}
+				}
+			}
+			
+			start_button->enabled = (distinct_colours > 1);
+		}
+		start_button->m_fgc = start_button->enabled ? ImgStuff::Colour(255, 255, 255) : ImgStuff::Colour(96, 96, 96);
 	}
 }
 
