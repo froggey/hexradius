@@ -349,7 +349,7 @@ GUI::TextButton::TextButton(GUI &g, int ax, int ay, int aw, int ah, int to, std:
 	w = aw;
 	h = ah;
 	tab_order = to;
-	enabled = tab_order ? true : false;
+	enabled = !!tab_order;
 
 	m_align = CENTER;
 	m_fgc = ImgStuff::Colour(255, 255, 255);
