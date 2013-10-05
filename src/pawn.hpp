@@ -6,7 +6,7 @@ private:
 	Tile::List &all_tiles;
 
 public:
-	enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD, BLACKHOLE };
+	enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD, BLACKHOLE, ANT_ATTACK };
 	typedef std::map<int,int> PowerList;
 
 	Tile *cur_tile;

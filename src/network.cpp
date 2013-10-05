@@ -11,9 +11,10 @@
 #include "powers.hpp"
 #include "gamestate.hpp"
 #include "fontstuff.hpp"
+#include "animator.hpp"
 
 Server::Server(uint16_t port, const std::string &s) :
-	game_state(0), acceptor(io_service), scenario(*this)
+	game_state(0), acceptor(io_service), scenario(*this), ant_timer(io_service)
 {
 	scenario.load_file(s);
 
@@ -194,6 +195,7 @@ void Server::StartGame(void) {
 	}
 
 	game_state = static_cast<ServerGameState *>(scenario.init_game(colours));
+	doing_ant_stuff = false;
 
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 	int bskip = TTF_FontLineSkip(bfont);
@@ -501,6 +503,9 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 }
 
 bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message &msg) {
+	if(doing_ant_stuff) {
+		return true;
+	}
 	if(msg.msg() == protocol::MOVE) {
 		if(msg.pawns_size() != 1) {
 			return true;
@@ -580,4 +585,47 @@ void Server::update_one_tile(Tile *tile)
 	tile->CopyToProto(update.add_tiles());
 
 	WriteAll(update);
+}
+
+typedef Tile *(GameState::*tile_coord_fn)(Tile *);
+static tile_coord_fn tile_coord_fns[] = {
+	&GameState::tile_left_of,
+	&GameState::tile_sw_of,
+	&GameState::tile_se_of,
+	&GameState::tile_right_of,
+	&GameState::tile_ne_of,
+	&GameState::tile_nw_of,
+};
+
+void Server::ant_tick(const boost::system::error_code &/*ec*/)
+{
+	assert(doing_ant_stuff);
+
+	if(ant_range == 0) {
+		doing_ant_stuff = false;
+		return;
+	}
+	ant_range -= 1;
+
+	assert(ant_new_heights.size() == 5);
+	assert(ant_go_left.size() == 5);
+
+	printf("(%i,%i) %i:  %i %i %i\n", ant_tile->col, ant_tile->row, ant_tile->height,
+	       ant_new_heights[ant_tile->height+2], ant_go_left[ant_tile->height+2], ant_direction);
+	ant_tile->height = ant_new_heights[ant_tile->height+2];
+	if(ant_tile->pawn && ant_tile->pawn->colour != ant_pawn->colour) {
+		game_state->destroy_pawn(ant_tile->pawn, Pawn::ANT_ATTACK, ant_pawn);
+		game_state->add_animator(new Animators::PawnBoom(ant_tile->screen_x, ant_tile->screen_y));
+	}
+	game_state->update_tile(ant_tile);
+	ant_direction += ant_go_left[ant_tile->height+2] ? 1 : -1;
+	if(ant_direction >= 6) ant_direction -= 6;
+	else if(ant_direction < 0) ant_direction += 6;
+	Tile *new_tile = (game_state->*(tile_coord_fns[ant_direction]))(ant_tile);
+	if(new_tile) {
+		ant_tile = new_tile;
+	}
+
+	ant_timer.expires_at(ant_timer.expires_at() + boost::posix_time::milliseconds(1000));
+	ant_timer.async_wait(boost::bind(&Server::ant_tick, this, boost::asio::placeholders::error));
 }

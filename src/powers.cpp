@@ -4,6 +4,7 @@
 #include "animator.hpp"
 #include "gamestate.hpp"
 #include <boost/bind.hpp>
+#include <algorithm>
 
 #undef ABSOLUTE
 #undef RELATIVE
@@ -406,6 +407,36 @@ static void use_upgrade_power(pawn_ptr pawn, ServerGameState *state, uint32_t up
 	state->grant_upgrade(pawn, upgrade);
 }
 
+// http://en.wikipedia.org/wiki/Langton's_ant
+// The ant's action in chosen based on the height of the tile, but
+// the rules are randomly assigned each use.
+// The ant will not advance onto a void tile.
+// Random rules might not be the best idea. Maybe someone can determine the most
+// interesting ruleset and hardcode that.
+// Testing reveals that this comes up with astonishingly bad rulesets.
+// Unfortunatly, all the logic is stuffed in Server, because
+// there's no way to do stuff with a delay from here :(
+static bool can_ant(pawn_ptr, ServerGameState *) {
+	return true;
+}
+
+static void use_ant(pawn_ptr pawn, ServerGameState *state) {
+	std::vector<int> go_left;
+	std::vector<int> new_height;
+	for(int i = 0; i < 5; ++i) {
+		go_left.push_back(rand() & 1);
+	}
+	new_height.push_back(-1);
+	new_height.push_back(-2);
+	new_height.push_back(0);
+	new_height.push_back(1);
+	new_height.push_back(2);
+	std::random_shuffle(go_left.begin(), go_left.end());
+	std::random_shuffle(new_height.begin(), new_height.end());
+
+	state->run_ant_stuff(pawn, rand() % 6, 15 * (pawn->range + 1), go_left, new_height);
+}
+
 static void def_power(const char *name,
 		      boost::function<void(pawn_ptr, ServerGameState *)> use_fn,
 		      boost::function<bool(pawn_ptr, ServerGameState *)> test_fn,
@@ -499,4 +530,5 @@ void Powers::init_powers()
 	def_power("Teleport", &teleport, can_teleport, 60, Powers::Power::undirected);
 	def_power("Landing Pad", &landing_pad, can_landing_pad, 60, Powers::Power::undirected);
 	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
+	def_power("Ant of Death", &use_ant, can_ant, 50, Powers::Power::undirected);
 }

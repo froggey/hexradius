@@ -244,3 +244,17 @@ void ServerGameState::move_pawn_to(pawn_ptr pawn, Tile *target)
 		}
 	}
 }
+
+void ServerGameState::run_ant_stuff(pawn_ptr pawn, int initial_direction, int range, const std::vector<int> &go_left, const std::vector<int> &new_heights)
+{
+	server.ant_pawn = pawn;
+	server.ant_tile = pawn->cur_tile;
+	server.ant_direction = initial_direction;
+	server.ant_range = range;
+	server.ant_go_left = go_left;
+	server.ant_new_heights = new_heights;
+
+	server.doing_ant_stuff = true;
+	server.ant_timer.expires_from_now(boost::posix_time::milliseconds(0));
+	server.ant_timer.async_wait(boost::bind(&Server::ant_tick, &server, boost::asio::placeholders::error));
+}
