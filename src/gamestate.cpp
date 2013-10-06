@@ -245,13 +245,13 @@ void ServerGameState::move_pawn_to(pawn_ptr pawn, Tile *target)
 	}
 }
 
-void ServerGameState::run_ant_stuff(pawn_ptr pawn, int range)
+void ServerGameState::run_worm_stuff(pawn_ptr pawn, int range)
 {
-	server.ant_pawn = pawn;
-	server.ant_tile = pawn->cur_tile;
-	server.ant_range = range;
+	server.worm_pawn = pawn;
+	server.worm_tile = pawn->cur_tile;
+	server.worm_range = range;
 
-	server.doing_ant_stuff = true;
-	server.ant_timer.expires_from_now(boost::posix_time::milliseconds(0));
-	server.ant_timer.async_wait(boost::bind(&Server::ant_tick, &server, boost::asio::placeholders::error));
+	server.doing_worm_stuff = true;
+	server.worm_timer.expires_from_now(boost::posix_time::milliseconds(0));
+	server.worm_timer.async_wait(boost::bind(&Server::worm_tick, &server, boost::asio::placeholders::error));
 }

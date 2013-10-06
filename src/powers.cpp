@@ -407,21 +407,21 @@ static void use_upgrade_power(pawn_ptr pawn, ServerGameState *state, uint32_t up
 	state->grant_upgrade(pawn, upgrade);
 }
 
-// http://en.wikipedia.org/wiki/Langton's_ant
-// The ant's action in chosen based on the height of the tile, but
+// http://en.wikipedia.org/wiki/Langton's_worm
+// The worm's action in chosen based on the height of the tile, but
 // the rules are randomly assigned each use.
-// The ant will not advance onto a void tile.
+// The worm will not advance onto a void tile.
 // Random rules might not be the best idea. Maybe someone can determine the most
 // interesting ruleset and hardcode that.
 // Testing reveals that this comes up with astonishingly bad rulesets.
 // Unfortunatly, all the logic is stuffed in Server, because
 // there's no way to do stuff with a delay from here :(
-static bool can_ant(pawn_ptr, ServerGameState *) {
+static bool can_worm(pawn_ptr, ServerGameState *) {
 	return true;
 }
 
-static void use_ant(pawn_ptr pawn, ServerGameState *state) {
-	state->run_ant_stuff(pawn, 15 * (pawn->range + 1));
+static void use_worm(pawn_ptr pawn, ServerGameState *state) {
+	state->run_worm_stuff(pawn, 15 * (pawn->range + 1));
 }
 
 static void def_power(const char *name,
@@ -511,5 +511,5 @@ void Powers::init_powers()
 	def_power("Teleport", &teleport, can_teleport, 60, Powers::Power::undirected);
 	def_power("Landing Pad", &landing_pad, can_landing_pad, 60, Powers::Power::undirected);
 	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
-	def_power("Ant of Death", &use_ant, can_ant, 40, Powers::Power::undirected);
+	def_power("Worm", &use_worm, can_worm, 4099999, Powers::Power::undirected);
 }
