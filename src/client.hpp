@@ -33,7 +33,8 @@ class Client {
 		std::list<TileAnimators::Animator*> tile_animators;
 
 		void send_begin();
-		void change_colour(uint16_t id, PlayerColour colour);
+		bool change_colour(uint16_t id, PlayerColour colour);
+		bool change_map(const std::string &map);
 		void add_animator(Animators::Generic* anim);
 
 		GameState *game_state;
@@ -68,6 +69,8 @@ class Client {
 		uint16_t my_id, turn;
 		player_set players;
 		enum { CONNECTING, LOBBY, GAME } state;
+		
+		std::string map_name;
 		Scenario scenario;
 
 		int screen_w, screen_h;
@@ -98,7 +101,8 @@ class Client {
 		GUI lobby_gui;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_players;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_buttons;
-		std::vector<boost::shared_ptr<GUI::DropDown> > lobby_drops;
+		std::vector< boost::shared_ptr< GUI::DropDown<std::string> > >  map_chooser;
+		std::vector< boost::shared_ptr< GUI::DropDown<PlayerColour> > > colour_choosers;
 
 		void net_thread_main();
 		void connect_callback(const boost::system::error_code& error);

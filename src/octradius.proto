@@ -32,6 +32,7 @@ enum msgtype {
 	DESTROY = 29;   // Destroy a pawn.
 	USE_POWER_NOTIFICATION = 30; // Display a power added message.
 									// pawn->use_power is the power. Might not be supplied.
+	CHANGE_MAP = 31;
 }
 
 enum colour {
@@ -121,4 +122,6 @@ message message {
 
 	optional string animation_name = 15;
 	repeated key_value misc = 16;
+	
+	optional string map_name = 17;
 }

@@ -82,6 +82,7 @@ private:
 	client_set clients;
 	uint16_t idcounter;
 
+	std::string map_name;
 	Scenario scenario;
 
 	client_iterator turn;

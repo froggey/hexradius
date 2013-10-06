@@ -117,7 +117,11 @@ void Pawn::force_move(Tile *tile, ServerGameState *state) {
 		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
 		cur_tile->has_mine = false;
 		state->update_tile(cur_tile);
-		if(!(flags & PWR_SHIELD)) {
+		// Shield protects from one mine.
+		if(flags & PWR_SHIELD) {
+			flags &= ~PWR_SHIELD;
+			state->update_pawn(shared_from_this());
+		} else {
 			state->destroy_pawn(shared_from_this(), MINED);
 		}
 	}
