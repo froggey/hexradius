@@ -16,7 +16,8 @@
 Server::Server(uint16_t port, const std::string &s) :
 	game_state(0), acceptor(io_service), scenario(*this), ant_timer(io_service)
 {
-	scenario.load_file(s);
+	map_name = s;
+	scenario.load_file("scenario/" + s);
 
 	idcounter = 0;
 
@@ -477,6 +478,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		}
 
 		scenario.store_proto(ginfo);
+		ginfo.set_map_name(map_name);
 
 		client->Write(ginfo);
 
@@ -492,6 +494,44 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		WriteAll(pjoin, client.get());
 	}else if(msg.msg() == protocol::BEGIN && client->id == ADMIN_ID) {
 		StartGame();
+	}else if(msg.msg() == protocol::CHANGE_MAP && client->id == ADMIN_ID) {
+		try {
+			scenario.load_file("scenario/" + msg.map_name());
+			map_name = msg.map_name();
+			
+			for(client_set::iterator c = clients.begin(); c != clients.end(); c++)
+			{
+				protocol::message ginfo;
+
+				ginfo.set_msg(protocol::GINFO);
+
+				ginfo.set_player_id((*c)->id);
+
+				for(client_set::iterator d = clients.begin(); d != clients.end(); d++)
+				{
+					if((*d)->colour == NOINIT)
+					{
+						continue;
+					}
+
+					int i = ginfo.players_size();
+
+					ginfo.add_players();
+					ginfo.mutable_players(i)->set_name((*d)->playername);
+					ginfo.mutable_players(i)->set_colour((protocol::colour)(*d)->colour);
+					ginfo.mutable_players(i)->set_id((*d)->id);
+				}
+
+				scenario.store_proto(ginfo);
+				ginfo.set_map_name(map_name);
+
+				(*c)->Write(ginfo);
+			}
+		}
+		catch(std::exception &e)
+		{
+			std::cerr << "Failed to load map '" << msg.map_name() << "': " << e.what() << std::endl;
+		}
 	}else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		if(client->id == ADMIN_ID || client->id == msg.players(0).id()) {
 			Client *c = get_client(msg.players(0).id());

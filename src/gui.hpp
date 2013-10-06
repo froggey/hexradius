@@ -184,6 +184,7 @@ public:
 		void HandleEvent(const SDL_Event &event);
 
 		void select(item_list::iterator item);
+		void select(const std::string &value);
 	};
 
 	struct Checkbox : Thing {

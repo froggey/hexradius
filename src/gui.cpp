@@ -468,8 +468,13 @@ void GUI::DropDown::Draw() {
 
 static void dropdown_set(const GUI::TextButton &button, const SDL_Event &, GUI::DropDown *drop) {
 	for(GUI::DropDown::item_list::iterator i = drop->items.begin(); i != drop->items.end(); i++) {
-		if(button.m_text == (*i).text) {
-			drop->select(i);
+		if(button.m_text == (*i).text)
+		{
+			if(!drop->callback || drop->callback(*drop, *i))
+			{
+				drop->select(i);
+			}
+			
 			break;
 		}
 	}
@@ -518,10 +523,23 @@ void GUI::DropDown::HandleEvent(const SDL_Event &event) {
 }
 
 void GUI::DropDown::select(item_list::iterator item) {
-	if(!callback || callback(*this, *item)) {
-		button.m_text = item->text;
-		button.set_fg_colour(item->colour);
-		selected = item;
+	button.m_text = item->text;
+	button.set_fg_colour(item->colour);
+	selected = item;
+}
+
+void GUI::DropDown::select(const std::string &value)
+{
+	for(item_list::iterator i = items.begin(); i != items.end(); ++i)
+	{
+		if(i->text == value)
+		{
+			button.m_text = i->text;
+			button.set_fg_colour(i->colour);
+			selected = i;
+			
+			break;
+		}
 	}
 }
 

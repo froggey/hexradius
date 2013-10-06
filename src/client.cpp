@@ -5,6 +5,7 @@
 #include <boost/bind.hpp>
 #include <stdexcept>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 
 #include "octradius.hpp"
 #include "octradius.pb.h"
@@ -406,6 +407,7 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		my_id = msg.player_id();
 
 		scenario.load_proto(msg);
+		map_name = msg.map_name();
 
 		for(int i = 0; i < msg.players_size(); i++) {
 			Player p;
@@ -419,24 +421,6 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 				my_colour = p.colour;
 			}
 		}
-
-		lobby_buttons.clear();
-
-		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
-		pn->align(GUI::LEFT);
-		lobby_buttons.push_back(pn);
-
-		boost::shared_ptr<GUI::TextButton> pc(new GUI::TextButton(lobby_gui, 330, 20, 135, 35, 0, "Team"));
-		pc->align(GUI::LEFT);
-		lobby_buttons.push_back(pc);
-
-		if(my_id == ADMIN_ID) {
-			boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 1, "Start Game", boost::bind(start_cb, _1, _2, this)));
-			lobby_buttons.push_back(sg);
-		}
-
-		boost::shared_ptr<GUI::TextButton> lg(new GUI::TextButton(lobby_gui, 645, 384, 135, 35, 2, "Leave Game", leave_cb));
-		lobby_buttons.push_back(lg);
 
 		lobby_regen();
 	}else if(msg.msg() == protocol::PJOIN) {
@@ -982,8 +966,43 @@ static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &i
 void Client::lobby_regen() {
 	int y = 65;
 
+	lobby_buttons.clear();
 	lobby_players.clear();
 	lobby_drops.clear();
+
+	boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
+	pn->align(GUI::LEFT);
+	lobby_buttons.push_back(pn);
+
+	boost::shared_ptr<GUI::TextButton> pc(new GUI::TextButton(lobby_gui, 330, 20, 135, 35, 0, "Team"));
+	pc->align(GUI::LEFT);
+	lobby_buttons.push_back(pc);
+
+	if(my_id == ADMIN_ID) {
+		boost::shared_ptr<GUI::DropDown> mn(new GUI::DropDown(lobby_gui, 475, 20, 305, 35, 1));
+		lobby_drops.push_back(mn);
+
+		mn->callback = boost::bind(&Client::change_map, this, _2);
+
+		using namespace boost::filesystem;
+
+		for(directory_iterator node("scenario"); node != directory_iterator(); ++node)
+		{
+			mn->items.push_back(GUI::DropDown::Item(node->path().string().substr(9), ImgStuff::Colour(255, 255, 255)));
+		}
+		
+		mn->select(map_name);
+
+		boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 2, "Start Game", boost::bind(start_cb, _1, _2, this)));
+		lobby_buttons.push_back(sg);
+	}
+	else{
+		boost::shared_ptr<GUI::TextButton> mn(new GUI::TextButton(lobby_gui, 475, 20, 305, 35, 0, map_name));
+		lobby_buttons.push_back(mn);
+	}
+
+	boost::shared_ptr<GUI::TextButton> lg(new GUI::TextButton(lobby_gui, 645, 384, 135, 35, 3, "Leave Game", leave_cb));
+	lobby_buttons.push_back(lg);
 
 	for(player_set::iterator p = players.begin(); p != players.end(); p++) {
 		boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, y, 300, 35, 0, (*p).name));
@@ -1034,6 +1053,17 @@ void Client::change_colour(uint16_t id, PlayerColour colour) {
 	msg.mutable_players(0)->set_colour((protocol::colour)colour);
 
 	WriteProto(msg);
+}
+
+bool Client::change_map(const GUI::DropDown::Item &map)
+{
+	protocol::message msg;
+	msg.set_msg(protocol::CHANGE_MAP);
+	msg.set_map_name(map.text);
+
+	WriteProto(msg);
+
+	return false;
 }
 
 void Client::add_animator(Animators::Generic* anim) {

@@ -143,7 +143,7 @@ static void host_cb(const GUI::TextButton &, const SDL_Event &, HostMenu *menu) 
 		return;
 	}
 
-	Server server(port, "scenario/" + menu->scenario_input.selected->text);
+	Server server(port, menu->scenario_input.selected->text);
 
 	Client client("127.0.0.1", port);
 
@@ -182,15 +182,16 @@ HostMenu::HostMenu() :
 	port_input.set_enter_callback(boost::bind(host_textbox_enter, _1, _2, this));
 	port_input.set_input_callback(&port_input_filter);
 
+	scenario_label.align(GUI::RIGHT);
+
 	using namespace boost::filesystem;
 
 	for(directory_iterator node("scenario"); node != directory_iterator(); ++node)
 	{
 		scenario_input.items.push_back(GUI::DropDown::Item(node->path().string().substr(9), ImgStuff::Colour(255, 255, 255)));
 	}
-
-	scenario_label.align(GUI::RIGHT);
-	scenario_input.select(scenario_input.items.begin());
+	
+	scenario_input.select("hex_2p");
 }
 
 void HostMenu::run() {

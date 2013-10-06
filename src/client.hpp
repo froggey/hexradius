@@ -34,6 +34,7 @@ class Client {
 
 		void send_begin();
 		void change_colour(uint16_t id, PlayerColour colour);
+		bool change_map(const GUI::DropDown::Item &map);
 		void add_animator(Animators::Generic* anim);
 
 		GameState *game_state;
@@ -68,6 +69,8 @@ class Client {
 		uint16_t my_id, turn;
 		player_set players;
 		enum { CONNECTING, LOBBY, GAME } state;
+		
+		std::string map_name;
 		Scenario scenario;
 
 		int screen_w, screen_h;
