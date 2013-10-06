@@ -15,7 +15,7 @@
 #include "tile_anims.hpp"
 
 Server::Server(uint16_t port, const std::string &s) :
-	game_state(0), acceptor(io_service), scenario(*this), ant_timer(io_service)
+	game_state(0), acceptor(io_service), scenario(*this), worm_timer(io_service)
 {
 	map_name = s;
 	scenario.load_file("scenario/" + s);
@@ -197,7 +197,7 @@ void Server::StartGame(void) {
 	}
 
 	game_state = static_cast<ServerGameState *>(scenario.init_game(colours));
-	doing_ant_stuff = false;
+	doing_worm_stuff = false;
 
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 	int bskip = TTF_FontLineSkip(bfont);
@@ -322,8 +322,8 @@ bool Server::CheckForGameOver() {
 	}
 	
 	if (alive <= 1) {
-		ant_timer.cancel();
-		doing_ant_stuff = false;
+		worm_timer.cancel();
+		doing_worm_stuff = false;
 
 		state = LOBBY;
 		
@@ -555,7 +555,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 }
 
 bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message &msg) {
-	if(doing_ant_stuff) {
+	if(doing_worm_stuff) {
 		return true;
 	}
 	if(msg.msg() == protocol::MOVE) {
@@ -654,41 +654,41 @@ static tile_coord_fn tile_coord_fns[] = {
 	&GameState::tile_nw_of,
 };
 
-void Server::ant_tick(const boost::system::error_code &/*ec*/)
+void Server::worm_tick(const boost::system::error_code &/*ec*/)
 {
-	assert(doing_ant_stuff);
+	assert(doing_worm_stuff);
 
-	if(ant_range == 0) {
-		doing_ant_stuff = false;
+	if(worm_range == 0) {
+		doing_worm_stuff = false;
 		return;
 	}
-	ant_range -= 1;
+	worm_range -= 1;
 	
-	if (ant_tile->height < 2) {
+	if (worm_tile->height < 2) {
 		game_state->add_animator(new TileAnimators::ElevationAnimator(
-			Tile::List(1, ant_tile), ant_tile, 0, TileAnimators::RELATIVE, 1));
-		game_state->set_tile_height(ant_tile, ant_tile->height + 1);
+			Tile::List(1, worm_tile), worm_tile, 0, TileAnimators::RELATIVE, 1));
+		game_state->set_tile_height(worm_tile, worm_tile->height + 1);
 	}
-	if(ant_tile->pawn && ant_tile->pawn->colour != ant_pawn->colour) {
-		game_state->destroy_pawn(ant_tile->pawn, Pawn::ANT_ATTACK, ant_pawn);
-		game_state->add_animator(new Animators::PawnBoom(ant_tile->screen_x, ant_tile->screen_y));
+	if(worm_tile->pawn && worm_tile->pawn->colour != worm_pawn->colour) {
+		game_state->destroy_pawn(worm_tile->pawn, Pawn::ANT_ATTACK, worm_pawn);
+		game_state->add_animator(new Animators::PawnBoom(worm_tile->screen_x, worm_tile->screen_y));
 	}
-	game_state->update_tile(ant_tile);
+	game_state->update_tile(worm_tile);
 	
 	std::vector<Tile*> choices;
 	for (int i = 0; i < 6; i++) {
-		Tile* temp = (game_state->*(tile_coord_fns[i]))(ant_tile);
+		Tile* temp = (game_state->*(tile_coord_fns[i]))(worm_tile);
 		if (temp && temp->height < 2)
 			choices.push_back(temp);
 	}
 	
 	if (choices.size() == 0) {
-		doing_ant_stuff = false;
+		doing_worm_stuff = false;
 		return;
 	}
 	
-	ant_tile = choices[rand() % choices.size()];
+	worm_tile = choices[rand() % choices.size()];
 	
-	ant_timer.expires_at(ant_timer.expires_at() + boost::posix_time::milliseconds(1000));
-	ant_timer.async_wait(boost::bind(&Server::ant_tick, this, boost::asio::placeholders::error));
+	worm_timer.expires_at(worm_timer.expires_at() + boost::posix_time::milliseconds(1000));
+	worm_timer.async_wait(boost::bind(&Server::worm_tick, this, boost::asio::placeholders::error));
 }

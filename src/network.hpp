@@ -91,12 +91,12 @@ private:
 	int pspawn_turns;
 	int pspawn_num;
 
-	bool doing_ant_stuff;
-	pawn_ptr ant_pawn;
-	Tile *ant_tile;
-	int ant_range;
-	boost::asio::deadline_timer ant_timer;
-	void ant_tick(const boost::system::error_code &/*ec*/);
+	bool doing_worm_stuff;
+	pawn_ptr worm_pawn;
+	Tile *worm_tile;
+	int worm_range;
+	boost::asio::deadline_timer worm_timer;
+	void worm_tick(const boost::system::error_code &/*ec*/);
 
 	void worker_main();
 
