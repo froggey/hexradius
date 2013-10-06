@@ -49,7 +49,7 @@ struct HostMenu {
 	GUI::TextBox port_input;
 
 	GUI::TextButton scenario_label;
-	GUI::DropDown scenario_input;
+	GUI::DropDown<std::string> scenario_input;
 
 	GUI::TextButton host_btn;
 	GUI::TextButton back_btn;

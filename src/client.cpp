@@ -957,18 +957,13 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &i
 	DrawPawn(pawn, rect, base, infravision_tiles);
 }
 
-static bool ccolour_callback(const GUI::DropDown &, const GUI::DropDown::Item &item, Client *client) {
-	client->change_colour(item.i1, (PlayerColour)item.i2);
-
-	return false;
-}
-
 void Client::lobby_regen() {
 	int y = 65;
 
 	lobby_buttons.clear();
 	lobby_players.clear();
-	lobby_drops.clear();
+	map_chooser.clear();
+	colour_choosers.clear();
 
 	boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
 	pn->align(GUI::LEFT);
@@ -979,16 +974,17 @@ void Client::lobby_regen() {
 	lobby_buttons.push_back(pc);
 
 	if(my_id == ADMIN_ID) {
-		boost::shared_ptr<GUI::DropDown> mn(new GUI::DropDown(lobby_gui, 475, 20, 305, 35, 1));
-		lobby_drops.push_back(mn);
+		boost::shared_ptr< GUI::DropDown<std::string> > mn(new GUI::DropDown<std::string>(lobby_gui, 475, 20, 305, 35, 1));
+		map_chooser.push_back(mn);
 
-		mn->callback = boost::bind(&Client::change_map, this, _2);
+		mn->callback = boost::bind(&Client::change_map, this, _1);
 
 		using namespace boost::filesystem;
 
 		for(directory_iterator node("scenario"); node != directory_iterator(); ++node)
 		{
-			mn->items.push_back(GUI::DropDown::Item(node->path().string().substr(9), ImgStuff::Colour(255, 255, 255)));
+			std::string name = node->path().string().substr(9);
+			mn->add_item(name, name);
 		}
 		
 		mn->select(map_name);
@@ -1010,21 +1006,21 @@ void Client::lobby_regen() {
 		lobby_players.push_back(pn);
 
 		if(my_id == p->id || my_id == ADMIN_ID) {
-			boost::shared_ptr<GUI::DropDown> pc(new GUI::DropDown(lobby_gui, 330, y, 135, 35, y));
+			boost::shared_ptr< GUI::DropDown<PlayerColour> > pc(new GUI::DropDown<PlayerColour>(lobby_gui, 330, y, 135, 35, y));
 
-			for(int i = 0; i < 7; i++) {
-				if(i == SPECTATE || scenario.colours.find((PlayerColour)i) != scenario.colours.end()) {
-					pc->items.push_back(GUI::DropDown::Item(team_names[i], team_colours[i], p->id, i));
-
-					if(p->colour == i) {
-						pc->select(pc->items.end()-1);
-					}
+			for(int i = 0; i < 7; i++)
+			{
+				if(i == SPECTATE || scenario.colours.find((PlayerColour)i) != scenario.colours.end())
+				{
+					pc->add_item((PlayerColour)(i), team_names[i], team_colours[i]);
 				}
 			}
 
-			pc->callback = boost::bind(ccolour_callback, _1, _2, this);
+			pc->select(p->colour);
 
-			lobby_drops.push_back(pc);
+			pc->callback = boost::bind(&Client::change_colour, this, p->id, _1);
+
+			colour_choosers.push_back(pc);
 		}else{
 			boost::shared_ptr<GUI::TextButton> pc(new GUI::TextButton(lobby_gui, 330, y, 135, 35, 0, team_names[p->colour]));
 			pc->align(GUI::LEFT);
@@ -1044,7 +1040,8 @@ void Client::send_begin() {
 	WriteProto(msg);
 }
 
-void Client::change_colour(uint16_t id, PlayerColour colour) {
+bool Client::change_colour(uint16_t id, PlayerColour colour)
+{
 	protocol::message msg;
 	msg.set_msg(protocol::CCOLOUR);
 
@@ -1053,13 +1050,15 @@ void Client::change_colour(uint16_t id, PlayerColour colour) {
 	msg.mutable_players(0)->set_colour((protocol::colour)colour);
 
 	WriteProto(msg);
+
+	return false;
 }
 
-bool Client::change_map(const GUI::DropDown::Item &map)
+bool Client::change_map(const std::string &map)
 {
 	protocol::message msg;
 	msg.set_msg(protocol::CHANGE_MAP);
-	msg.set_map_name(map.text);
+	msg.set_map_name(map);
 
 	WriteProto(msg);
 

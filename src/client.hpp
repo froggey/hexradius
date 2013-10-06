@@ -33,8 +33,8 @@ class Client {
 		TileAnimators::Animator* current_animator;
 
 		void send_begin();
-		void change_colour(uint16_t id, PlayerColour colour);
-		bool change_map(const GUI::DropDown::Item &map);
+		bool change_colour(uint16_t id, PlayerColour colour);
+		bool change_map(const std::string &map);
 		void add_animator(Animators::Generic* anim);
 
 		GameState *game_state;
@@ -101,7 +101,8 @@ class Client {
 		GUI lobby_gui;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_players;
 		std::vector<boost::shared_ptr<GUI::TextButton> > lobby_buttons;
-		std::vector<boost::shared_ptr<GUI::DropDown> > lobby_drops;
+		std::vector< boost::shared_ptr< GUI::DropDown<std::string> > >  map_chooser;
+		std::vector< boost::shared_ptr< GUI::DropDown<PlayerColour> > > colour_choosers;
 
 		void net_thread_main();
 		void connect_callback(const boost::system::error_code& error);

@@ -143,7 +143,7 @@ static void host_cb(const GUI::TextButton &, const SDL_Event &, HostMenu *menu) 
 		return;
 	}
 
-	Server server(port, menu->scenario_input.selected->text);
+	Server server(port, *(menu->scenario_input.selected()));
 
 	Client client("127.0.0.1", port);
 
@@ -188,7 +188,8 @@ HostMenu::HostMenu() :
 
 	for(directory_iterator node("scenario"); node != directory_iterator(); ++node)
 	{
-		scenario_input.items.push_back(GUI::DropDown::Item(node->path().string().substr(9), ImgStuff::Colour(255, 255, 255)));
+		std::string name = node->path().string().substr(9);
+		scenario_input.add_item(name, name);
 	}
 	
 	scenario_input.select("hex_2p");
