@@ -33,10 +33,12 @@ int Powers::RandomPower(void) {
 typedef boost::function<Tile::List(pawn_ptr)> tile_area_function;
 
 // Return the pawn's current tile, a single point.
+/*
 static Tile::List point_tile(pawn_ptr pawn)
 {
 	return Tile::List(1, pawn->cur_tile);
 }
+*/
 
 // Return the surrounding radial tiles.
 static tile_area_function radial_tiles = boost::bind(&Pawn::RadialTiles, _1);
