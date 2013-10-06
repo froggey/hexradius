@@ -511,12 +511,6 @@ void Powers::init_powers()
 		  boost::bind(test_wrap_power, fs_tiles, _1, _2, Powers::Power::ne_sw),
 		  50,
 		  Powers::Power::ne_sw);
-	
-	def_power("Mine",
-		  boost::bind(use_mine_power, point_tile, _1, _2),
-		  boost::bind(test_mine_power, point_tile, _1, _2),
-		  60,
-		  Powers::Power::undirected);
 
 	def_upgrade_power("Hover", PWR_CLIMB, 30);
 	def_upgrade_power("Shield", PWR_SHIELD, 30);
