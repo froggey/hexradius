@@ -552,8 +552,13 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 			}
 
 			client->WriteBasic(protocol::OK);
-			
-			CheckForGameOver();
+
+			if(!CheckForGameOver()) {
+				// Make sure the player still has pawns.
+				if(game_state->player_pawns((*turn)->colour).empty()) {
+					NextTurn();
+				}
+			}
 		}
 	}
 
