@@ -49,7 +49,7 @@ static Uint32 redraw_callback(Uint32 interval, void *) {
 }
 
 Client::Client(std::string host, uint16_t port) :
-	quit(false), current_animator(NULL), game_state(0),
+	quit(false), game_state(0),
 	socket(io_service), redraw_timer(NULL), turn(0),
 	state(CONNECTING), scenario(), last_redraw(0), board(SDL_Rect()),
 	dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()),
@@ -184,7 +184,7 @@ void Client::run() {
 			continue;
 		}
 
-		if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && !current_animator) {
+		if(event.type == SDL_MOUSEBUTTONDOWN && turn == my_id && tile_animators.empty()) {
 			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			if(event.button.button == SDL_BUTTON_LEFT) {
@@ -196,7 +196,7 @@ void Client::run() {
 				}
 			}
 		}
-		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && !current_animator) {
+		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && tile_animators.empty()) {
 			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
@@ -626,9 +626,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 			assert(tile);
 			tiles.push_back(tile);
 		}
-		if(!current_animator) {
-			current_animator = new TileAnimators::ElevationAnimator(tiles, center, delay_factor, mode, target_elevation);
-		}
+		tile_animators.push_back(new TileAnimators::ElevationAnimator(tiles, center, delay_factor, mode, target_elevation));
 	} else if(msg.msg() == protocol::PARTICLE_ANIMATION) {
 		int tile_x = -1, tile_y = -1;
 		for(int i = 0; i < msg.misc_size(); i++) {
@@ -698,10 +696,12 @@ void Client::DrawScreen() {
 
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
-
-	if (current_animator && !current_animator->do_stuff()) {
-		delete current_animator;
-		current_animator = 0;
+	
+	for (std::list<TileAnimators::Animator*>::iterator it = tile_animators.begin(); it != tile_animators.end(); it++) {
+		if (!(*it)->do_stuff()) {
+			delete *it;
+			it = tile_animators.erase(it);
+		}
 	}
 
 	ensure_SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));

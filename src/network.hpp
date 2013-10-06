@@ -94,9 +94,6 @@ private:
 	pawn_ptr ant_pawn;
 	Tile *ant_tile;
 	int ant_range;
-	int ant_direction;
-	std::vector<int> ant_go_left;
-	std::vector<int> ant_new_heights;
 	boost::asio::deadline_timer ant_timer;
 	void ant_tick(const boost::system::error_code &/*ec*/);
 

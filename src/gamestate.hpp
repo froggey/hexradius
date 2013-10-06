@@ -69,7 +69,7 @@ public:
 	void update_tile(Tile *tile);
 	// Move a pawn onto the target tile, for effect.
 	void move_pawn_to(pawn_ptr pawn, Tile *target);
-	void run_ant_stuff(pawn_ptr pawn, int initial_direction, int range, const std::vector<int> &go_left, const std::vector<int> &new_heights);
+	void run_ant_stuff(pawn_ptr pawn, int range);
 private:
 	Server &server;
 };

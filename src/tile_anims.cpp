@@ -54,7 +54,7 @@ namespace TileAnimators {
 				}
 
 				int this_t = t - tile->anim_delay;
-				if (this_t > 2000) {
+				if (this_t > 1500) {
 					tile->animating = false;
 				}
 				else if (this_t >= 0) {

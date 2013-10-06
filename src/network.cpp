@@ -12,6 +12,7 @@
 #include "gamestate.hpp"
 #include "fontstuff.hpp"
 #include "animator.hpp"
+#include "tile_anims.hpp"
 
 Server::Server(uint16_t port, const std::string &s) :
 	game_state(0), acceptor(io_service), scenario(*this), ant_timer(io_service)
@@ -617,24 +618,32 @@ void Server::ant_tick(const boost::system::error_code &/*ec*/)
 		return;
 	}
 	ant_range -= 1;
-
-	assert(ant_new_heights.size() == 5);
-	assert(ant_go_left.size() == 5);
-
-	ant_tile->height = ant_new_heights[ant_tile->height+2];
+	
+	if (ant_tile->height < 2) {
+		game_state->add_animator(new TileAnimators::ElevationAnimator(
+			Tile::List(1, ant_tile), ant_tile, 0, TileAnimators::RELATIVE, 1));
+		game_state->set_tile_height(ant_tile, ant_tile->height + 1);
+	}
 	if(ant_tile->pawn && ant_tile->pawn->colour != ant_pawn->colour) {
 		game_state->destroy_pawn(ant_tile->pawn, Pawn::ANT_ATTACK, ant_pawn);
 		game_state->add_animator(new Animators::PawnBoom(ant_tile->screen_x, ant_tile->screen_y));
 	}
 	game_state->update_tile(ant_tile);
-	ant_direction += ant_go_left[ant_tile->height+2] ? 1 : -1;
-	if(ant_direction >= 6) ant_direction -= 6;
-	else if(ant_direction < 0) ant_direction += 6;
-	Tile *new_tile = (game_state->*(tile_coord_fns[ant_direction]))(ant_tile);
-	if(new_tile) {
-		ant_tile = new_tile;
+	
+	std::vector<Tile*> choices;
+	for (int i = 0; i < 6; i++) {
+		Tile* temp = (game_state->*(tile_coord_fns[i]))(ant_tile);
+		if (temp && temp->height < 2)
+			choices.push_back(temp);
 	}
-
+	
+	if (choices.size() == 0) {
+		doing_ant_stuff = false;
+		return;
+	}
+	
+	ant_tile = choices[rand() % choices.size()];
+	
 	ant_timer.expires_at(ant_timer.expires_at() + boost::posix_time::milliseconds(1000));
 	ant_timer.async_wait(boost::bind(&Server::ant_tick, this, boost::asio::placeholders::error));
 }

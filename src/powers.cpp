@@ -421,20 +421,7 @@ static bool can_ant(pawn_ptr, ServerGameState *) {
 }
 
 static void use_ant(pawn_ptr pawn, ServerGameState *state) {
-	std::vector<int> go_left;
-	std::vector<int> new_height;
-	for(int i = 0; i < 5; ++i) {
-		go_left.push_back(rand() & 1);
-	}
-	new_height.push_back(-1);
-	new_height.push_back(-2);
-	new_height.push_back(0);
-	new_height.push_back(1);
-	new_height.push_back(2);
-	std::random_shuffle(go_left.begin(), go_left.end());
-	std::random_shuffle(new_height.begin(), new_height.end());
-
-	state->run_ant_stuff(pawn, rand() % 6, 15 * (pawn->range + 1), go_left, new_height);
+	state->run_ant_stuff(pawn, 15 * (pawn->range + 1));
 }
 
 static void def_power(const char *name,

@@ -29,8 +29,8 @@ class Client {
 		~Client();
 
 		void run();
-
-		TileAnimators::Animator* current_animator;
+		
+		std::list<TileAnimators::Animator*> tile_animators;
 
 		void send_begin();
 		void change_colour(uint16_t id, PlayerColour colour);
