@@ -315,6 +315,9 @@ bool Server::CheckForGameOver() {
 	}
 	
 	if (alive <= 1) {
+		ant_timer.cancel();
+		doing_ant_stuff = false;
+
 		state = LOBBY;
 		
 		protocol::message gover;
@@ -613,8 +616,6 @@ void Server::ant_tick(const boost::system::error_code &/*ec*/)
 	assert(ant_new_heights.size() == 5);
 	assert(ant_go_left.size() == 5);
 
-	printf("(%i,%i) %i:  %i %i %i\n", ant_tile->col, ant_tile->row, ant_tile->height,
-	       ant_new_heights[ant_tile->height+2], ant_go_left[ant_tile->height+2], ant_direction);
 	ant_tile->height = ant_new_heights[ant_tile->height+2];
 	if(ant_tile->pawn && ant_tile->pawn->colour != ant_pawn->colour) {
 		game_state->destroy_pawn(ant_tile->pawn, Pawn::ANT_ATTACK, ant_pawn);
