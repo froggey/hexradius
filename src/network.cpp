@@ -271,6 +271,9 @@ void Server::NextTurn() {
 	client_set::iterator last = turn;
 
 	black_hole_suck();
+	if(CheckForGameOver()) {
+		return;
+	}
 
 	while(1) {
 		if(turn == clients.end()) {
