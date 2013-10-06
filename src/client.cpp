@@ -773,83 +773,88 @@ void Client::DrawScreen() {
 	if(hpawn && (hpawn->flags & PWR_JUMP)) {
 		jump_tiles = hpawn->move_tiles();
 	}
+	
+	for(int z = -2; z <= 2; z++) {
+		for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
+			if((*ti)->height != z) {
+				continue;
+			}
+			if((*ti)->pawn) {
+				assert(!(*ti)->pawn->destroyed());
+			}
+			SDL_Rect rect;
+			rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
+			rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
+			rect.w = rect.h = 0;
 
-	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
-		if((*ti)->pawn) {
-			assert(!(*ti)->pawn->destroyed());
-		}
-		SDL_Rect rect;
-		rect.x = board.x + BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
-		rect.y = board.y + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
-		rect.w = rect.h = 0;
-
-		if ((*ti)->animating) {
-			rect.x += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
-			rect.y += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
-		}
-		else {
-			rect.x += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
-			rect.y += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
-		}
-
-		(*ti)->screen_x = rect.x;
-		(*ti)->screen_y = rect.y;
-
-		SDL_Surface *tile_img = (*ti)->smashed ? smashed_tile : tile;
-
-		if(htile == *ti) {
-			tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
-		} else if(std::find(jump_tiles.begin(), jump_tiles.end(), *ti) != jump_tiles.end()) {
-			tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
-		} else if(htile && options.show_lines) {
-			if(diag_row != (*ti)->row) {
-				diag_cols(htile, (*ti)->row, bs_col, fs_col);
-				diag_row = (*ti)->row;
+			if ((*ti)->animating) {
+				rect.x += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
+				rect.y += (-1 * (*ti)->anim_height) * TILE_HEIGHT_FACTOR;
+			}
+			else {
+				rect.x += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
+				rect.y += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
 			}
 
-			if((*ti)->col == bs_col || (*ti)->col == fs_col || (*ti)->row == htile->row) {
-				tile_img = (*ti)->smashed ? smashed_line_tile : line_tile;
+			(*ti)->screen_x = rect.x;
+			(*ti)->screen_y = rect.y;
+
+			SDL_Surface *tile_img = (*ti)->smashed ? smashed_tile : tile;
+
+			if(htile == *ti) {
+				tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
+			} else if(std::find(jump_tiles.begin(), jump_tiles.end(), *ti) != jump_tiles.end()) {
+				tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
+			} else if(htile && options.show_lines) {
+				if(diag_row != (*ti)->row) {
+					diag_cols(htile, (*ti)->row, bs_col, fs_col);
+					diag_row = (*ti)->row;
+				}
+
+				if((*ti)->col == bs_col || (*ti)->col == fs_col || (*ti)->row == htile->row) {
+					tile_img = (*ti)->smashed ? smashed_line_tile : line_tile;
+				}
 			}
-		}
 
-		ensure_SDL_BlitSurface(tile_img, NULL, screen, &rect);
+			ensure_SDL_BlitSurface(tile_img, NULL, screen, &rect);
 
-		if((*ti)->has_mine) {
-			SDL_Rect s;
-			s.x = 0;
-			s.y = (*ti)->mine_colour * 50;
-			s.w = s.h = 50;
-			ensure_SDL_BlitSurface(mine, &s, screen, &rect);
-		}
-		if((*ti)->has_landing_pad) {
-			SDL_Rect s;
-			s.x = 0;
-			s.y = (*ti)->landing_pad_colour * 50;
-			s.w = s.h = 50;
-			ensure_SDL_BlitSurface(landing_pad, &s, screen, &rect);
-		}
-		if((*ti)->has_black_hole) {
-			ensure_SDL_BlitSurface(blackhole, NULL, screen, &rect);
-		}
-
-		if((*ti)->has_power) {
-			ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
-		}
-		
-		for (int wd = 0; wd < 6; wd++) {
-			if ((*ti)->wrap & (1 << wd)) {
+			if((*ti)->has_mine) {
 				SDL_Rect s;
 				s.x = 0;
-				s.y = wd * 50;
+				s.y = (*ti)->mine_colour * 50;
 				s.w = s.h = 50;
-				ensure_SDL_BlitSurface(wrap, &s, screen, &rect);
+				ensure_SDL_BlitSurface(mine, &s, screen, &rect);
 			}
-		}
+			if((*ti)->has_landing_pad) {
+				SDL_Rect s;
+				s.x = 0;
+				s.y = (*ti)->landing_pad_colour * 50;
+				s.w = s.h = 50;
+				ensure_SDL_BlitSurface(landing_pad, &s, screen, &rect);
+			}
+			if((*ti)->has_black_hole) {
+				ensure_SDL_BlitSurface(blackhole, NULL, screen, &rect);
+			}
 
-		if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
-			draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles);
-		}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
-			draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles);
+			if((*ti)->has_power) {
+				ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
+			}
+			
+			for (int wd = 0; wd < 6; wd++) {
+				if ((*ti)->wrap & (1 << wd)) {
+					SDL_Rect s;
+					s.x = 0;
+					s.y = wd * 50;
+					s.w = s.h = 50;
+					ensure_SDL_BlitSurface(wrap, &s, screen, &rect);
+				}
+			}
+
+			if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
+				draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles);
+			}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
+				draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles);
+			}
 		}
 	}
 
