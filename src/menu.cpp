@@ -3,6 +3,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 #include "menu.hpp"
 #include "octradius.hpp"
 #include "client.hpp"
@@ -136,14 +137,13 @@ void JoinMenu::run() {
 
 static void host_cb(const GUI::TextButton &, const SDL_Event &, HostMenu *menu) {
 	int port = atoi(menu->port_input.text.c_str());
-	std::string scenario = menu->scenario_input.text;
 
 	if(port < 1 || port > 65535) {
 		std::cerr << "Invalid port number" << std::endl;
 		return;
 	}
 
-	Server server(port, "scenario/" + scenario);
+	Server server(port, "scenario/" + menu->scenario_input.selected->text);
 
 	Client client("127.0.0.1", port);
 
@@ -182,9 +182,15 @@ HostMenu::HostMenu() :
 	port_input.set_enter_callback(boost::bind(host_textbox_enter, _1, _2, this));
 	port_input.set_input_callback(&port_input_filter);
 
+	using namespace boost::filesystem;
+
+	for(directory_iterator node("scenario"); node != directory_iterator(); ++node)
+	{
+		scenario_input.items.push_back(GUI::DropDown::Item(node->path().string().substr(9), ImgStuff::Colour(255, 255, 255)));
+	}
+
 	scenario_label.align(GUI::RIGHT);
-	scenario_input.set_text("hex_2p");
-	scenario_input.set_enter_callback(boost::bind(host_textbox_enter, _1, _2, this));
+	scenario_input.select(scenario_input.items.begin());
 }
 
 void HostMenu::run() {
