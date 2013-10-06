@@ -246,6 +246,8 @@ template <class key_type> void GUI::DropDown<key_type>::user_select(const key_ty
 	{
 		select(key);
 	}
+	
+	item_buttons.clear();
 }
 
 template <class key_type> GUI::DropDown<key_type>::DropDown(GUI &g, int ax, int ay, int aw, int ah, int to) : Thing(g), button(g, ax, ay, aw-ah, ah, 0, "UNSET")
