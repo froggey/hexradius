@@ -215,6 +215,11 @@ void Server::StartGame(void) {
 
 	state = GAME;
 
+	turn = clients.begin();
+	for(int i = rand() % clients.size(); i != 0; --i) {
+		++turn;
+	}
+
 	NextTurn();
 }
 
