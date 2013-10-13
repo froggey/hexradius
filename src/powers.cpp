@@ -513,5 +513,5 @@ void Powers::init_powers()
 	def_power("Teleport", &teleport, can_teleport, 60, Powers::Power::undirected);
 	def_power("Landing Pad", &landing_pad, can_landing_pad, 60, Powers::Power::undirected);
 	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
-	def_power("Worm", &use_worm, can_worm, 4099999, Powers::Power::undirected);
+	def_power("Worm", &use_worm, can_worm, 40, Powers::Power::undirected);
 }
