@@ -28,6 +28,8 @@ Server::Server(uint16_t port, const std::string &s) :
 	pspawn_turns = 1;
 	pspawn_num = 1;
 
+	fog_of_war = false;
+
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 
 	acceptor.open(endpoint.protocol());
@@ -489,6 +491,8 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		scenario.store_proto(ginfo);
 		ginfo.set_map_name(map_name);
 
+		ginfo.set_fog_of_war(fog_of_war);
+
 		client->Write(ginfo);
 
 		protocol::message pjoin;
@@ -534,6 +538,8 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 				scenario.store_proto(ginfo);
 				ginfo.set_map_name(map_name);
 
+				ginfo.set_fog_of_war(fog_of_war);
+
 				(*c)->Write(ginfo);
 			}
 		}
@@ -541,6 +547,11 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		{
 			std::cerr << "Failed to load map '" << msg.map_name() << "': " << e.what() << std::endl;
 		}
+	} else if(msg.msg() == protocol::CHANGE_SETTING && client->id == ADMIN_ID) {
+		if(msg.has_fog_of_war()) {
+			fog_of_war = msg.fog_of_war();
+		}
+		WriteAll(msg);
 	}else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		if(client->id == ADMIN_ID || client->id == msg.players(0).id()) {
 			Client *c = get_client(msg.players(0).id());

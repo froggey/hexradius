@@ -91,6 +91,8 @@ private:
 	int pspawn_turns;
 	int pspawn_num;
 
+	bool fog_of_war;
+
 	bool doing_worm_stuff;
 	pawn_ptr worm_pawn;
 	Tile *worm_tile;

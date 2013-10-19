@@ -422,6 +422,8 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 			}
 		}
 
+		fog_of_war = msg.fog_of_war();
+
 		lobby_regen();
 	}else if(msg.msg() == protocol::PJOIN) {
 		if(msg.players_size() == 1) {
@@ -451,6 +453,11 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		}else{
 			std::cerr << "CCOLOUR message recieved with " << msg.players_size() << " players, ignoring" << std::endl;
 		}
+	} else if(msg.msg() == protocol::CHANGE_SETTING) {
+		if(msg.has_fog_of_war()) {
+			fog_of_war = msg.fog_of_war();
+		}
+		lobby_regen();
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in LOBBY, ignoring" << std::endl;
 	}
@@ -670,6 +677,8 @@ void Client::DrawScreen() {
 	SDL_Surface *smashed_tint_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,100,0));
 	SDL_Surface *jump_candidate_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,0,100));
 	SDL_Surface *smashed_jump_candidate_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,0,100));
+	SDL_Surface *fow_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(100,100,100));
+	SDL_Surface *smashed_fow_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(100,100,100));
 	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *smashed_line_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
@@ -753,6 +762,24 @@ void Client::DrawScreen() {
 		}
 	}
 
+	std::set<Tile *> visible_tiles;
+	if(fog_of_war) {
+		for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
+			pawn_ptr p = (*ti)->pawn;
+			if(p && p->colour == my_colour) {
+				Tile::List tiles;
+				tiles = p->RadialTiles();
+				visible_tiles.insert(tiles.begin(), tiles.end());
+				tiles = p->RowTiles();
+				visible_tiles.insert(tiles.begin(), tiles.end());
+				tiles = p->bs_tiles();
+				visible_tiles.insert(tiles.begin(), tiles.end());
+				tiles = p->fs_tiles();
+				visible_tiles.insert(tiles.begin(), tiles.end());
+			}
+		}
+	}
+
 	Tile::List jump_tiles;
 	if(hpawn && (hpawn->flags & PWR_JUMP)) {
 		jump_tiles = hpawn->move_tiles();
@@ -789,6 +816,8 @@ void Client::DrawScreen() {
 				tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
 			} else if(std::find(jump_tiles.begin(), jump_tiles.end(), *ti) != jump_tiles.end()) {
 				tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
+			} else if(visible_tiles.find(*ti) == visible_tiles.end()) {
+				tile_img = (*ti)->smashed ? smashed_fow_tile : fow_tile;
 			} else if(htile && options.show_lines) {
 				if(diag_row != (*ti)->row) {
 					diag_cols(htile, (*ti)->row, bs_col, fs_col);
@@ -835,9 +864,9 @@ void Client::DrawScreen() {
 			}
 
 			if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
-				draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles);
+				draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles, visible_tiles);
 			}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
-				draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles);
+				draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles, visible_tiles);
 			}
 		}
 	}
@@ -854,7 +883,7 @@ void Client::DrawScreen() {
 
 	if(dpawn) {
 		SDL_Rect rect = {mouse_x-30, mouse_y-30, 0, 0}, base = {0,0,50,50};
-		DrawPawn(dpawn, rect, base, std::set<Tile *>());
+		DrawPawn(dpawn, rect, base, std::set<Tile *>(), std::set<Tile *>());
 	}
 
 	std::vector<pawn_ptr> all_pawns = game_state->all_pawns();
@@ -884,11 +913,12 @@ void Client::DrawScreen() {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::set<Tile *> &infravision_tiles) {
+void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::set<Tile *> &infravision_tiles, const std::set<Tile *> &visible_tiles) {
 	bool invis = !!(pawn->flags & PWR_INVISIBLE);
-	bool hide = invis &&
-		(pawn->colour != my_colour) &&
-		(infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end());
+	bool hide = (invis &&
+		     (pawn->colour != my_colour) &&
+		     (infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end())) ||
+		(fog_of_war && visible_tiles.find(pawn->cur_tile) == visible_tiles.end() && pawn != dpawn);
 
 	if (!hide) {
 		const ImgStuff::TintValues tint(0, 0, 0, invis ? 128 : 255);
@@ -928,7 +958,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 	}
 }
 
-void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &infravision_tiles) {
+void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &infravision_tiles, const std::set<Tile *> &visible_tiles) {
 	int teleport_y = 0;
 	SDL_Rect rect = {tile->screen_x, tile->screen_y, 0, 0}, base = {0,0,50,50};
 
@@ -954,7 +984,7 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &i
 		return;
 	}
 
-	DrawPawn(pawn, rect, base, infravision_tiles);
+	DrawPawn(pawn, rect, base, infravision_tiles, visible_tiles);
 }
 
 void Client::lobby_regen() {
@@ -964,6 +994,7 @@ void Client::lobby_regen() {
 	lobby_players.clear();
 	map_chooser.clear();
 	colour_choosers.clear();
+	lobby_settings.clear();
 
 	boost::shared_ptr<GUI::TextButton> pn(new GUI::TextButton(lobby_gui, 20, 20, 300, 35, 0, "Player Name"));
 	pn->align(GUI::LEFT);
@@ -972,6 +1003,14 @@ void Client::lobby_regen() {
 	boost::shared_ptr<GUI::TextButton> pc(new GUI::TextButton(lobby_gui, 330, 20, 135, 35, 0, "Team"));
 	pc->align(GUI::LEFT);
 	lobby_buttons.push_back(pc);
+
+	boost::shared_ptr<GUI::Checkbox> fow(new GUI::Checkbox(lobby_gui, 475, 65, 25, 25, 0, fog_of_war, my_id == ADMIN_ID));
+	fow->set_callback(boost::bind(&Client::fog_of_war_cb, this, _1));
+	lobby_settings.push_back(fow);
+
+	boost::shared_ptr<GUI::TextButton> fow_label(new GUI::TextButton(lobby_gui, 475+30, 65, 160, 25, 0, "Fog of War"));
+	fow_label->align(GUI::LEFT);
+	lobby_buttons.push_back(fow_label);
 
 	if(my_id == ADMIN_ID) {
 		boost::shared_ptr< GUI::DropDown<std::string> > mn(new GUI::DropDown<std::string>(lobby_gui, 475, 20, 305, 35, 1));
@@ -1031,6 +1070,15 @@ void Client::lobby_regen() {
 
 		y += 40;
 	}
+}
+
+void Client::fog_of_war_cb(const GUI::Checkbox &checkbox)
+{
+	printf("Update FOW.\n");
+	protocol::message msg;
+	msg.set_msg(protocol::CHANGE_SETTING);
+	msg.set_fog_of_war(checkbox.state);
+	WriteProto(msg);
 }
 
 void Client::send_begin() {
