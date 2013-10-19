@@ -1074,7 +1074,6 @@ void Client::lobby_regen() {
 
 void Client::fog_of_war_cb(const GUI::Checkbox &checkbox)
 {
-	printf("Update FOW.\n");
 	protocol::message msg;
 	msg.set_msg(protocol::CHANGE_SETTING);
 	msg.set_fog_of_war(checkbox.state);
