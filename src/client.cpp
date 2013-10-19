@@ -753,11 +753,7 @@ void Client::DrawScreen() {
 			Tile::List tiles;
 			tiles = p->RadialTiles();
 			infravision_tiles.insert(tiles.begin(), tiles.end());
-			tiles = p->RowTiles();
-			infravision_tiles.insert(tiles.begin(), tiles.end());
-			tiles = p->bs_tiles();
-			infravision_tiles.insert(tiles.begin(), tiles.end());
-			tiles = p->fs_tiles();
+			tiles = p->linear_tiles();
 			infravision_tiles.insert(tiles.begin(), tiles.end());
 		}
 	}
@@ -770,12 +766,10 @@ void Client::DrawScreen() {
 				Tile::List tiles;
 				tiles = p->RadialTiles();
 				visible_tiles.insert(tiles.begin(), tiles.end());
-				tiles = p->RowTiles();
-				visible_tiles.insert(tiles.begin(), tiles.end());
-				tiles = p->bs_tiles();
-				visible_tiles.insert(tiles.begin(), tiles.end());
-				tiles = p->fs_tiles();
-				visible_tiles.insert(tiles.begin(), tiles.end());
+				if(p->flags & PWR_INFRAVISION) {
+					tiles = p->linear_tiles();
+					visible_tiles.insert(tiles.begin(), tiles.end());
+				}
 			}
 		}
 	}
@@ -784,7 +778,7 @@ void Client::DrawScreen() {
 	if(hpawn && (hpawn->flags & PWR_JUMP)) {
 		jump_tiles = hpawn->move_tiles();
 	}
-	
+
 	for(int z = -2; z <= 2; z++) {
 		for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
 			if((*ti)->height != z) {

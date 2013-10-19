@@ -293,6 +293,17 @@ Tile::List Pawn::fs_tiles() {
 	return tiles;
 }
 
+Tile::List Pawn::linear_tiles() {
+	Tile::List tiles, result;
+	tiles = RowTiles();
+	result.insert(result.end(), tiles.begin(), tiles.end());
+	tiles = bs_tiles();
+	result.insert(result.end(), tiles.begin(), tiles.end());
+	tiles = fs_tiles();
+	result.insert(result.end(), tiles.begin(), tiles.end());
+	return result;
+}
+
 void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 	p->set_col(cur_tile->col);
 	p->set_row(cur_tile->row);

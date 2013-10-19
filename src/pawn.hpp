@@ -51,6 +51,8 @@ public:
 	Tile::List bs_tiles();
 	Tile::List fs_tiles();
 
+	Tile::List linear_tiles();
+
 	bool has_power();
 };
 
