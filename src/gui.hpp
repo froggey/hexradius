@@ -192,13 +192,14 @@ public:
 	struct Checkbox : Thing {
 		typedef boost::function<void(const GUI::Checkbox &checkbox)> callback_t;
 
+		bool enabled;
 		bool state;
 
 		int x_down, y_down;
 
 		callback_t toggle_callback;
 
-		Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state = false);
+		Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state = false, bool enabled = true);
 		~Checkbox();
 
 		void set_callback(callback_t callback);

@@ -430,7 +430,9 @@ void GUI::TextButton::HandleEvent(const SDL_Event &event) {
 	}
 }
 
-GUI::Checkbox::Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state) : Thing(g) {
+GUI::Checkbox::Checkbox(GUI &g, int ax, int ay, int aw, int ah, int to, bool default_state, bool enabled) :
+	Thing(g), enabled(enabled)
+{
 	x = gui.x + ax;
 	y = gui.y + ay;
 	w = aw;
@@ -481,16 +483,23 @@ void GUI::Checkbox::Draw() {
 }
 
 void GUI::Checkbox::HandleEvent(const SDL_Event &event) {
+	if(!enabled) return;
 	if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		x_down = event.button.x;
 		y_down = event.button.y;
 	}else if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		if(event.button.x == x_down && event.button.y == y_down) {
 			state = !state;
+			if(toggle_callback) {
+				toggle_callback(*this);
+			}
 		}
 	}else if(event.type == SDL_KEYDOWN) {
 		if(event.key.keysym.sym == SDLK_SPACE) {
 			state = !state;
+			if(toggle_callback) {
+				toggle_callback(*this);
+			}
 		}
 	}
 }
