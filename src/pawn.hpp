@@ -45,13 +45,17 @@ public:
 	void AddPower(int power);
 	bool UsePower(int power, ServerGameState *state);
 
-	Tile::List RowTiles(void);
+	Tile::List RowTiles() { return RowTiles(this->range); }
+	Tile::List RowTiles(int range);
 	Tile::List RadialTiles() { return RadialTiles(this->range); }
 	Tile::List RadialTiles(int range);
-	Tile::List bs_tiles();
-	Tile::List fs_tiles();
+	Tile::List bs_tiles() { return bs_tiles(this->range); }
+	Tile::List bs_tiles(int rage);
+	Tile::List fs_tiles() { return fs_tiles(this->range); }
+	Tile::List fs_tiles(int range);
 
-	Tile::List linear_tiles();
+	Tile::List linear_tiles() { return linear_tiles(this->range); }
+	Tile::List linear_tiles(int range);
 
 	bool has_power();
 };

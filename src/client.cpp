@@ -764,7 +764,7 @@ void Client::DrawScreen() {
 			pawn_ptr p = (*ti)->pawn;
 			if(p && p->colour == my_colour) {
 				Tile::List tiles;
-				tiles = p->RadialTiles();
+				tiles = p->RadialTiles(p->range+1);
 				visible_tiles.insert(tiles.begin(), tiles.end());
 				if(p->flags & PWR_INFRAVISION) {
 					tiles = p->linear_tiles();

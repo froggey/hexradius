@@ -160,7 +160,7 @@ bool Pawn::UsePower(int power, ServerGameState *state) {
 	return true;
 }
 
-Tile::List Pawn::RowTiles(void) {
+Tile::List Pawn::RowTiles(int range) {
 	Tile::List tiles;
 	Tile::List::iterator i = all_tiles.begin();
 
@@ -231,7 +231,7 @@ Tile::List Pawn::RadialTiles(int range)
 	return ret;
 }
 
-Tile::List Pawn::bs_tiles() {
+Tile::List Pawn::bs_tiles(int range) {
 	Tile::List tiles;
 
 	int base = cur_tile->col;
@@ -262,7 +262,7 @@ Tile::List Pawn::bs_tiles() {
 	return tiles;
 }
 
-Tile::List Pawn::fs_tiles() {
+Tile::List Pawn::fs_tiles(int range) {
 	Tile::List tiles;
 
 	int base = cur_tile->col;
@@ -293,13 +293,13 @@ Tile::List Pawn::fs_tiles() {
 	return tiles;
 }
 
-Tile::List Pawn::linear_tiles() {
+Tile::List Pawn::linear_tiles(int range) {
 	Tile::List tiles, result;
-	tiles = RowTiles();
+	tiles = RowTiles(range);
 	result.insert(result.end(), tiles.begin(), tiles.end());
-	tiles = bs_tiles();
+	tiles = bs_tiles(range);
 	result.insert(result.end(), tiles.begin(), tiles.end());
-	tiles = fs_tiles();
+	tiles = fs_tiles(range);
 	result.insert(result.end(), tiles.begin(), tiles.end());
 	return result;
 }
