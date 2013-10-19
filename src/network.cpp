@@ -309,6 +309,9 @@ void Server::NextTurn() {
 }
 
 bool Server::CheckForGameOver() {
+	if(state == LOBBY) {
+		return true;
+	}
 	if (getenv("HR_DONT_END_GAME"))
 		return false;
 	
