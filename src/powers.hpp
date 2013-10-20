@@ -16,6 +16,8 @@ const uint32_t PWR_INFRAVISION = 1<<4;
 const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVISION | PWR_JUMP);
 
 namespace Powers {
+const unsigned int REQ_FOG_OF_WAR = 1<<0;
+
 	struct Power {
 		const char *name;
 		// Acually use the power.
@@ -27,12 +29,15 @@ namespace Powers {
 		enum Directionality {
 			undirected, row, radial, nw_se, ne_sw
 		} direction;
+
+		// Spawn requirements.
+		unsigned int requirements;
 	};
 
 extern std::vector<Power> powers;
 void init_powers();
 
-int RandomPower(void);
+int RandomPower(bool fog_of_war);
 }
 
 #endif /* !OR_POWERS_HPP */

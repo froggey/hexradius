@@ -357,7 +357,7 @@ void Server::SpawnPowers() {
 
 	for(Tile::List::iterator t = stiles.begin(); t != stiles.end(); t++) {
 		if((*t)->smashed) continue;
-		(*t)->power = Powers::RandomPower();
+		(*t)->power = Powers::RandomPower(fog_of_war);
 		(*t)->has_power = true;
 
 		msg.add_tiles();

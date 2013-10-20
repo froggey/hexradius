@@ -11,14 +11,20 @@
 
 using namespace Powers;
 
-int Powers::RandomPower(void) {
+int Powers::RandomPower(bool fog_of_war) {
 	int total = 0;
 	for (size_t i = 0; i < powers.size(); i++) {
+		if(!fog_of_war && (Powers::powers[i].requirements & Powers::REQ_FOG_OF_WAR)) {
+			continue;
+		}
 		total += Powers::powers[i].spawn_rate;
 	}
 
 	int n = rand() % total;
 	for (size_t i = 0; i < powers.size(); i++) {
+		if(!fog_of_war && (Powers::powers[i].requirements & Powers::REQ_FOG_OF_WAR)) {
+			continue;
+		}
 		if(n < Powers::powers[i].spawn_rate) {
 			return i;
 		}
@@ -429,9 +435,10 @@ static void use_worm(pawn_ptr pawn, ServerGameState *state) {
 static void def_power(const char *name,
 		      boost::function<void(pawn_ptr, ServerGameState *)> use_fn,
 		      boost::function<bool(pawn_ptr, ServerGameState *)> test_fn,
-		      int probability, Power::Directionality direction)
+		      int probability, Power::Directionality direction,
+		      unsigned int requirements = 0)
 {
-	powers.push_back((Power){name, use_fn, test_fn, probability, direction});
+	powers.push_back((Power){name, use_fn, test_fn, probability, direction, requirements});
 }
 
 
@@ -440,37 +447,43 @@ static void def_directional_power(const char *name,
 				  boost::function<void(tile_area_function, pawn_ptr, ServerGameState *)> use_fn,
 				  boost::function<bool(tile_area_function, pawn_ptr, ServerGameState *)> test_fn,
 				  int radial_probability,
-				  int linear_probability)
+				  int linear_probability,
+				  unsigned int requirements = 0)
 {
 	def_power(name,
 		  boost::bind(use_fn, radial_tiles, _1, _2),
 		  boost::bind(test_fn, radial_tiles, _1, _2),
 		  radial_probability,
-		  Powers::Power::radial);
+		  Powers::Power::radial,
+		  requirements);
 	def_power(name,
 		  boost::bind(use_fn, row_tiles, _1, _2),
 		  boost::bind(test_fn, row_tiles, _1, _2),
 		  linear_probability,
-		  Powers::Power::row);
+		  Powers::Power::row,
+		  requirements);
 	def_power(name,
 		  boost::bind(use_fn, bs_tiles, _1, _2),
 		  boost::bind(test_fn, bs_tiles, _1, _2),
 		  linear_probability,
-		  Powers::Power::nw_se);
+		  Powers::Power::nw_se,
+		  requirements);
 	def_power(name,
 		  boost::bind(use_fn, fs_tiles, _1, _2),
 		  boost::bind(test_fn, fs_tiles, _1, _2),
 		  linear_probability,
-		  Powers::Power::ne_sw);
+		  Powers::Power::ne_sw,
+		  requirements);
 }
 
-static void def_upgrade_power(const char *name, uint32_t upgrade, int probabiliy)
+static void def_upgrade_power(const char *name, uint32_t upgrade, int probability, unsigned int requirements = 0)
 {
 	def_power(name,
 		  boost::bind(use_upgrade_power, _1, _2, upgrade),
 		  boost::bind(can_use_upgrade, _1, _2, upgrade),
-		  probabiliy,
-		  Powers::Power::undirected);
+		  probability,
+		  Powers::Power::undirected,
+		  requirements);
 }
 
 std::vector<Powers::Power> Powers::powers;
