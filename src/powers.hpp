@@ -13,10 +13,11 @@ const uint32_t PWR_CLIMB = 1<<1;
 const uint32_t PWR_JUMP = 1<<2;
 const uint32_t PWR_INVISIBLE = 1<<3;
 const uint32_t PWR_INFRAVISION = 1<<4;
+const uint32_t PWR_CONFUSED = 1<<5;
 const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVISION | PWR_JUMP);
 
 namespace Powers {
-const unsigned int REQ_FOG_OF_WAR = 1<<0;
+	const unsigned int REQ_FOG_OF_WAR = 1<<0;
 
 	struct Power {
 		const char *name;
@@ -34,10 +35,10 @@ const unsigned int REQ_FOG_OF_WAR = 1<<0;
 		unsigned int requirements;
 	};
 
-extern std::vector<Power> powers;
-void init_powers();
+	extern std::vector<Power> powers;
+	void init_powers();
 
-int RandomPower(bool fog_of_war);
+	int RandomPower(bool fog_of_war);
 }
 
 #endif /* !OR_POWERS_HPP */

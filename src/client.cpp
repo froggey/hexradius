@@ -936,6 +936,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 		SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png", tint);
 		SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png", tint);
 		SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png", tint);
+		SDL_Surface *confused = ImgStuff::GetImage("graphics/confused.png", tint);
 
 		unsigned int frame = torus_frame;
 		
@@ -964,6 +965,8 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 			ensure_SDL_BlitSurface(shield, &base, screen, &rect);
 		if(pawn->flags & PWR_INFRAVISION)
 			ensure_SDL_BlitSurface(infravision, &base, screen, &rect);
+		if(pawn->flags & PWR_CONFUSED)
+			ensure_SDL_BlitSurface(confused, &base, screen, &rect);
 	}
 }
 

@@ -89,6 +89,27 @@ static void use_destroy_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 	destroy_enemies(area_fn(pawn), pawn, state, Pawn::PWR_DESTROY, true, false);
 }
 
+/// Confuse: Confused pawns have a chance to move in the wrong direction when moved.
+static bool test_confuse_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List area = area_fn(pawn);
+	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && !((*i)->pawn->flags & PWR_CONFUSED)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static void use_confuse_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List area = area_fn(pawn);
+	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
+			(*i)->pawn->flags |= PWR_CONFUSED;
+			state->update_pawn((*i)->pawn);
+		}
+	}
+}
+
 /// Annihilate: Destroy *all* pawns in the target area.
 static bool test_annihilate_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
 	return can_destroy_enemies(area_fn(pawn), pawn, state, false);
@@ -438,15 +459,6 @@ static bool can_eye(pawn_ptr pawn, ServerGameState *) {
 	return true;
 }
 
-// http://en.wikipedia.org/wiki/Langton's_worm
-// The worm's action in chosen based on the height of the tile, but
-// the rules are randomly assigned each use.
-// The worm will not advance onto a void tile.
-// Random rules might not be the best idea. Maybe someone can determine the most
-// interesting ruleset and hardcode that.
-// Testing reveals that this comes up with astonishingly bad rulesets.
-// Unfortunatly, all the logic is stuffed in Server, because
-// there's no way to do stuff with a delay from here :(
 static bool can_worm(pawn_ptr, ServerGameState *) {
 	return true;
 }
@@ -521,6 +533,7 @@ void Powers::init_powers()
 	def_directional_power("Mine", use_mine_power, test_mine_power, 40, 20);
 	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 50, 50);
 	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 50, 50);
+	def_directional_power("Confuse", use_confuse_power, test_confuse_power, 40, 40);
 	def_power("Wrap",
 		  boost::bind(use_wrap_power, row_tiles, _1, _2, Powers::Power::row),
 		  boost::bind(test_wrap_power, row_tiles, _1, _2, Powers::Power::row),
@@ -552,4 +565,5 @@ void Powers::init_powers()
 	def_power("Worm", &use_worm, can_worm, 40, Powers::Power::undirected);
 
 	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
+	
 }

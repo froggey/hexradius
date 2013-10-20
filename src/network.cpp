@@ -14,6 +14,16 @@
 #include "animator.hpp"
 #include "tile_anims.hpp"
 
+typedef Tile *(GameState::*tile_coord_fn)(Tile *);
+static tile_coord_fn tile_coord_fns[] = {
+	&GameState::tile_left_of,
+	&GameState::tile_sw_of,
+	&GameState::tile_se_of,
+	&GameState::tile_right_of,
+	&GameState::tile_ne_of,
+	&GameState::tile_nw_of,
+};
+
 Server::Server(uint16_t port, const std::string &s) :
 	game_state(0), acceptor(io_service), scenario(*this), worm_timer(io_service)
 {
@@ -585,8 +595,31 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
 			return true;
 		}
-
-
+		
+		if((pawn->flags & PWR_CONFUSED) && !(pawn->flags & PWR_JUMP)) {
+			int r = rand() % 6;
+			switch (r) {
+				case 0:
+				case 1:
+				case 2: {
+					std::vector<Tile*> choices;
+					for (int i = 0; i < 6; i++) {
+						Tile* temp = (game_state->*(tile_coord_fns[i]))(tile);
+						if (temp && pawn->can_move(temp, game_state))
+							choices.push_back(temp);
+					}
+					if (choices.size() > 0)
+						tile = choices[rand() % choices.size()];
+					break;
+				}
+				case 3: {
+					pawn->flags &= ~PWR_CONFUSED;
+					game_state->update_pawn(pawn);
+					break;
+				}
+			}
+		}
+		
 		if(pawn->can_move(tile, game_state)) {
 			game_state->move_pawn_to(pawn, tile);
 			if((pawn->flags & PWR_JUMP) && !pawn->destroyed()) {
@@ -657,16 +690,6 @@ void Server::update_one_tile(Tile *tile)
 
 	WriteAll(update);
 }
-
-typedef Tile *(GameState::*tile_coord_fn)(Tile *);
-static tile_coord_fn tile_coord_fns[] = {
-	&GameState::tile_left_of,
-	&GameState::tile_sw_of,
-	&GameState::tile_se_of,
-	&GameState::tile_right_of,
-	&GameState::tile_ne_of,
-	&GameState::tile_nw_of,
-};
 
 void Server::worm_tick(const boost::system::error_code &/*ec*/)
 {
