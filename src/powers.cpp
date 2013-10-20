@@ -217,8 +217,6 @@ static void use_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerGa
 			(*i)->pawn->flags &= PWR_GOOD;
 			state->update_pawn((*i)->pawn);
 		}
-		(*i)->wrap = 0;
-		
 		state->update_tile(*i);
 	}
 }
@@ -237,6 +235,9 @@ static bool test_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 			return true;
 		}
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
+			return true;
+		}
+		if((*i)->pawn && (*i)->pawn->colour == pawn->colour && ((*i)->pawn->flags & ~PWR_GOOD)) {
 			return true;
 		}
 	}
