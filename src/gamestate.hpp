@@ -38,7 +38,13 @@ public:
 	Tile *tile_nw_of(Tile *t);
 	Tile *tile_se_of(Tile *t);
 	Tile *tile_sw_of(Tile *t);
-	
+
+	Tile::List row_tiles(Tile *t, int range);
+	Tile::List radial_tiles(Tile *t, int range);
+	Tile::List bs_tiles(Tile *t, int range);
+	Tile::List fs_tiles(Tile *t, int range);
+	Tile::List linear_tiles(Tile *t, int range);
+
 	/** Return the pawn at given board column & row,
 	 * or null if there is no pawn at that location. */
 	pawn_ptr pawn_at(int column, int row);

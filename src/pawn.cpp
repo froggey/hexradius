@@ -7,8 +7,8 @@
 #include "network.hpp"
 #include "gamestate.hpp"
 
-Pawn::Pawn(PlayerColour c, Tile::List &at, Tile *ct) :
-	all_tiles(at), cur_tile(ct), colour(c),
+Pawn::Pawn(PlayerColour c, GameState *game_state, Tile *ct) :
+	game_state(game_state), cur_tile(ct), colour(c),
 	range(0), flags(0), destroyed_by(OK),
 	last_tile(0), teleport_time(0)
 {
@@ -160,149 +160,17 @@ bool Pawn::UsePower(int power, ServerGameState *state) {
 	return true;
 }
 
-Tile::List Pawn::RowTiles(int range) {
-	Tile::List tiles;
-	Tile::List::iterator i = all_tiles.begin();
-
-	int min = cur_tile->row-range;
-	int max = cur_tile->row+range;
-
-	for(; i != all_tiles.end(); i++) {
-		if((*i)->row >= min && (*i)->row <= max) {
-			tiles.push_back(*i);
-		}
-	}
-
-	return tiles;
-}
-
+Tile::List Pawn::RowTiles(int range)
+{ return game_state->row_tiles(cur_tile, range); }
 Tile::List Pawn::RadialTiles(int range)
-{
-	/* Build a set of coordinates that fall within the pawn's radial power
-	 * area by initialising the set with the current tile and then
-	 * calculating the surrounding coordinates of each pair repeatedly
-	 * until the pawn's range has been satisfied.
-	*/
-	
-	std::set< std::pair<int,int> > coords;
-	
-	coords.insert(std::make_pair(cur_tile->col, cur_tile->row));
-	
-	for(int i = 0; i <= range; ++i)
-	{
-		std::set< std::pair<int,int> > new_coords = coords;
-		
-		for(std::set< std::pair<int,int> >::iterator ci = coords.begin(); ci != coords.end(); ++ci)
-		{
-			int c_min   = ci->first  - 1 + (ci->second % 2) * 1;
-			int c_max   = ci->first  + (ci->second % 2) * 1;
-			int c_extra = ci->first  + (ci->second % 2 ? -1 : 1);
-			int r_min   = ci->second - 1;
-			int r_max   = ci->second + 1;
-			
-			for(int c = c_min; c <= c_max; ++c)
-			{
-				for(int r = r_min; r <= r_max; ++r)
-				{
-					new_coords.insert(std::make_pair(c, r));
-				}
-			}
-			
-			new_coords.insert(std::make_pair(c_extra, ci->second));
-		}
-		
-		coords.insert(new_coords.begin(), new_coords.end());
-	}
-	
-	/* Build a list of any tiles that fall within the set of coordinates to
-	 * be returned.
-	*/
-	
-	Tile::List ret;
-	
-	for(Tile::List::iterator ti = all_tiles.begin(); ti != all_tiles.end(); ++ti)
-	{
-		if(coords.find(std::make_pair((*ti)->col, (*ti)->row)) != coords.end())
-		{
-			ret.push_back(*ti);
-		}
-	}
-	
-	return ret;
-}
+{ return game_state->radial_tiles(cur_tile, range); }
+Tile::List Pawn::bs_tiles(int range)
+{ return game_state->bs_tiles(cur_tile, range); }
+Tile::List Pawn::fs_tiles(int range)
+{ return game_state->fs_tiles(cur_tile, range); }
 
-Tile::List Pawn::bs_tiles(int range) {
-	Tile::List tiles;
-
-	int base = cur_tile->col;
-
-	for(int r = cur_tile->row; r > 0; r--) {
-		if(r % 2 == 0) {
-			base--;
-		}
-	}
-
-	for(Tile::List::iterator tile = all_tiles.begin(); tile != all_tiles.end(); tile++) {
-		int col = (*tile)->col, row = (*tile)->row;
-		int mcol = base;
-
-		for(int i = 1; i <= row; i++) {
-			if(i % 2 == 0) {
-				mcol++;
-			}
-		}
-
-		int min = mcol-range, max = mcol+range;
-
-		if(col >= min && col <= max) {
-			tiles.push_back(*tile);
-		}
-	}
-
-	return tiles;
-}
-
-Tile::List Pawn::fs_tiles(int range) {
-	Tile::List tiles;
-
-	int base = cur_tile->col;
-
-	for(int r = cur_tile->row; r > 0; r--) {
-		if(r % 2) {
-			base++;
-		}
-	}
-
-	for(Tile::List::iterator tile = all_tiles.begin(); tile != all_tiles.end(); tile++) {
-		int col = (*tile)->col, row = (*tile)->row;
-		int mcol = base;
-
-		for(int i = 0; i <= row; i++) {
-			if(i % 2) {
-				mcol--;
-			}
-		}
-
-		int min = mcol-range, max = mcol+range;
-
-		if(col >= min && col <= max) {
-			tiles.push_back(*tile);
-		}
-	}
-
-	return tiles;
-}
-
-Tile::List Pawn::linear_tiles(int range) {
-	Tile::List tiles, result;
-	tiles = RowTiles(range);
-	result.insert(result.end(), tiles.begin(), tiles.end());
-	tiles = bs_tiles(range);
-	result.insert(result.end(), tiles.begin(), tiles.end());
-	tiles = fs_tiles(range);
-	result.insert(result.end(), tiles.begin(), tiles.end());
-	return result;
-}
+Tile::List Pawn::linear_tiles(int range)
+{ return game_state->linear_tiles(cur_tile, range); }
 
 void Pawn::CopyToProto(protocol::pawn *p, bool copy_powers) {
 	p->set_col(cur_tile->col);

@@ -1,9 +1,11 @@
 #ifndef PAWN_HPP
 #define PAWN_HPP
 
+class GameState;
+
 class Pawn : public boost::enable_shared_from_this<Pawn>, boost::noncopyable {
 private:
-	Tile::List &all_tiles;
+	GameState *game_state;
 
 public:
 	enum destroy_type { OK, STOMP, PWR_DESTROY, PWR_ANNIHILATE, PWR_SMASH, MINED, FELL_OUT_OF_THE_WORLD, BLACKHOLE, ANT_ATTACK };
@@ -20,7 +22,7 @@ public:
 	Tile *last_tile;
 	Uint32 teleport_time;
 
-	Pawn(PlayerColour c, Tile::List &at, Tile *ct);
+	Pawn(PlayerColour c, GameState *game_state, Tile *ct);
 
 	void destroy(destroy_type dt);
 	bool destroyed();
@@ -42,7 +44,7 @@ public:
 	Tile::List RadialTiles() { return RadialTiles(this->range); }
 	Tile::List RadialTiles(int range);
 	Tile::List bs_tiles() { return bs_tiles(this->range); }
-	Tile::List bs_tiles(int rage);
+	Tile::List bs_tiles(int range);
 	Tile::List fs_tiles() { return fs_tiles(this->range); }
 	Tile::List fs_tiles(int range);
 

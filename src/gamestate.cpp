@@ -63,6 +63,150 @@ Tile *GameState::tile_nw_of(Tile *t) { return tile_nw_of_coords(t->col, t->row);
 Tile *GameState::tile_se_of(Tile *t) { return tile_se_of_coords(t->col, t->row); }
 Tile *GameState::tile_sw_of(Tile *t) { return tile_sw_of_coords(t->col, t->row); }
 
+Tile::List GameState::row_tiles(Tile *t, int range) {
+	Tile::List tiles;
+	Tile::List::iterator i = this->tiles.begin();
+
+	int min = t->row-range;
+	int max = t->row+range;
+
+	for(; i != this->tiles.end(); i++) {
+		if((*i)->row >= min && (*i)->row <= max) {
+			tiles.push_back(*i);
+		}
+	}
+
+	return tiles;
+}
+
+Tile::List GameState::radial_tiles(Tile *t, int range)
+{
+	/* Build a set of coordinates that fall within the pawn's radial power
+	 * area by initialising the set with the current tile and then
+	 * calculating the surrounding coordinates of each pair repeatedly
+	 * until the pawn's range has been satisfied.
+	*/
+
+	std::set< std::pair<int,int> > coords;
+
+	coords.insert(std::make_pair(t->col, t->row));
+
+	for(int i = 0; i <= range; ++i)
+	{
+		std::set< std::pair<int,int> > new_coords = coords;
+
+		for(std::set< std::pair<int,int> >::iterator ci = coords.begin(); ci != coords.end(); ++ci)
+		{
+			int c_min   = ci->first  - 1 + (ci->second % 2) * 1;
+			int c_max   = ci->first  + (ci->second % 2) * 1;
+			int c_extra = ci->first  + (ci->second % 2 ? -1 : 1);
+			int r_min   = ci->second - 1;
+			int r_max   = ci->second + 1;
+
+			for(int c = c_min; c <= c_max; ++c)
+			{
+				for(int r = r_min; r <= r_max; ++r)
+				{
+					new_coords.insert(std::make_pair(c, r));
+				}
+			}
+
+			new_coords.insert(std::make_pair(c_extra, ci->second));
+		}
+
+		coords.insert(new_coords.begin(), new_coords.end());
+	}
+
+	/* Build a list of any tiles that fall within the set of coordinates to
+	 * be returned.
+	*/
+
+	Tile::List ret;
+
+	for(Tile::List::iterator ti = this->tiles.begin(); ti != this->tiles.end(); ++ti)
+	{
+		if(coords.find(std::make_pair((*ti)->col, (*ti)->row)) != coords.end())
+		{
+			ret.push_back(*ti);
+		}
+	}
+
+	return ret;
+}
+
+Tile::List GameState::bs_tiles(Tile *t, int range) {
+	Tile::List tiles;
+
+	int base = t->col;
+
+	for(int r = t->row; r > 0; r--) {
+		if(r % 2 == 0) {
+			base--;
+		}
+	}
+
+	for(Tile::List::iterator tile = this->tiles.begin(); tile != this->tiles.end(); tile++) {
+		int col = (*tile)->col, row = (*tile)->row;
+		int mcol = base;
+
+		for(int i = 1; i <= row; i++) {
+			if(i % 2 == 0) {
+				mcol++;
+			}
+		}
+
+		int min = mcol-range, max = mcol+range;
+
+		if(col >= min && col <= max) {
+			tiles.push_back(*tile);
+		}
+	}
+
+	return tiles;
+}
+
+Tile::List GameState::fs_tiles(Tile *t, int range) {
+	Tile::List tiles;
+
+	int base = t->col;
+
+	for(int r = t->row; r > 0; r--) {
+		if(r % 2) {
+			base++;
+		}
+	}
+
+	for(Tile::List::iterator tile = this->tiles.begin(); tile != this->tiles.end(); tile++) {
+		int col = (*tile)->col, row = (*tile)->row;
+		int mcol = base;
+
+		for(int i = 0; i <= row; i++) {
+			if(i % 2) {
+				mcol--;
+			}
+		}
+
+		int min = mcol-range, max = mcol+range;
+
+		if(col >= min && col <= max) {
+			tiles.push_back(*tile);
+		}
+	}
+
+	return tiles;
+}
+
+Tile::List GameState::linear_tiles(Tile *t, int range) {
+	Tile::List tiles, result;
+	tiles = row_tiles(t, range);
+	result.insert(result.end(), tiles.begin(), tiles.end());
+	tiles = bs_tiles(t, range);
+	result.insert(result.end(), tiles.begin(), tiles.end());
+	tiles = fs_tiles(t, range);
+	result.insert(result.end(), tiles.begin(), tiles.end());
+	return result;
+}
+
 pawn_ptr GameState::pawn_at(int column, int row)
 {
 	Tile *tile = tile_at(column, row);

@@ -53,7 +53,7 @@ void Scenario::load_file(std::string filename) {
 		
 		if(t->second.has_pawn)
 		{
-			tile->pawn = pawn_ptr(new Pawn(t->second.pawn_colour, game_state->tiles, tile));
+			tile->pawn = pawn_ptr(new Pawn(t->second.pawn_colour, game_state, tile));
 			colours.insert(t->second.pawn_colour);
 		}
 		
@@ -137,7 +137,7 @@ void Scenario::load_proto(const protocol::message &msg) {
 			continue;
 		}
 
-		tile->pawn = pawn_ptr(new Pawn(c, game_state->tiles, tile));
+		tile->pawn = pawn_ptr(new Pawn(c, game_state, tile));
 		colours.insert(c);
 	}
 }
