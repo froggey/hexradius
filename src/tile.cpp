@@ -11,7 +11,7 @@ Tile::Tile(int c, int r, int h) :
 	animating(false), screen_x(0), screen_y(0),
 	render_pawn(pawn_ptr()),
 	has_mine(false), has_landing_pad(false),
-	has_black_hole(false), wrap(0) {
+	has_black_hole(false), has_eye(false), wrap(0) {
 }
 
 bool Tile::SetHeight(int h) {
@@ -36,6 +36,8 @@ void Tile::CopyToProto(protocol::tile *t) {
 	t->set_landing_pad_colour(landing_pad_colour);
 	t->set_has_black_hole(has_black_hole);
 	t->set_black_hole_power(black_hole_power);
+	t->set_has_eye(has_eye);
+	t->set_eye_colour(eye_colour);
 	t->set_wrap(wrap);
 }
 

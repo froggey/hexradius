@@ -504,6 +504,8 @@ void Client::handle_message_game(const protocol::message &msg) {
 			tile->landing_pad_colour = (PlayerColour)msg.tiles(i).landing_pad_colour();
 			tile->has_black_hole = msg.tiles(i).has_black_hole();
 			tile->black_hole_power = msg.tiles(i).black_hole_power();
+			tile->has_eye = msg.tiles(i).has_eye();
+			tile->eye_colour = (PlayerColour)msg.tiles(i).eye_colour();
 			tile->wrap = msg.tiles(i).wrap();
 		}
 
@@ -685,11 +687,12 @@ void Client::DrawScreen() {
 	SDL_Surface *mine = ImgStuff::GetImage("graphics/mines.png");
 	SDL_Surface *landing_pad = ImgStuff::GetImage("graphics/landingpad.png");
 	SDL_Surface *blackhole = ImgStuff::GetImage("graphics/blackhole.png");
+	SDL_Surface *eye = ImgStuff::GetImage("graphics/eye.png");
 	SDL_Surface *wrap = ImgStuff::GetImage("graphics/wrap.png");
 
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
-	
+
 	for (std::list<TileAnimators::Animator*>::iterator it = tile_animators.begin(); it != tile_animators.end(); it++) {
 		if (!(*it)->do_stuff()) {
 			delete *it;
@@ -770,6 +773,10 @@ void Client::DrawScreen() {
 					tiles = p->linear_tiles();
 					visible_tiles.insert(tiles.begin(), tiles.end());
 				}
+			}
+			if((*ti)->has_eye && (*ti)->eye_colour == my_colour) {
+				Tile::List tiles = game_state->radial_tiles(*ti, 1);
+				visible_tiles.insert(tiles.begin(), tiles.end());
 			}
 		}
 	}
@@ -861,6 +868,15 @@ void Client::DrawScreen() {
 				draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles, visible_tiles);
 			}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
 				draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles, visible_tiles);
+			}
+
+			// Z-order. The eye is watching.
+			if((*ti)->has_eye) {
+				SDL_Rect s;
+				s.x = 0;
+				s.y = (*ti)->eye_colour * 50;
+				s.w = s.h = 50;
+				ensure_SDL_BlitSurface(eye, &s, screen, &rect);
 			}
 		}
 	}

@@ -182,6 +182,9 @@ static void use_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerGa
 		if((*i)->has_landing_pad && (*i)->landing_pad_colour != pawn->colour) {
 			(*i)->has_landing_pad = false;
 		}
+		if((*i)->has_eye && (*i)->eye_colour != pawn->colour) {
+			(*i)->has_eye = false;
+		}
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
 			(*i)->pawn->flags &= ~PWR_GOOD;
 			(*i)->pawn->range = 0;
@@ -201,6 +204,9 @@ static bool test_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 			return true;
 		}
 		if((*i)->has_landing_pad && (*i)->landing_pad_colour != pawn->colour) {
+			return true;
+		}
+		if((*i)->has_eye && (*i)->eye_colour != pawn->colour) {
 			return true;
 		}
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && ((*i)->pawn->flags & PWR_GOOD || (*i)->pawn->range > 0)) {
@@ -246,7 +252,9 @@ static void use_repaint_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 			(*i)->mine_colour = pawn->colour;
 		if ((*i)->has_landing_pad)
 			(*i)->landing_pad_colour = pawn->colour;
-		
+		if ((*i)->has_eye)
+			(*i)->eye_colour = pawn->colour;
+
 		state->update_tile(*i);
 	}
 }
@@ -258,6 +266,8 @@ static bool test_repaint_power(tile_area_function area_fn, pawn_ptr pawn, Server
 		if ((*i)->has_mine && (*i)->mine_colour != pawn->colour)
 			return true;
 		if ((*i)->has_landing_pad && (*i)->landing_pad_colour != pawn->colour)
+			return true;
+		if ((*i)->has_eye && (*i)->eye_colour != pawn->colour)
 			return true;
 	}
 
@@ -415,6 +425,19 @@ static void use_upgrade_power(pawn_ptr pawn, ServerGameState *state, uint32_t up
 	state->grant_upgrade(pawn, upgrade);
 }
 
+static void use_eye(pawn_ptr pawn, ServerGameState *state)
+{
+	pawn->cur_tile->has_eye = true;
+	pawn->cur_tile->eye_colour = pawn->colour;
+	state->update_tile(pawn->cur_tile);
+}
+
+static bool can_eye(pawn_ptr pawn, ServerGameState *) {
+	if(pawn->cur_tile->has_eye && pawn->cur_tile->eye_colour == pawn->colour) return false;
+	if(pawn->cur_tile->has_black_hole) return false;
+	return true;
+}
+
 // http://en.wikipedia.org/wiki/Langton's_worm
 // The worm's action in chosen based on the height of the tile, but
 // the rules are randomly assigned each use.
@@ -527,4 +550,6 @@ void Powers::init_powers()
 	def_power("Landing Pad", &landing_pad, can_landing_pad, 60, Powers::Power::undirected);
 	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
 	def_power("Worm", &use_worm, can_worm, 40, Powers::Power::undirected);
+
+	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
 }

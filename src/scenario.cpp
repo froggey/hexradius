@@ -112,7 +112,10 @@ void Scenario::load_proto(const protocol::message &msg) {
 		
 		tile->has_landing_pad    = msg.tiles(i).has_landing_pad();
 		tile->landing_pad_colour = (PlayerColour)(msg.tiles(i).landing_pad_colour());
-		
+
+		tile->has_eye    = msg.tiles(i).has_eye();
+		tile->eye_colour = (PlayerColour)(msg.tiles(i).eye_colour());
+
 		tile->has_black_hole   = msg.tiles(i).has_black_hole();
 		tile->black_hole_power = msg.tiles(i).black_hole_power();
 	}

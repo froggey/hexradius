@@ -65,6 +65,8 @@ message tile {
 	optional bool has_black_hole = 10;
 	optional uint32 black_hole_power = 11;
 	optional uint32 wrap = 12;
+	optional bool has_eye = 13;
+	optional uint32 eye_colour = 14;
 }
 
 message pawn {
