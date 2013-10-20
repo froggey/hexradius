@@ -810,7 +810,7 @@ void Client::DrawScreen() {
 				tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
 			} else if(std::find(jump_tiles.begin(), jump_tiles.end(), *ti) != jump_tiles.end()) {
 				tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
-			} else if(visible_tiles.find(*ti) == visible_tiles.end()) {
+			} else if(fog_of_war && visible_tiles.find(*ti) == visible_tiles.end()) {
 				tile_img = (*ti)->smashed ? smashed_fow_tile : fow_tile;
 			} else if(htile && options.show_lines) {
 				if(diag_row != (*ti)->row) {
