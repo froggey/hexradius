@@ -1,6 +1,6 @@
 # -*- mode: python -*-
 env = Environment(
-	CCFLAGS='-Wall -Wextra -ggdb',
+	CCFLAGS='-Wall -Wextra -Wno-narrowing -ggdb',
 	LINKFLAGS='-lprotobuf -lboost_system -lpthread -lboost_thread -lboost_program_options -lboost_filesystem',
 )
 env.ParseConfig('pkg-config --cflags --libs sdl SDL_image SDL_ttf SDL_gfx')

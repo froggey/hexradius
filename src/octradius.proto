@@ -34,7 +34,7 @@ enum msgtype {
 									// pawn->use_power is the power. Might not be supplied.
 	CHANGE_MAP = 31;
 
-        CHANGE_SETTING = 32;
+	CHANGE_SETTING = 32;
 }
 
 enum colour {
@@ -127,5 +127,5 @@ message message {
 
 	optional string map_name = 17;
 
-        optional bool fog_of_war = 18;
+	optional bool fog_of_war = 18;
 }

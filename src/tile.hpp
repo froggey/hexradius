@@ -32,6 +32,15 @@ struct Tile {
 	bool has_black_hole;
 	int black_hole_power;
 	
+	struct PowerMessage {
+		int power;
+		bool added;
+		float time;
+
+		PowerMessage(int p, bool a) : power(p), added(a), time(2) {}
+	};
+	std::list<PowerMessage> power_messages;
+	
 	uint32_t wrap;
 	enum wrap_direction { WRAP_RIGHT, WRAP_LEFT, WRAP_UP_RIGHT, WRAP_DOWN_RIGHT, WRAP_UP_LEFT, WRAP_DOWN_LEFT };
 

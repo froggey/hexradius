@@ -19,14 +19,6 @@ public:
 
 	Tile *last_tile;
 	Uint32 teleport_time;
-	struct PowerMessage {
-		int power;
-		bool added;
-		float time;
-
-		PowerMessage(int p, bool a) : power(p), added(a), time(2) {}
-	};
-	std::list<PowerMessage> power_messages;
 
 	Pawn(PlayerColour c, Tile::List &at, Tile *ct);
 

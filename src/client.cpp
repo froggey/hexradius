@@ -525,7 +525,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 				int old_num = old_powers[index];
 				if (num < old_num) {
 					for (int i = num; i < old_num; i++)
-						pawn->power_messages.push_back(Pawn::PowerMessage(index, false));
+						pawn->cur_tile->power_messages.push_back(Tile::PowerMessage(index, false));
 				}
 
 				if(index >= Powers::powers.size() || num <= 0) {
@@ -647,16 +647,16 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 	} else if(msg.msg() == protocol::ADD_POWER_NOTIFICATION) {
 		assert(msg.pawns_size() == 1);
-		pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
-		assert(pawn);
-		pawn->power_messages.push_back(Pawn::PowerMessage(msg.pawns(0).has_use_power() ?
+		Tile* tile = game_state->tile_at(msg.pawns(0).col(), msg.pawns(0).row());
+		assert(tile);
+		tile->power_messages.push_back(Tile::PowerMessage(msg.pawns(0).has_use_power() ?
 								  msg.pawns(0).use_power() :
 								  -1, true));
 	} else if(msg.msg() == protocol::USE_POWER_NOTIFICATION) {
 		assert(msg.pawns_size() == 1);
-		pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
-		assert(pawn);
-		pawn->power_messages.push_back(Pawn::PowerMessage(msg.pawns(0).has_use_power() ?
+		Tile* tile = game_state->tile_at(msg.pawns(0).col(), msg.pawns(0).row());
+		assert(tile);
+		tile->power_messages.push_back(Tile::PowerMessage(msg.pawns(0).has_use_power() ?
 								  msg.pawns(0).use_power() :
 								  -1, false));
 	}else{
@@ -882,14 +882,13 @@ void Client::DrawScreen() {
 
 	std::vector<pawn_ptr> all_pawns = game_state->all_pawns();
 	float dt = (SDL_GetTicks() - last_redraw) / 1000.0;
-	for(std::vector<pawn_ptr>::iterator pi = all_pawns.begin(); pi != all_pawns.end(); ++pi) {
-		pawn_ptr pawn = *pi;
-		for (std::list<Pawn::PowerMessage>::iterator i = pawn->power_messages.begin(); i != pawn->power_messages.end(); ++i) {
+	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
+		for (std::list<Tile::PowerMessage>::iterator i = (*ti)->power_messages.begin(); i != (*ti)->power_messages.end(); ++i) {
 			i->time -= dt;
 			if (i->time > 0)
-				draw_power_message(pawn, *i);
+				draw_power_message(*ti, *i);
 			else
-				i = pawn->power_messages.erase(i);
+				i = (*ti)->power_messages.erase(i);
 		}
 	}
 
@@ -1241,11 +1240,11 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 	}
 }
 
-void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
+void Client::draw_power_message(Tile* tile, Tile::PowerMessage& pm) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
 	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 14);
 
-	bool hide = pm.power == -1 || (pm.added && pawn->colour != my_colour);
+	bool hide = pm.power == -1;
 
 	std::string str = hide ? "???" : Powers::powers[pm.power].name;
 	str = (pm.added ? "+ " : "- ") + str;
@@ -1259,8 +1258,8 @@ void Client::draw_power_message(pawn_ptr pawn, Pawn::PowerMessage& pm) {
 		rect.w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[pm.power].direction]);
 	rect.w += fw;
 	rect.h = fh;
-	rect.x = pawn->cur_tile->screen_x - rect.w / 2 + TILE_WIDTH / 2;
-	rect.y = pawn->cur_tile->screen_y - 32 + 16 * pm.time;
+	rect.x = tile->screen_x - rect.w / 2 + TILE_WIDTH / 2;
+	rect.y = tile->screen_y - 32 + 16 * pm.time;
 
 	ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178 * std::min(pm.time, 1.0f));
 
