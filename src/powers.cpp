@@ -213,6 +213,10 @@ static void use_purify_power(tile_area_function area_fn, pawn_ptr pawn, ServerGa
 			// This pawn got changed, rerun the tile effects.
 			state->move_pawn_to((*i)->pawn, (*i)->pawn->cur_tile);
 		}
+		if ((*i)->pawn && (*i)->pawn->colour == pawn->colour) {
+			(*i)->pawn->flags &= PWR_GOOD;
+			state->update_pawn((*i)->pawn);
+		}
 		state->update_tile(*i);
 	}
 }
