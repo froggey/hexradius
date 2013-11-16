@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "loadimage.hpp"
-#include "octradius.hpp"
+#include "hexradius.hpp"
 
 SDL_Surface *screen = NULL;
 int screen_w = -1, screen_h = -1;
@@ -170,7 +170,7 @@ void ImgStuff::TintSurface(SDL_Surface *surface, const TintValues &tint) {
 
 			Uint8 r, g, b, a;
 			SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
-			
+
 			r = FOOBAR(r);
 			g = FOOBAR(g);
 			b = FOOBAR(b);

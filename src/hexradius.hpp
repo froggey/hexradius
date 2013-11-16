@@ -1,5 +1,5 @@
-#ifndef OR_OCTRADIUS_HPP
-#define OR_OCTRADIUS_HPP
+#ifndef HEXRADIUS_HPP
+#define HEXRADIUS_HPP
 
 #include <iostream>
 #include <stdlib.h>
@@ -18,7 +18,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/utility.hpp>
 
-#include "octradius.pb.h"
+#include "hexradius.pb.h"
 
 const unsigned int MAX_MSGSIZE = 8192;
 const uint16_t DEFAULT_PORT = 9012;

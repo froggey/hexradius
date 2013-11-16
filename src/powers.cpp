@@ -1,5 +1,5 @@
 #include "powers.hpp"
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "tile_anims.hpp"
 #include "animator.hpp"
 #include "gamestate.hpp"
@@ -305,7 +305,7 @@ static bool test_repaint_power(tile_area_function area_fn, pawn_ptr pawn, Server
 /// Wrap: Allow jumping from one side of the board to the other.
 static void use_wrap_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state, Powers::Power::Directionality direction) {
 	Tile::List tiles = area_fn(pawn);
-	
+
 	for (Tile::List::iterator it = tiles.begin(); it != tiles.end(); it++) {
 		if (direction == Powers::Power::row) {
 			if (!state->tile_left_of(*it))
@@ -325,14 +325,14 @@ static void use_wrap_power(tile_area_function area_fn, pawn_ptr pawn, ServerGame
 			if (!state->tile_sw_of(*it))
 				(*it)->wrap |= 1 << Tile::WRAP_DOWN_LEFT;
 		}
-		
+
 		state->update_tile(*it);
 	}
 }
 
 static bool test_wrap_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state, Powers::Power::Directionality direction) {
 	Tile::List tiles = area_fn(pawn);
-	
+
 	for (Tile::List::iterator it = tiles.begin(); it != tiles.end(); it++) {
 		if (direction == Powers::Power::row) {
 			if (!state->tile_left_of(*it) && !((*it)->wrap & (1 << Tile::WRAP_LEFT)))
@@ -572,5 +572,5 @@ void Powers::init_powers()
 	def_power("Worm", &use_worm, can_worm, 40, Powers::Power::undirected);
 
 	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
-	
+
 }

@@ -1,7 +1,7 @@
 #include <boost/foreach.hpp>
 
 #include "tile.hpp"
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "loadimage.hpp"
 
 Tile::Tile(int c, int r, int h) :

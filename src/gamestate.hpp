@@ -1,9 +1,9 @@
-#ifndef OR_GAMESTATE_HPP
-#define OR_GAMESTATE_HPP
+#ifndef GAMESTATE_HPP
+#define GAMESTATE_HPP
 
 #include <vector>
 #include <boost/utility.hpp>
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "tile.hpp"
 #include "pawn.hpp"
 
@@ -25,7 +25,7 @@ public:
 	/** Return the tile at given board column & row,
 	 * or null if there is no tile at that location. */
 	Tile *tile_at(int column, int row);
-	
+
 	Tile *tile_left_of_coords(int column, int row);
 	Tile *tile_right_of_coords(int column, int row);
 	Tile *tile_ne_of_coords(int column, int row);

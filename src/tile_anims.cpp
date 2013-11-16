@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <boost/foreach.hpp>
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "tile_anims.hpp"
 #include "client.hpp"
 

@@ -9,7 +9,7 @@
 #include "gui.hpp"
 #include "fontstuff.hpp"
 #include "loadimage.hpp"
-#include "octradius.hpp"
+#include "hexradius.hpp"
 
 void GUI::Thing::HandleEvent(const SDL_Event &) {
 }

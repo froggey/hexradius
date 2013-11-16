@@ -1,5 +1,5 @@
-#ifndef OR_FONTSTUFF_HPP
-#define OR_FONTSTUFF_HPP
+#ifndef FONTSTUFF_HPP
+#define FONTSTUFF_HPP
 #include <SDL/SDL_ttf.h>
 #include <string>
 
@@ -10,4 +10,4 @@ namespace FontStuff {
 	int TextWidth(TTF_Font *font, const std::string &text);
 }
 
-#endif /* !OR_FONTSTUFF_HPP */
+#endif /* !FONTSTUFF_HPP */

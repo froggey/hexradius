@@ -7,8 +7,8 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 
-#include "octradius.hpp"
-#include "octradius.pb.h"
+#include "hexradius.hpp"
+#include "hexradius.pb.h"
 #include "client.hpp"
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
@@ -867,7 +867,7 @@ void Client::DrawScreen() {
 			if((*ti)->has_power) {
 				ensure_SDL_BlitSurface(pickup, NULL, screen, &rect);
 			}
-			
+
 			for (int wd = 0; wd < 6; wd++) {
 				if ((*ti)->wrap & (1 << wd)) {
 					SDL_Rect s;
@@ -953,7 +953,7 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 		SDL_Surface *confused = ImgStuff::GetImage("graphics/confused.png", tint);
 
 		unsigned int frame = torus_frame;
-		
+
 		if (pawn != dpawn)
 			ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
@@ -1051,7 +1051,7 @@ void Client::lobby_regen() {
 			std::string name = node->path().string().substr(9);
 			mn->add_item(name, name);
 		}
-		
+
 		mn->select(map_name);
 
 		boost::shared_ptr<GUI::TextButton> sg(new GUI::TextButton(lobby_gui, 645, 339, 135, 35, 2, "Start Game", boost::bind(start_cb, _1, _2, this)));
