@@ -1,5 +1,5 @@
-#ifndef OR_CLIENT_HPP
-#define OR_CLIENT_HPP
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <stdint.h>
 #include <boost/asio.hpp>
@@ -11,9 +11,9 @@
 #include <boost/thread.hpp>
 #include <queue>
 
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "tile_anims.hpp"
-#include "octradius.pb.h"
+#include "hexradius.pb.h"
 #include "gui.hpp"
 #include "animator.hpp"
 #include "scenario.hpp"
@@ -141,4 +141,4 @@ private:
 	}
 };
 
-#endif /* !OR_CLIENT_HPP */
+#endif /* !CLIENT_HPP */

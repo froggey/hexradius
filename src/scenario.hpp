@@ -1,8 +1,8 @@
-#ifndef OR_SCENARIO_HPP
-#define OR_SCENARIO_HPP
+#ifndef SCENARIO_HPP
+#define SCENARIO_HPP
 
-#include "octradius.hpp"
-#include "octradius.pb.h"
+#include "hexradius.hpp"
+#include "hexradius.pb.h"
 #include <boost/utility.hpp>
 
 class GameState;
@@ -37,4 +37,4 @@ private:
 	Server *server;
 };
 
-#endif /* !OR_SCENARIO_HPP */
+#endif /* !SCENARIO_HPP */

@@ -5,7 +5,7 @@
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 #include "menu.hpp"
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "client.hpp"
 #include "fontstuff.hpp"
 #include "loadimage.hpp"
@@ -191,7 +191,7 @@ HostMenu::HostMenu() :
 		std::string name = node->path().string().substr(9);
 		scenario_input.add_item(name, name);
 	}
-	
+
 	scenario_input.select("hex_2p");
 }
 

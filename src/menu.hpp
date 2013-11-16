@@ -1,5 +1,5 @@
-#ifndef OR_MENU_HPP
-#define OR_MENU_HPP
+#ifndef MENU_HPP
+#define MENU_HPP
 
 #include <SDL/SDL.h>
 #include <string>

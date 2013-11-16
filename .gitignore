@@ -2,6 +2,6 @@
 /.sconsign*
 /hexradius
 /options.txt
-/src/octradius.pb.cc
-/src/octradius.pb.h
+/src/hexradius.pb.cc
+/src/hexradius.pb.h
 core.*

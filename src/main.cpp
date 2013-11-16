@@ -21,7 +21,7 @@
 #include "loadimage.hpp"
 #include "fontstuff.hpp"
 #include "powers.hpp"
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "network.hpp"
 #include "client.hpp"
 #include "menu.hpp"

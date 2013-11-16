@@ -2,7 +2,7 @@
 #define TILE_HPP
 
 #include <vector>
-#include "octradius.hpp"
+#include "hexradius.hpp"
 
 struct Tile {
 	typedef std::vector<Tile*> List;

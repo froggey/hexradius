@@ -1,10 +1,10 @@
-#ifndef OR_POWERS_HPP
-#define OR_POWERS_HPP
+#ifndef POWERS_HPP
+#define POWERS_HPP
 
 #include <stdint.h>
 #include <boost/function.hpp>
 
-#include "octradius.hpp"
+#include "hexradius.hpp"
 
 class ServerGameState;
 
@@ -41,4 +41,4 @@ namespace Powers {
 	int RandomPower(bool fog_of_war);
 }
 
-#endif /* !OR_POWERS_HPP */
+#endif /* !POWERS_HPP */

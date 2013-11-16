@@ -1,8 +1,8 @@
 #include <set>
 
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "powers.hpp"
-#include "octradius.pb.h"
+#include "hexradius.pb.h"
 #include "client.hpp"
 #include "network.hpp"
 #include "gamestate.hpp"
@@ -47,7 +47,7 @@ static Tile* line_end(Tile* start, boost::function<Tile*(Tile*)> move_fn) {
 bool Pawn::can_move(Tile *tile, ServerGameState *state) {
 	// Move only onto adjacent tiles or friendly landing pads.
 	Tile::List adjacent_tiles = move_tiles();
-	
+
 	if (cur_tile->wrap & (1 << Tile::WRAP_LEFT))
 		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_right_of, state, _1)));
 	if (cur_tile->wrap & (1 << Tile::WRAP_RIGHT))
@@ -60,7 +60,7 @@ bool Pawn::can_move(Tile *tile, ServerGameState *state) {
 		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_sw_of, state, _1)));
 	if (cur_tile->wrap & (1 << Tile::WRAP_DOWN_RIGHT))
 		adjacent_tiles.push_back(line_end(cur_tile, boost::bind(&GameState::tile_nw_of, state, _1)));
-	
+
 	if((std::find(adjacent_tiles.begin(), adjacent_tiles.end(), tile) == adjacent_tiles.end()) &&
 	   !(tile->has_landing_pad && tile->landing_pad_colour == colour)) {
 		return false;

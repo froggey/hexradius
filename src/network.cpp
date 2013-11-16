@@ -7,7 +7,7 @@
 #include <boost/foreach.hpp>
 
 #include "network.hpp"
-#include "octradius.pb.h"
+#include "hexradius.pb.h"
 #include "powers.hpp"
 #include "gamestate.hpp"
 #include "fontstuff.hpp"
@@ -280,7 +280,7 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 	}
 
 	server.clients.erase(shared_from_this());
-	
+
 	server.CheckForGameOver();
 }
 
@@ -326,7 +326,7 @@ bool Server::CheckForGameOver() {
 	}
 	if (getenv("HR_DONT_END_GAME"))
 		return false;
-	
+
 	int alive = 0;
 	uint16_t winner_id;
 	for (client_set::iterator it = clients.begin(); it != clients.end(); it++) {
@@ -335,23 +335,23 @@ bool Server::CheckForGameOver() {
 			winner_id = (*it)->id;
 		}
 	}
-	
+
 	if (alive <= 1) {
 		worm_timer.cancel();
 		doing_worm_stuff = false;
 
 		state = LOBBY;
-		
+
 		protocol::message gover;
 		gover.set_msg(protocol::GOVER);
 		gover.set_is_draw(alive == 0);
 		if (alive > 0)
 			gover.set_player_id(winner_id);
-		
+
 		turn = clients.end();
-		
+
 		WriteAll(gover);
-		
+
 		return true;
 	}
 	else {
@@ -427,13 +427,13 @@ static bool can_pull_on_to(Tile *tile, pawn_ptr pawn) {
 
 void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 	Tile *target;
-	
+
 	float bx = tile->col + ((tile->row % 2) * 0.5f);
 	float by = tile->row * 0.5f;
 	float px = pawn->cur_tile->col + ((pawn->cur_tile->row % 2) * 0.5f);
 	float py = pawn->cur_tile->row * 0.5f;
 	float angle = atan2(py - by, px - bx);
-	
+
 	if (angle > -M_PI / 6 && angle <= M_PI / 6) // approaching from right
 		target = game_state->tile_at(pawn->cur_tile->col - 1, pawn->cur_tile->row);
 	else if (angle > M_PI / 6 && angle <= M_PI / 2) // from bottom right
@@ -448,7 +448,7 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 		target = game_state->tile_at(pawn->cur_tile->col + 1, pawn->cur_tile->row);
 	else
 		target = NULL;
-	
+
 	if (target && can_pull_on_to(target, pawn))
 		game_state->move_pawn_to(pawn, target);
 }
@@ -521,7 +521,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		try {
 			scenario.load_file("scenario/" + msg.map_name());
 			map_name = msg.map_name();
-			
+
 			for(client_set::iterator c = clients.begin(); c != clients.end(); c++)
 			{
 				protocol::message ginfo;
@@ -595,7 +595,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
 			return true;
 		}
-		
+
 		if((pawn->flags & PWR_CONFUSED) && !(pawn->flags & PWR_JUMP)) {
 			int r = rand() % 6;
 			switch (r) {
@@ -619,7 +619,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				}
 			}
 		}
-		
+
 		if(pawn->can_move(tile, game_state)) {
 			game_state->move_pawn_to(pawn, tile);
 			if((pawn->flags & PWR_JUMP) && !pawn->destroyed()) {
@@ -700,7 +700,7 @@ void Server::worm_tick(const boost::system::error_code &/*ec*/)
 		return;
 	}
 	worm_range -= 1;
-	
+
 	if (worm_tile->height < 2) {
 		game_state->add_animator(new TileAnimators::ElevationAnimator(
 			Tile::List(1, worm_tile), worm_tile, 0, TileAnimators::RELATIVE, 1));
@@ -711,21 +711,21 @@ void Server::worm_tick(const boost::system::error_code &/*ec*/)
 		game_state->add_animator(new Animators::PawnBoom(worm_tile->screen_x, worm_tile->screen_y));
 	}
 	game_state->update_tile(worm_tile);
-	
+
 	std::vector<Tile*> choices;
 	for (int i = 0; i < 6; i++) {
 		Tile* temp = (game_state->*(tile_coord_fns[i]))(worm_tile);
 		if (temp && temp->height < 2)
 			choices.push_back(temp);
 	}
-	
+
 	if (choices.size() == 0) {
 		doing_worm_stuff = false;
 		return;
 	}
-	
+
 	worm_tile = choices[rand() % choices.size()];
-	
+
 	worm_timer.expires_at(worm_timer.expires_at() + boost::posix_time::milliseconds(1000));
 	worm_timer.async_wait(boost::bind(&Server::worm_tick, this, boost::asio::placeholders::error));
 }

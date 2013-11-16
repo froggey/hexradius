@@ -1,7 +1,7 @@
-#ifndef OR_TILE_ANIMS_HPP
-#define OR_TILE_ANIMS_HPP
+#ifndef TILE_ANIMS_HPP
+#define TILE_ANIMS_HPP
 
-#include "octradius.hpp"
+#include "hexradius.hpp"
 #include "tile.hpp"
 
 #undef ABSOLUTE

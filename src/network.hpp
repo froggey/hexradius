@@ -1,5 +1,5 @@
-#ifndef OR_NETWORK_HPP
-#define OR_NETWORK_HPP
+#ifndef NETWORK_HPP
+#define NETWORK_HPP
 
 #include <queue>
 #include <stdint.h>
@@ -12,8 +12,8 @@
 #include <vector>
 #include <boost/thread.hpp>
 
-#include "octradius.pb.h"
-#include "octradius.hpp"
+#include "hexradius.pb.h"
+#include "hexradius.hpp"
 #include "scenario.hpp"
 
 class ServerGameState;
@@ -130,4 +130,4 @@ private:
 	void update_one_tile(Tile *tile);
 };
 
-#endif /* !OR_NETWORK_HPP */
+#endif /* !NETWORK_HPP */

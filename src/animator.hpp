@@ -1,9 +1,9 @@
-#ifndef OR_ANIMATOR_HPP
-#define OR_ANIMATOR_HPP
+#ifndef ANIMATOR_HPP
+#define ANIMATOR_HPP
 
 #include <SDL/SDL.h>
 
-#include "octradius.hpp"
+#include "hexradius.hpp"
 
 namespace Animators {
 class Generic {
@@ -62,4 +62,4 @@ public:
 };
 }
 
-#endif /* !OR_ANIMATOR_HPP */
+#endif /* !ANIMATOR_HPP */

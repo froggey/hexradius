@@ -1,5 +1,5 @@
-#ifndef OR_LOADIMAGE_HPP
-#define OR_LOADIMAGE_HPP
+#ifndef LOADIMAGE_HPP
+#define LOADIMAGE_HPP
 
 #include <SDL/SDL.h>
 
@@ -51,4 +51,4 @@ namespace ImgStuff {
 	void set_mode(int w, int h);
 }
 
-#endif /* !OR_LOADIMAGE_HPP */
+#endif /* !LOADIMAGE_HPP */
