@@ -35,6 +35,8 @@ enum msgtype {
 	CHANGE_MAP = 31;
 
 	CHANGE_SETTING = 32;
+	
+	RESIGN = 33;
 }
 
 enum colour {

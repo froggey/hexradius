@@ -35,6 +35,8 @@ const unsigned int TILE_WOFF = 50;
 const unsigned int TILE_HOFF = 38;
 const unsigned int TILE_ROFF = 25;
 const unsigned int TILE_HEIGHT_FACTOR = 5;
+const unsigned int RESIGN_BUTTON_WIDTH = 64;
+const unsigned int RESIGN_BUTTON_HEIGHT = 16;
 
 const uint16_t ADMIN_ID = 0;
 

@@ -653,6 +653,18 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				}
 			}
 		}
+	}else if(msg.msg() == protocol::RESIGN) {
+		if(*turn != client)
+			return true;
+		std::vector<pawn_ptr> pawns = game_state->all_pawns();
+		for(std::vector<pawn_ptr>::iterator it = pawns.begin(); it != pawns.end(); it++) {
+			if((*it)->colour == client->colour) {
+				game_state->destroy_pawn(*it, Pawn::OK);
+			}
+		}
+		if(!CheckForGameOver()) {
+			NextTurn();
+		}
 	}
 
 	return true;

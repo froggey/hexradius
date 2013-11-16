@@ -195,6 +195,11 @@ void Client::run() {
 				if(tile && tile->pawn && tile->pawn->colour == my_colour) {
 					dpawn = tile->pawn;
 				}
+				else if(turn == my_id && xd > screen->w - RESIGN_BUTTON_WIDTH && yd < RESIGN_BUTTON_HEIGHT) {
+					protocol::message msg;
+					msg.set_msg(protocol::RESIGN);
+					WriteProto(msg);
+				}
 			}
 		}
 		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && tile_animators.empty()) {
@@ -738,6 +743,15 @@ void Client::DrawScreen() {
 			text += ")  ";
 			FontStuff::BlitText(screen, rect, f, team_colours[(*p).colour], text);
 			rect.x += FontStuff::TextWidth(f, text);
+		}
+		
+		if(turn == my_id) {
+			rect.x = screen->w - RESIGN_BUTTON_WIDTH;
+			rect.w = RESIGN_BUTTON_WIDTH;
+			rect.h = RESIGN_BUTTON_HEIGHT;
+			ensure_SDL_FillRect(screen, &rect, SDL_MapRGB(screen->format, 128, 0, 0));
+			rect.x += (RESIGN_BUTTON_WIDTH - FontStuff::TextWidth(bfont, "Resign")) / 2;
+			FontStuff::BlitText(screen, rect, bfont, ImgStuff::Colour(255, 255, 255), "Resign");
 		}
 	}
 
