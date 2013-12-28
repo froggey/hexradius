@@ -495,6 +495,39 @@ static void use_worm(pawn_ptr pawn, ServerGameState *state) {
 	state->run_worm_stuff(pawn, 15 * (pawn->range + 1));
 }
 
+/// Prod: Do thing.
+static bool can_prod(int, pawn_ptr, ServerGameState *) {
+	return true;
+}
+
+//typedef boost::function<Tile*(GameState *, Tile *)> direction_fn;
+static Tile *(GameState::*directions[])(Tile *) = {
+	&GameState::tile_ne_of,
+	&GameState::tile_right_of,
+	&GameState::tile_se_of,
+	&GameState::tile_sw_of,
+	&GameState::tile_left_of,
+	&GameState::tile_nw_of,
+};
+
+static void use_prod(int dir, pawn_ptr pawn, ServerGameState *state) {
+	Tile *tile = (state->*(directions[dir]))(pawn->cur_tile);
+	if(!tile) return;
+	if(tile->has_mine) {
+		// ### This should probably be part of Tile.
+		if(tile->pawn) {
+			tile->pawn->detonate_mine(state);
+		} else {
+			state->add_animator(new Animators::PawnBoom(tile->screen_x, tile->screen_y));
+			tile->has_mine = false;
+			state->update_tile(tile);
+		}
+	}
+	if(tile->pawn) {
+		state->play_prod_animation(pawn, tile->pawn);
+	}
+}
+
 static void def_power(const char *name,
 		      boost::function<void(pawn_ptr, ServerGameState *)> use_fn,
 		      boost::function<bool(pawn_ptr, ServerGameState *)> test_fn,
@@ -593,6 +626,13 @@ void Powers::init_powers()
 	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
 	def_power("Worm", &use_worm, can_worm, 40, Powers::Power::undirected);
 
-	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
+	for(int i = 0; i < 6; ++i) {
+		def_power("Prod",
+			  boost::bind(use_prod, i, _1, _2),
+			  boost::bind(can_prod, i, _1, _2),
+			  20,
+			  Powers::Power::Directionality(Powers::Power::northeast + i));
+	}
 
+	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
 }

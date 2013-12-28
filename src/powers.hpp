@@ -28,7 +28,8 @@ namespace Powers {
 		int spawn_rate;
 
 		enum Directionality {
-			undirected, row, radial, nw_se, ne_sw
+			undirected, row, radial, nw_se, ne_sw,
+			northeast, east, southeast, southwest, west, northwest
 		} direction;
 
 		// Spawn requirements.

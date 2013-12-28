@@ -10,7 +10,7 @@
 Pawn::Pawn(PlayerColour c, GameState *game_state, Tile *ct) :
 	game_state(game_state), cur_tile(ct), colour(c),
 	range(0), flags(0), destroyed_by(OK),
-	last_tile(0), teleport_time(0)
+	last_tile(0), teleport_time(0), prod_time(0)
 {
 }
 
@@ -114,16 +114,21 @@ void Pawn::force_move(Tile *tile, ServerGameState *state) {
 	}
 
 	if(cur_tile->has_mine && cur_tile->mine_colour != colour && !(flags & PWR_CLIMB)) {
-		state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
-		cur_tile->has_mine = false;
-		state->update_tile(cur_tile);
-		// Shield protects from one mine.
-		if(flags & PWR_SHIELD) {
-			flags &= ~PWR_SHIELD;
-			state->update_pawn(shared_from_this());
-		} else {
-			state->destroy_pawn(shared_from_this(), MINED);
-		}
+		detonate_mine(state);
+	}
+}
+
+void Pawn::detonate_mine(ServerGameState *state)
+{
+	state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
+	cur_tile->has_mine = false;
+	state->update_tile(cur_tile);
+	// Shield protects from one mine.
+	if(flags & PWR_SHIELD) {
+		flags &= ~PWR_SHIELD;
+		state->update_pawn(shared_from_this());
+	} else {
+		state->destroy_pawn(shared_from_this(), MINED);
 	}
 }
 

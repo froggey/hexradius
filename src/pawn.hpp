@@ -20,7 +20,7 @@ public:
 	destroy_type destroyed_by;
 
 	Tile *last_tile;
-	Uint32 teleport_time;
+	Uint32 teleport_time, prod_time;
 
 	Pawn(PlayerColour c, GameState *game_state, Tile *ct);
 
@@ -35,6 +35,8 @@ public:
 	void force_move(Tile *new_tile, ServerGameState *state);
 	// A list of tiles that the pawn can reach when moving.
 	Tile::List move_tiles();
+	// Perform pawn-related mine detonation stuff.
+	void detonate_mine(ServerGameState *state);
 
 	void AddPower(int power);
 	bool UsePower(int power, ServerGameState *state);

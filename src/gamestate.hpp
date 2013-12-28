@@ -76,6 +76,8 @@ public:
 	// Move a pawn onto the target tile, for effect.
 	void move_pawn_to(pawn_ptr pawn, Tile *target);
 	void run_worm_stuff(pawn_ptr pawn, int range);
+	// Pawn got proded.
+	void play_prod_animation(pawn_ptr pawn, pawn_ptr target);
 private:
 	Server &server;
 };

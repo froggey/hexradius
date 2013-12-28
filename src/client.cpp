@@ -559,27 +559,46 @@ void Client::handle_message_game(const protocol::message &msg) {
 
 		ImgStuff::set_mode(MENU_WIDTH, MENU_HEIGHT);
 	} else if(msg.msg() == protocol::PAWN_ANIMATION) {
-		if(msg.animation_name() != "teleport") {
-			std::cerr << "Unknown pawn animation " << msg.animation_name() << std::endl;
-			return;
-		}
-		if(msg.pawns_size() != 1) {
-			std::cerr << "Recieved invalid teleport animation." << std::endl;
-			return;
-		}
-		pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
-		if(!pawn) {
-			std::cerr << "Recieved invalid teleport animation. No such pawn " << msg.pawns(0).col() << "," << msg.pawns(0).col() << std::endl;
-			return;
-		}
+		if(msg.animation_name() == "teleport") {
+			if(msg.pawns_size() != 1) {
+				std::cerr << "Recieved invalid teleport animation." << std::endl;
+				return;
+			}
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+			if(!pawn) {
+				std::cerr << "Recieved invalid teleport animation. No such pawn " << msg.pawns(0).col() << "," << msg.pawns(0).col() << std::endl;
+				return;
+			}
 
-		// Beware! The teleport animation message is sent before the move message.
-		// This expects that the pawn will move soon after the animation starts playing.
-		// The animation message contains source (col/row) tile and the target (new_col/new_row)
-		// tile coordinates, but these aren't used yet.
-		pawn->last_tile = pawn->cur_tile;
-		pawn->last_tile->render_pawn = pawn;
-		pawn->teleport_time = SDL_GetTicks();
+			// Beware! The teleport animation message is sent before the move message.
+			// This expects that the pawn will move soon after the animation starts playing.
+			// The animation message contains source (col/row) tile and the target (new_col/new_row)
+			// tile coordinates, but these aren't used yet.
+			pawn->last_tile = pawn->cur_tile;
+			pawn->last_tile->render_pawn = pawn;
+			pawn->teleport_time = SDL_GetTicks();
+		} else if(msg.animation_name() == "prod") {
+			// Pawn 0 = originator
+			// Pawn 1 = target
+			if(msg.pawns_size() != 2) {
+				std::cerr << "Recieved invalid teleport animation." << std::endl;
+				return;
+			}
+			pawn_ptr pawn = game_state->pawn_at(msg.pawns(0).col(), msg.pawns(0).row());
+			if(!pawn) {
+				std::cerr << "Recieved invalid prod animation. No such pawn " << msg.pawns(0).col() << "," << msg.pawns(0).col() << std::endl;
+				return;
+			}
+			pawn_ptr target = game_state->pawn_at(msg.pawns(1).col(), msg.pawns(1).row());
+			if(!target) {
+				std::cerr << "Recieved invalid prod animation. No such pawn " << msg.pawns(1).col() << "," << msg.pawns(1).col() << std::endl;
+				return;
+			}
+
+			target->prod_time = SDL_GetTicks();
+		} else {
+			std::cerr << "Unknown pawn animation " << msg.animation_name() << std::endl;
+		}
 	} else if(msg.msg() == protocol::TILE_ANIMATION) {
 		if(msg.animation_name() != "elevation") {
 			std::cerr << "Received unsupported animation " << msg.animation_name() << std::endl;
@@ -1006,6 +1025,14 @@ void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &i
 			pawn->last_tile = NULL;
 		}
 	}
+	if(pawn->prod_time) {
+		float prod = (SDL_GetTicks() - pawn->prod_time) / 500.0f;
+		if(prod < 1.0) {
+			rect.y -= 2.0f*sinf(prod * M_PI * 2.0f);
+		} else {
+			pawn->prod_time = 0;
+		}
+	}
 
 	if(pawn->cur_tile != tile && pawn->last_tile != tile) {
 		return;
@@ -1183,12 +1210,18 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 // They must to be seperate from the actual name because they have to be
 // rendered using DejaVu Serif.
 // Save this file with UTF-8 or I'll set you on fire.
-static const char *direction_suffixes[5] = {
+static const char *direction_suffixes[11] = {
 	"", // Undirected
 	" ↔", // Row.    U+2194 LEFT RIGHT ARROW
 	" ⥁", // Radial. U+2941 CLOCKWISE CLOSED CIRCLE ARROW
 	" ⤡", // NW-SE.  U+2921 NORTH WEST AND SOUTH EAST ARROW
 	" ⤢", // NE-SW.  U+2922 NORTH EAST AND SOUTH WEST ARROW
+	" ↗", // NE.     U+2197 NORTH EAST ARROW
+	" →", // E.      U+2192 RIGHTWARDS ARROW
+	" ↘", // SE.     U+2198 SOUTH EAST ARROW
+	" ↙", // SW.     U+2199 SOUTH WEST ARROW
+	" ←", // W.      U+2190 LEFTWARDS ARROW
+	" ↖", // NW.     U+2196 NORTH WEST ARROW
 };
 
 void Client::draw_pmenu(pawn_ptr pawn) {

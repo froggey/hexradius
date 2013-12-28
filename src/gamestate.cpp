@@ -399,3 +399,17 @@ void ServerGameState::run_worm_stuff(pawn_ptr pawn, int range)
 	server.worm_timer.expires_from_now(boost::posix_time::milliseconds(0));
 	server.worm_timer.async_wait(boost::bind(&Server::worm_tick, &server, boost::asio::placeholders::error));
 }
+
+void ServerGameState::play_prod_animation(pawn_ptr pawn, pawn_ptr target)
+{
+	protocol::message msg;
+	msg.set_msg(protocol::PAWN_ANIMATION);
+	msg.add_pawns();
+	msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
+	msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
+	msg.add_pawns();
+	msg.mutable_pawns(1)->set_col(target->cur_tile->col);
+	msg.mutable_pawns(1)->set_row(target->cur_tile->row);
+	msg.set_animation_name("prod");
+	server.WriteAll(msg);
+}
