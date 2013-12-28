@@ -90,7 +90,7 @@ static void use_destroy_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 }
 
 /// Confuse: Confused pawns have a chance to move in the wrong direction when moved.
-static bool test_confuse_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+static bool test_confuse_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState */*state*/) {
 	Tile::List area = area_fn(pawn);
 	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour && !((*i)->pawn->flags & PWR_CONFUSED)) {
@@ -111,7 +111,7 @@ static void use_confuse_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 }
 
 /// Hijack: Recruit pawns.
-static bool test_hijack_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+static bool test_hijack_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState */*state*/) {
 	Tile::List area = area_fn(pawn);
 	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
 		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
