@@ -562,7 +562,7 @@ void Powers::init_powers()
 	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 50, 50);
 	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 50, 50);
 	def_directional_power("Confuse", use_confuse_power, test_confuse_power, 40, 40);
-	def_directional_power("Hijack", use_hijack_power, test_hijack_power, 40, 40);
+	def_directional_power("Hijack", use_hijack_power, test_hijack_power, 30, 30);
 	def_power("Wrap",
 		  boost::bind(use_wrap_power, row_tiles, _1, _2, Powers::Power::row),
 		  boost::bind(test_wrap_power, row_tiles, _1, _2, Powers::Power::row),
