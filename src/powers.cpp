@@ -110,6 +110,27 @@ static void use_confuse_power(tile_area_function area_fn, pawn_ptr pawn, ServerG
 	}
 }
 
+/// Hijack: Recruit pawns.
+static bool test_hijack_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List area = area_fn(pawn);
+	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static void use_hijack_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
+	Tile::List area = area_fn(pawn);
+	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
+		if((*i)->pawn && (*i)->pawn->colour != pawn->colour) {
+			(*i)->pawn->colour = pawn->colour;
+			state->update_pawn((*i)->pawn);
+		}
+	}
+}
+
 /// Annihilate: Destroy *all* pawns in the target area.
 static bool test_annihilate_power(tile_area_function area_fn, pawn_ptr pawn, ServerGameState *state) {
 	return can_destroy_enemies(area_fn(pawn), pawn, state, false);
@@ -541,6 +562,7 @@ void Powers::init_powers()
 	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 50, 50);
 	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 50, 50);
 	def_directional_power("Confuse", use_confuse_power, test_confuse_power, 40, 40);
+	def_directional_power("Hijack", use_hijack_power, test_hijack_power, 40, 40);
 	def_power("Wrap",
 		  boost::bind(use_wrap_power, row_tiles, _1, _2, Powers::Power::row),
 		  boost::bind(test_wrap_power, row_tiles, _1, _2, Powers::Power::row),

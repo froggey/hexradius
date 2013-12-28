@@ -523,6 +523,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 
 			pawn->flags = msg.pawns(i).flags();
 			pawn->range = msg.pawns(i).range();
+			pawn->colour = PlayerColour(msg.pawns(i).colour());
 			std::map<int, int> old_powers(pawn->powers);
 			pawn->powers.clear();
 
