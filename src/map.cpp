@@ -2,6 +2,9 @@
 #include <stdexcept>
 
 #include "map.hpp"
+#include "pawn.hpp"
+#include "scenario.hpp"
+#include "gamestate.hpp"
 
 const unsigned char MAP_OP_TILE  = 1;
 const unsigned char MAP_OP_BREAK = 2;
@@ -36,45 +39,112 @@ struct map_op
 	}
 } __attribute((__packed__));
 
-unsigned int HexRadius::Map::width() const
+unsigned int Map::width() const
 {
 	unsigned int w = 0;
 	
 	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t)
 	{
-		w = std::max(w, (unsigned int)(t->second.pos.first + 1));
+		w = std::max(w, (unsigned int)(t->second.col + 1));
 	}
 	
 	return w;
 }
 
-unsigned int HexRadius::Map::height() const
+unsigned int Map::height() const
 {
 	unsigned int h = 0;
 	
 	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t)
 	{
-		h = std::max(h, (unsigned int)(t->second.pos.second + 1));
+		h = std::max(h, (unsigned int)(t->second.row + 1));
 	}
 	
 	return h;
 }
 
-HexRadius::Map::Tile *HexRadius::Map::get_tile(const Position &pos)
+Tile *Map::get_tile(const Position &pos)
 {
 	std::map<Position,Tile>::iterator t = tiles.find(pos);
 	
 	return t != tiles.end() ? &(t->second) : NULL;
 }
 
-HexRadius::Map::Tile *HexRadius::Map::touch_tile(const Position &pos)
+Tile *Map::touch_tile(const Position &pos)
 {
-	std::map<Position,Tile>::iterator t = tiles.insert(std::make_pair(pos, Tile(pos))).first;
+	std::map<Position,Tile>::iterator t = tiles.insert(std::make_pair(pos, Tile(pos.first, pos.second, 0))).first;
 	
 	return &(t->second);
 }
 
-void HexRadius::Map::load(const std::string &filename)
+void Map::load(const std::string &filename)
+{
+	FILE *fh = fopen(filename.c_str(), "rb");
+	if(!fh) {
+		throw std::runtime_error("Could not open " + filename);
+	}
+
+	// Read map header.
+	char hdr[4];
+	if(fread(hdr, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read header from map " + filename);
+	}
+	if(memcmp(hdr, "HRM1", 4) != 0) {
+		// Not a map1 format, punt to the old loader.
+		fclose(fh);
+		load_old_style(filename);
+		return;
+	}
+
+	unsigned char len_bits[4];
+	if(fread(len_bits, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read length from map " + filename);
+	}
+	size_t len =
+		len_bits[0] |
+		(len_bits[1] << 8) |
+		(len_bits[2] << 16) |
+		(len_bits[3] << 24);
+	std::string pb(len, 0);
+	if(fread(&pb[0], len, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read data from map " + filename);
+	}
+	fclose(fh);
+
+	Scenario scn;
+	protocol::message msg;
+	msg.ParseFromString(pb);
+	scn.load_proto(msg);
+
+	std::map<Position,Tile> new_tiles;
+
+	for(Tile::List::iterator i = scn.game_state->tiles.begin(); i != scn.game_state->tiles.end(); ++i) {
+		std::map<Position,Tile>::iterator t = new_tiles.insert(std::make_pair(Position((*i)->col, (*i)->row), Tile((*i)->col, (*i)->row, 0))).first;
+		t->second = **i;
+		if(t->second.pawn) {
+			t->second.pawn = pawn_ptr(new Pawn(t->second.pawn->colour, NULL, &t->second));
+		}
+	}
+
+	if(new_tiles.empty())
+	{
+		throw std::runtime_error(filename + ": No tiles found in map");
+	}
+
+	tiles = new_tiles;
+
+	// Fix pawn cur_tile pointers.
+	for(std::map<Position,Tile>::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		if(i->second.pawn) {
+			i->second.pawn->cur_tile = &i->second;
+		}
+	}
+}
+
+void Map::load_old_style(const std::string &filename)
 {
 	FILE *fh = fopen(filename.c_str(), "rb");
 	if(!fh)
@@ -112,27 +182,27 @@ void HexRadius::Map::load(const std::string &filename)
 					fprintf(stderr, "Ignoring tile with bad height\n");
 					break;
 				}
-				
-				new_tiles.insert(std::make_pair(Position(op.x, op.y), Tile(Position(op.x, op.y), op.extra)));
+
+				new_tiles.insert(std::make_pair(Position(op.x, op.y), Tile(op.x, op.y, op.extra)));
 				break;
 			}
 			
 			case MAP_OP_BREAK:
 			{
-				tile->type = Tile::BROKEN;
+				tile->smashed = true;
 				break;
 			}
 			
 			case MAP_OP_BHOLE:
 			{
-				tile->type = Tile::BHOLE;
+				tile->has_black_hole = true;
+				tile->black_hole_power = 1;
 				break;
 			}
 			
 			case MAP_OP_SPAWN:
 			{
-				tile->has_pawn    = true;
-				tile->pawn_colour = (PlayerColour)(op.extra);
+				tile->pawn = pawn_ptr(new Pawn((PlayerColour)(op.extra), NULL, tile));
 				break;
 			}
 			
@@ -166,62 +236,63 @@ void HexRadius::Map::load(const std::string &filename)
 	}
 	
 	tiles = new_tiles;
+
+	// Fix pawn cur_tile pointers.
+	for(std::map<Position,Tile>::iterator i = tiles.begin(); i != tiles.end(); ++i) {
+		if(i->second.pawn) {
+			i->second.pawn->cur_tile = &i->second;
+		}
+	}
 }
 
-void HexRadius::Map::save(const std::string &filename) const
+void Map::save(const std::string &filename) const
 {
 	FILE *fh = fopen(filename.c_str(), "wb");
 	if(!fh)
 	{
 		throw std::runtime_error("Could not open " + filename);
 	}
-	
-	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t)
-	{
-		const Tile &tile = t->second;
-		
-		map_op tile_op(MAP_OP_TILE, tile.pos.first, tile.pos.second, tile.height);
-		fwrite(&tile_op, sizeof(tile_op), 1, fh);
-		
-		if(tile.type == Tile::BROKEN)
-		{
-			map_op break_op(MAP_OP_BREAK, tile.pos.first, tile.pos.second);
-			fwrite(&break_op, sizeof(break_op), 1, fh);
-		}
-		else if(tile.type == Tile::BHOLE)
-		{
-			map_op bhole_op(MAP_OP_BHOLE, tile.pos.first, tile.pos.second);
-			fwrite(&bhole_op, sizeof(bhole_op), 1, fh);
-		}
-		
-		if(tile.has_pawn)
-		{
-			map_op spawn_op(MAP_OP_SPAWN, tile.pos.first, tile.pos.second, tile.pawn_colour);
-			fwrite(&spawn_op, sizeof(spawn_op), 1, fh);
-		}
-		
-		if(tile.has_landing_pad)
-		{
-			map_op pad_op(MAP_OP_PAD, tile.pos.first, tile.pos.second, tile.landing_pad_colour);
-			fwrite(&pad_op, sizeof(pad_op), 1, fh);
-		}
-		
-		if(tile.has_mine)
-		{
-			map_op mine_op(MAP_OP_MINE, tile.pos.first, tile.pos.second, tile.mine_colour);
-			fwrite(&mine_op, sizeof(mine_op), 1, fh);
+
+	if(fwrite("HRM1", 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write magic to map " + filename);
+	}
+
+	// Same format as what scenario uses.
+	protocol::message msg;
+	msg.set_msg(protocol::MAP_DEFINITION);
+	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t) {
+		const Tile *tile = &t->second;
+		msg.add_tiles();
+		tile->CopyToProto(msg.mutable_tiles(msg.tiles_size()-1));
+
+		if(tile->pawn) {
+			msg.add_pawns();
+			tile->pawn->CopyToProto(msg.mutable_pawns(msg.pawns_size()-1), false);
+			assert(tile->pawn->cur_tile == tile);
 		}
 	}
-	
-	fclose(fh);
-}
 
-HexRadius::Map::Tile::Tile(const Position &_pos, int _height): pos(_pos)
-{
-	height = _height;
-	type   = NORMAL;
-	
-	has_pawn        = false;
-	has_landing_pad = false;
-	has_mine        = false;
+	std::string pb;
+	msg.SerializeToString(&pb);
+
+	unsigned char len[4];
+	len[0] = pb.size();
+	len[1] = (pb.size() >> 8);
+	len[2] = (pb.size() >> 16);
+	len[3] = (pb.size() >> 24);
+
+	if(fwrite(len, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write length to map " + filename);
+	}
+
+	if(fwrite(pb.data(), pb.size(), 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write to map " + filename);
+	}
+
+	if(fclose(fh)) {
+		throw std::runtime_error("Failed to save map " + filename);
+	}
 }

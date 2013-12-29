@@ -24,7 +24,7 @@ bool Tile::SetHeight(int h) {
 	}
 }
 
-void Tile::CopyToProto(protocol::tile *t) {
+void Tile::CopyToProto(protocol::tile *t) const {
 	t->set_col(col);
 	t->set_row(row);
 	t->set_height(height);

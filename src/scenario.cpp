@@ -7,8 +7,6 @@
 #include "gamestate.hpp"
 #include "map.hpp"
 
-using HexRadius::Position;
-
 Scenario::Scenario(Server &server) :
 	game_state(0), server(&server)
 {
@@ -33,40 +31,18 @@ void Scenario::load_file(std::string filename) {
 		new GameState;
 	colours.clear();
 
-	HexRadius::Map map;
+	Map map;
 	map.load(filename);
 
-	for(std::map<Position,HexRadius::Map::Tile>::iterator t = map.tiles.begin(); t != map.tiles.end(); ++t)
+	for(std::map<Position,Tile>::iterator t = map.tiles.begin(); t != map.tiles.end(); ++t)
 	{
-		game_state->tiles.push_back(new Tile(t->second.pos.first, t->second.pos.second, t->second.height));
-		Tile *tile = game_state->tile_at(t->second.pos.first, t->second.pos.second);
-		
-		if(t->second.type == HexRadius::Map::Tile::BROKEN)
+		Tile *tile = new Tile(t->second);
+		game_state->tiles.push_back(tile);
+
+		if(t->second.pawn)
 		{
-			tile->smashed = true;
-		}
-		else if(t->second.type == HexRadius::Map::Tile::BHOLE)
-		{
-			tile->has_black_hole   = true;
-			tile->black_hole_power = 1;
-		}
-		
-		if(t->second.has_pawn)
-		{
-			tile->pawn = pawn_ptr(new Pawn(t->second.pawn_colour, game_state, tile));
-			colours.insert(t->second.pawn_colour);
-		}
-		
-		if(t->second.has_landing_pad)
-		{
-			tile->has_landing_pad    = true;
-			tile->landing_pad_colour = t->second.landing_pad_colour;
-		}
-		
-		if(t->second.has_mine)
-		{
-			tile->has_mine    = true;
-			tile->mine_colour = t->second.mine_colour;
+			tile->pawn = pawn_ptr(new Pawn(t->second.pawn->colour, game_state, tile));
+			colours.insert(t->second.pawn->colour);
 		}
 	}
 }
@@ -131,7 +107,7 @@ void Scenario::load_proto(const protocol::message &msg) {
 		Tile *tile = game_state->tile_at(msg.pawns(i).col(), msg.pawns(i).row());
 
 		if(!tile) {
-			std::cerr << "Recieved pawn with invalid location, ignoring" << std::endl;
+			std::cerr << "Recieved pawn with invalid location " << msg.pawns(i).col() << "," << msg.pawns(i).row() << " ignoring" << std::endl;
 			continue;
 		}
 
