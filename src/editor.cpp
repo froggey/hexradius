@@ -550,7 +550,7 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 	mp_label.colour = ImgStuff::Colour(0, 0, 0);
 
 	mp_text = new GUI::TextBox(toolbar, 270, 5, 150, 25, 2);
-	mp_text->set_text("hex_2p");
+	mp_text->set_text("hex-2p");
 
 	GUI::TextButton load_button(toolbar, 425, 5, 50, 25, 3, "Load", &load_map_cb);
 	GUI::TextButton save_button(toolbar, 480, 5, 50, 25, 4, "Save", &save_map_cb);
