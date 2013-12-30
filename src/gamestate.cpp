@@ -449,7 +449,7 @@ void ServerGameState::teleport_hack(pawn_ptr pawn)
 
 void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
 	for(Server::client_set::iterator i = server.clients.begin(); i != server.clients.end(); i++) {
-		Server::Client::ptr client = *i;
+		boost::shared_ptr<Server::base_client> client = *i;
 		if(client->colour == NOINIT) continue;
 		protocol::message msg;
 		msg.set_msg(protocol::ADD_POWER_NOTIFICATION);
@@ -465,7 +465,7 @@ void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
 
 void ServerGameState::use_power_notification(pawn_ptr pawn, int power) {
 	for(Server::client_set::iterator i = server.clients.begin(); i != server.clients.end(); i++) {
-		Server::Client::ptr client = *i;
+		boost::shared_ptr<Server::base_client> client = *i;
 		if(client->colour == NOINIT) continue;
 		protocol::message msg;
 		msg.set_msg(protocol::USE_POWER_NOTIFICATION);

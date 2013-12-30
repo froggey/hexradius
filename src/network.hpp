@@ -20,7 +20,25 @@ class Tile;
 
 class Server {
 	friend class ServerGameState;
-	struct Client : public boost::enable_shared_from_this<Server::Client> {
+	struct base_client {
+		base_client(Server &server) :
+			server(server), colour(NOINIT), qcalled(false)
+		{}
+
+		Server &server;
+
+		uint16_t id;
+		std::string playername;
+		PlayerColour colour;
+
+		bool qcalled;
+
+		virtual ~base_client();
+		virtual void Write(const protocol::message &msg);
+		virtual void send_quit_message(const std::string &msg);
+		void Quit(const std::string &msg, bool send_to_client = true);
+	};
+	struct Client : public boost::enable_shared_from_this<Server::Client>, public base_client {
 		typedef boost::shared_ptr<Server::Client> ptr;
 		typedef void (Server::Client::*write_cb)(const boost::system::error_code&, ptr);
 
@@ -30,36 +48,33 @@ class Server {
 			server_send_buf(const protocol::message &msg) : send_buf(msg) {}
 		};
 
-		Client(boost::asio::io_service &io_service, Server &s) : socket(io_service), server(s), colour(NOINIT), qcalled(false) {}
+		Client(boost::asio::io_service &io_service, Server &s) :
+			base_client(s), socket(io_service)
+		{}
 
 		boost::asio::ip::tcp::socket socket;
-		Server &server;
 
 		uint32_t msgsize;
 		std::vector<char> msgbuf;
 
 		std::queue<server_send_buf> send_queue;
 
-		uint16_t id;
-		std::string playername;
-		PlayerColour colour;
-
-		bool qcalled;
+		virtual void send_quit_message(const std::string &msg);
 
 		void BeginRead();
 		void BeginRead2(const boost::system::error_code& error, ptr cptr);
 		void FinishRead(const boost::system::error_code& error, ptr cptr);
 
 		void FinishWrite(const boost::system::error_code& error, ptr cptr);
-		void Write(const protocol::message &msg, write_cb callback = &Server::Client::FinishWrite);
+		virtual void Write(const protocol::message &msg);
+		void Write(const protocol::message &msg, write_cb callback);
 		void WriteBasic(protocol::msgtype type);
 
-		void Quit(const std::string &msg, bool send_to_client = true);
 		void FinishQuit(const boost::system::error_code& error, ptr cptr);
 	};
 
 	struct client_compare {
-		bool operator()(const Server::Client::ptr left, const Server::Client::ptr right) {
+		bool operator()(const boost::shared_ptr<base_client> &left, const boost::shared_ptr<base_client> &right) {
 			return left->id < right->id;
 		}
 	};
@@ -71,7 +86,7 @@ public:
 	ServerGameState *game_state;
 
 private:
-	typedef std::set<Server::Client::ptr,client_compare> client_set;
+	typedef std::set<boost::shared_ptr<base_client>,client_compare> client_set;
 	typedef client_set::iterator client_iterator;
 
 	boost::asio::io_service io_service;
@@ -106,7 +121,7 @@ private:
 
 	typedef boost::shared_array<char> wbuf_ptr;
 
-	void WriteAll(const protocol::message &msg, Server::Client *exempt = NULL);
+	void WriteAll(const protocol::message &msg, Server::base_client *exempt = NULL);
 
 	void StartGame();
 	bool CheckForGameOver();
@@ -120,7 +135,7 @@ private:
 	bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
 	bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
 
-	Server::Client *get_client(uint16_t id);
+	Server::base_client *get_client(uint16_t id);
 
 	// Send an UPDATE message for one pawn.
 	void update_one_pawn(pawn_ptr pawn);

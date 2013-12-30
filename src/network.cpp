@@ -67,7 +67,7 @@ void Server::worker_main() {
 }
 
 void Server::StartAccept(void) {
-	Server::Client::ptr client(new Server::Client(io_service, *this));
+	boost::shared_ptr<Server::Client> client(new Server::Client(io_service, *this));
 
 	acceptor.async_accept(client->socket, boost::bind(&Server::HandleAccept, this, client, boost::asio::placeholders::error));
 }
@@ -101,6 +101,14 @@ void Server::HandleAccept(Server::Client::ptr client, const boost::system::error
 	} while(!ir.second);
 
 	client->BeginRead();
+}
+
+Server::base_client::~base_client()
+{
+}
+
+void Server::base_client::Write(const protocol::message &)
+{
 }
 
 void Server::Client::BeginRead() {
@@ -169,6 +177,10 @@ bool Server::HandleMessage(Server::Client::ptr client, const protocol::message &
 	}
 }
 
+void Server::Client::Write(const protocol::message &msg) {
+	Write(msg, &Client::FinishWrite);
+}
+
 void Server::Client::Write(const protocol::message &msg, write_cb callback) {
 	send_queue.push(server_send_buf(msg));
 	send_queue.back().callback = callback;
@@ -206,12 +218,12 @@ void Server::StartGame(void) {
 	std::set<PlayerColour> available_colours = game_state->colours();
 	std::set<PlayerColour> player_colours;
 
-	BOOST_FOREACH(Client::ptr c, clients) {
+	BOOST_FOREACH(boost::shared_ptr<base_client> c, clients) {
 		player_colours.insert(c->colour);
 	}
 
 	if(available_colours.size() < player_colours.size()) {
-		fprintf(stderr, "Too many teams for this map. This is a %u team amp.\n", (unsigned int)available_colours.size());
+		fprintf(stderr, "Too many teams for this map. This is a %u team map.\n", (unsigned int)available_colours.size());
 		return;
 	}
 
@@ -248,7 +260,7 @@ void Server::StartGame(void) {
 	NextTurn();
 }
 
-void Server::WriteAll(const protocol::message &msg, Server::Client *exempt) {
+void Server::WriteAll(const protocol::message &msg, Server::base_client *exempt) {
 	for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
 		if((*i).get() != exempt && (*i)->colour != NOINIT) {
 			(*i)->Write(msg);
@@ -256,7 +268,7 @@ void Server::WriteAll(const protocol::message &msg, Server::Client *exempt) {
 	}
 }
 
-void Server::Client::Quit(const std::string &msg, bool send_to_client) {
+void Server::base_client::Quit(const std::string &msg, bool send_to_client) {
 	if(qcalled) {
 		return;
 	}
@@ -275,25 +287,40 @@ void Server::Client::Quit(const std::string &msg, bool send_to_client) {
 		server.WriteAll(qmsg, this);
 	}
 
-	if(server.game_state) {
+	if(server.state == GAME) {
 		server.game_state->destroy_team_pawns(colour);
 	}
 
-	if(*(server.turn) == shared_from_this()) {
+	if(&**(server.turn) == this) {
 		server.NextTurn();
 	}
 
 	if(send_to_client) {
-		protocol::message pmsg;
-		pmsg.set_msg(protocol::QUIT);
-		pmsg.set_quit_msg(msg);
-
-		Write(pmsg, &Server::Client::FinishQuit);
+		send_quit_message(msg);
 	}
 
-	server.clients.erase(shared_from_this());
+	// Ehhh.
+	for(client_iterator i(server.clients.begin()); i != server.clients.end(); ++i) {
+		if(&**i == this) {
+			server.clients.erase(i);
+			break;
+		}
+	}
 
 	server.CheckForGameOver();
+}
+
+void Server::base_client::send_quit_message(const std::string &/*msg*/)
+{
+}
+
+void Server::Client::send_quit_message(const std::string &msg)
+{
+	protocol::message pmsg;
+	pmsg.set_msg(protocol::QUIT);
+	pmsg.set_quit_msg(msg);
+
+	Write(pmsg, &Server::Client::FinishQuit);
 }
 
 void Server::Client::FinishQuit(const boost::system::error_code &, ptr /*cptr*/) {}
@@ -577,7 +604,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		WriteAll(msg);
 	} else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		if(client->id == ADMIN_ID || client->id == msg.players(0).id()) {
-			Client *c = get_client(msg.players(0).id());
+			base_client *c = get_client(msg.players(0).id());
 
 			if(c) {
 				c->colour = (PlayerColour)msg.players(0).colour();
@@ -589,7 +616,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 	} else if(msg.msg() == protocol::KICK && client->id == ADMIN_ID &&
 		  // The admin cannot kick themselves.
 		  msg.player_id() != ADMIN_ID) {
-		Client *c = get_client(msg.player_id());
+		base_client *c = get_client(msg.player_id());
 		if(c) {
 			std::cout << "Kicking player " << msg.player_id() << std::endl;
 			c->Quit("Kicked");
@@ -693,7 +720,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 	return true;
 }
 
-Server::Client *Server::get_client(uint16_t id) {
+Server::base_client *Server::get_client(uint16_t id) {
 	client_iterator i = clients.begin();
 
 	for(; i != clients.end(); i++) {
