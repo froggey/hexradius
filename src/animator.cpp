@@ -55,25 +55,8 @@ float Animators::ImageAnimation::scale_factor(Uint32 time)
 	return last_scale;
 }
 
-protocol::message Animators::ImageAnimation::serialize_image_animation(const std::string &name) {
-	protocol::message msg;
-	msg.set_msg(protocol::PARTICLE_ANIMATION);
-	msg.set_animation_name(name);
-	protocol::key_value *tile_col = msg.add_misc();
-	tile_col->set_key("tile-col");
-	tile_col->set_int_value(tile->col);
-	protocol::key_value *tile_row = msg.add_misc();
-	tile_row->set_key("tile-row");
-	tile_row->set_int_value(tile->row);
-	return msg;
-}
-
 Animators::PawnCrush::PawnCrush(Tile *tile) :
 	ImageAnimation(tile, 500, "graphics/crush.png") {
-}
-
-protocol::message Animators::PawnCrush::serialize() {
-	return serialize_image_animation("crush");
 }
 
 static const Animators::ImageAnimation::scale_tween_point pow_animation_tween[] = {
@@ -88,10 +71,6 @@ Animators::PawnPow::PawnPow(Tile *tile) :
 					     &pow_animation_tween[boost::size(pow_animation_tween)])) {
 }
 
-protocol::message Animators::PawnPow::serialize() {
-	return serialize_image_animation("pow");
-}
-
 static const Animators::ImageAnimation::scale_tween_point boom_animation_tween[] = {
 	{0, 0.0f},
 	{350, 1.0f},
@@ -104,18 +83,10 @@ Animators::PawnBoom::PawnBoom(Tile *tile) :
 					     &boom_animation_tween[boost::size(boom_animation_tween)])) {
 }
 
-protocol::message Animators::PawnBoom::serialize() {
-	return serialize_image_animation("boom");
-}
-
 static const Animators::ImageAnimation::scale_tween_point aiee_animation_tween[] = {
 	{0, 1.0f},
 	{1500, 0.0f}
 };
-
-protocol::message Animators::PawnOhShitIFellDownAHole::serialize() {
-	return serialize_image_animation("ohshitifelldownahole");
-}
 
 Animators::PawnOhShitIFellDownAHole::PawnOhShitIFellDownAHole(Tile *tile) :
 	ImageAnimation(tile, 1500, "graphics/aiee.png",

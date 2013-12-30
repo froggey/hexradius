@@ -264,9 +264,16 @@ void ServerGameState::add_animator(TileAnimators::Animator *ani) {
 	server.WriteAll(msg);
 }
 
-void ServerGameState::add_animator(Animators::Generic *ani) {
-	protocol::message msg = ani->serialize();
-	delete ani;
+void ServerGameState::add_animator(const char *name, Tile *tile) {
+	protocol::message msg;
+	msg.set_msg(protocol::PARTICLE_ANIMATION);
+	msg.set_animation_name(name);
+	protocol::key_value *tile_col = msg.add_misc();
+	tile_col->set_key("tile-col");
+	tile_col->set_int_value(tile->col);
+	protocol::key_value *tile_row = msg.add_misc();
+	tile_row->set_key("tile-row");
+	tile_row->set_int_value(tile->row);
 	server.WriteAll(msg);
 }
 
@@ -360,7 +367,7 @@ void ServerGameState::move_pawn_to(pawn_ptr pawn, Tile *target)
 	// move_pawn_to is also called to recheck tile effects when a pawn's upgrade state changes.
 	if(pawn->cur_tile != target) {
 		if(target->pawn) {
-			add_animator(new Animators::PawnCrush(target));
+			add_animator("crush", target);
 			destroy_pawn(target->pawn, Pawn::STOMP, pawn);
 		}
 

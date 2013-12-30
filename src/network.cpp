@@ -211,9 +211,6 @@ void Server::StartGame(void) {
 	game_state = static_cast<ServerGameState *>(scenario.init_game(colours));
 	doing_worm_stuff = false;
 
-	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
-	int bskip = TTF_FontLineSkip(bfont);
-
 	protocol::message begin;
 	begin.set_msg(protocol::BEGIN);
 	WriteAll(begin);
@@ -712,7 +709,7 @@ void Server::worm_tick(const boost::system::error_code &/*ec*/)
 	}
 	if(worm_tile->pawn && worm_tile->pawn->colour != worm_pawn->colour) {
 		game_state->destroy_pawn(worm_tile->pawn, Pawn::ANT_ATTACK, worm_pawn);
-		game_state->add_animator(new Animators::PawnBoom(worm_tile));
+		game_state->add_animator("boom", worm_tile);
 	}
 	game_state->update_tile(worm_tile);
 

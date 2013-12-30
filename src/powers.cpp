@@ -57,7 +57,7 @@ static void destroy_enemies(Tile::List area, pawn_ptr pawn, ServerGameState *sta
 	for(Tile::List::iterator i = area.begin(); i != area.end(); ++i) {
 		if((*i)->pawn && (!enemies_only || (*i)->pawn->colour != pawn->colour)) {
 			state->destroy_pawn((*i)->pawn, dt, pawn);
-			state->add_animator(new Animators::PawnPow(*i));
+			state->add_animator("pow", *i);
 			if(smash_tile) {
 				(*i)->smashed = true;
 				(*i)->has_mine = false;
@@ -440,7 +440,7 @@ static bool can_landing_pad(pawn_ptr pawn, ServerGameState *) {
 static void black_hole(pawn_ptr pawn, ServerGameState *state) {
 	Tile *tile = pawn->cur_tile;
 	state->destroy_pawn(pawn, Pawn::BLACKHOLE, pawn);
-	state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile));
+	state->add_animator("ohshitifelldownahole", tile);
 	tile->has_black_hole = true;
 	tile->black_hole_power = pawn->range + 1;
 	tile->has_mine = false;
@@ -518,7 +518,7 @@ static void use_prod(int dir, pawn_ptr pawn, ServerGameState *state) {
 		if(tile->pawn) {
 			tile->pawn->detonate_mine(state);
 		} else {
-			state->add_animator(new Animators::PawnBoom(tile));
+			state->add_animator("boom", tile);
 			tile->has_mine = false;
 			state->update_tile(tile);
 		}

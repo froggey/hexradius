@@ -63,7 +63,7 @@ public:
 class ServerGameState : public GameState {
 public:
 	ServerGameState(Server &server);
-	void add_animator(Animators::Generic *animator);
+	void add_animator(const char *name, Tile *tile);
 	void add_animator(TileAnimators::Animator *animator);
 	void teleport_hack(pawn_ptr pawn);
 	void grant_upgrade(pawn_ptr pawn, uint32_t upgrade);

@@ -12,7 +12,6 @@ class Generic {
 public:
 	virtual ~Generic();
 	virtual bool render() = 0;
-	virtual protocol::message serialize() = 0;
 };
 
 class ImageAnimation : public Generic {
@@ -33,8 +32,6 @@ public:
 	ImageAnimation(Tile *tile, Uint32 runtime, const std::string &image,
 		       const scale_tween_point_vec &scale_tween = scale_tween_point_vec());
 	bool render();
-
-	protocol::message serialize_image_animation(const std::string &name);
 private:
 	float scale_factor(Uint32 time);
 };
@@ -42,25 +39,21 @@ private:
 class PawnCrush : public ImageAnimation {
 public:
 	PawnCrush(Tile *tile);
-	virtual protocol::message serialize();
 };
 
 class PawnPow : public ImageAnimation {
 public:
 	PawnPow(Tile *tile);
-	virtual protocol::message serialize();
 };
 
 class PawnBoom : public ImageAnimation {
 public:
 	PawnBoom(Tile *tile);
-	virtual protocol::message serialize();
 };
 
 class PawnOhShitIFellDownAHole : public ImageAnimation {
 public:
 	PawnOhShitIFellDownAHole(Tile *tile);
-	virtual protocol::message serialize();
 };
 }
 
