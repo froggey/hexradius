@@ -214,14 +214,6 @@ void Server::StartGame(void) {
 	TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
 	int bskip = TTF_FontLineSkip(bfont);
 
-	// Initialize tile screen positions, required for animations.
-	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
-		(*ti)->screen_x = BOARD_OFFSET + TILE_WOFF * (*ti)->col + (((*ti)->row % 2) * TILE_ROFF);
-		(*ti)->screen_y = bskip + BOARD_OFFSET + TILE_HOFF * (*ti)->row;
-		(*ti)->screen_x += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
-		(*ti)->screen_y += (-1 * (*ti)->height) * TILE_HEIGHT_FACTOR;
-	}
-
 	protocol::message begin;
 	begin.set_msg(protocol::BEGIN);
 	WriteAll(begin);
@@ -720,7 +712,7 @@ void Server::worm_tick(const boost::system::error_code &/*ec*/)
 	}
 	if(worm_tile->pawn && worm_tile->pawn->colour != worm_pawn->colour) {
 		game_state->destroy_pawn(worm_tile->pawn, Pawn::ANT_ATTACK, worm_pawn);
-		game_state->add_animator(new Animators::PawnBoom(worm_tile->screen_x, worm_tile->screen_y));
+		game_state->add_animator(new Animators::PawnBoom(worm_tile));
 	}
 	game_state->update_tile(worm_tile);
 

@@ -3,13 +3,14 @@
 #include "animator.hpp"
 #include "loadimage.hpp"
 #include "gui.hpp"
+#include "tile.hpp"
 
 Animators::Generic::~Generic() {
 }
 
-Animators::ImageAnimation::ImageAnimation(int tile_x, int tile_y, Uint32 runtime, const std::string &image,
+Animators::ImageAnimation::ImageAnimation(Tile *tile, Uint32 runtime, const std::string &image,
 					  const scale_tween_point_vec &scale_tween) :
-	tx(tile_x), ty(tile_y),
+	tile(tile),
 	init_ticks(SDL_GetTicks()), runtime(runtime),
 	image(ImgStuff::GetImage(image)),
 	scale_tween(scale_tween) {
@@ -23,11 +24,11 @@ bool Animators::ImageAnimation::render() {
 	float scale = scale_factor(current_time - init_ticks);
 
 	if(scale == 1.0) {
-		SDL_Rect rect = {tx, ty, 0, 0};
+		SDL_Rect rect = {tile->screen_x, tile->screen_y, 0, 0};
 		ensure_SDL_BlitSurface(image, NULL, screen, &rect);
 	} else {
 		SDL_Surface *scaled_image = rotozoomSurface(image, 0.0, double(scale), SMOOTHING_ON);
-		SDL_Rect rect = {tx, ty, 0, 0};
+		SDL_Rect rect = {tile->screen_x, tile->screen_y, 0, 0};
 		ensure_SDL_BlitSurface(scaled_image, NULL, screen, &rect);
 		SDL_FreeSurface(scaled_image);
 	}
@@ -58,17 +59,17 @@ protocol::message Animators::ImageAnimation::serialize_image_animation(const std
 	protocol::message msg;
 	msg.set_msg(protocol::PARTICLE_ANIMATION);
 	msg.set_animation_name(name);
-	protocol::key_value *tile_x = msg.add_misc();
-	tile_x->set_key("tile-x");
-	tile_x->set_int_value(tx);
-	protocol::key_value *tile_y = msg.add_misc();
-	tile_y->set_key("tile-y");
-	tile_y->set_int_value(ty);
+	protocol::key_value *tile_col = msg.add_misc();
+	tile_col->set_key("tile-col");
+	tile_col->set_int_value(tile->col);
+	protocol::key_value *tile_row = msg.add_misc();
+	tile_row->set_key("tile-row");
+	tile_row->set_int_value(tile->row);
 	return msg;
 }
 
-Animators::PawnCrush::PawnCrush(int tile_x, int tile_y) :
-	ImageAnimation(tile_x, tile_y, 500, "graphics/crush.png") {
+Animators::PawnCrush::PawnCrush(Tile *tile) :
+	ImageAnimation(tile, 500, "graphics/crush.png") {
 }
 
 protocol::message Animators::PawnCrush::serialize() {
@@ -81,8 +82,8 @@ static const Animators::ImageAnimation::scale_tween_point pow_animation_tween[] 
 	{350, 1.0f}
 };
 
-Animators::PawnPow::PawnPow(int tile_x, int tile_y) :
-	ImageAnimation(tile_x, tile_y, 700, "graphics/kapow.png",
+Animators::PawnPow::PawnPow(Tile *tile) :
+	ImageAnimation(tile, 700, "graphics/kapow.png",
 		       scale_tween_point_vec(&pow_animation_tween[0],
 					     &pow_animation_tween[boost::size(pow_animation_tween)])) {
 }
@@ -97,8 +98,8 @@ static const Animators::ImageAnimation::scale_tween_point boom_animation_tween[]
 	{400, 0.75f}
 };
 
-Animators::PawnBoom::PawnBoom(int tile_x, int tile_y) :
-	ImageAnimation(tile_x, tile_y, 700, "graphics/boom.png",
+Animators::PawnBoom::PawnBoom(Tile *tile) :
+	ImageAnimation(tile, 700, "graphics/boom.png",
 		       scale_tween_point_vec(&boom_animation_tween[0],
 					     &boom_animation_tween[boost::size(boom_animation_tween)])) {
 }
@@ -116,8 +117,8 @@ protocol::message Animators::PawnOhShitIFellDownAHole::serialize() {
 	return serialize_image_animation("ohshitifelldownahole");
 }
 
-Animators::PawnOhShitIFellDownAHole::PawnOhShitIFellDownAHole(int tile_x, int tile_y) :
-	ImageAnimation(tile_x, tile_y, 1500, "graphics/aiee.png",
+Animators::PawnOhShitIFellDownAHole::PawnOhShitIFellDownAHole(Tile *tile) :
+	ImageAnimation(tile, 1500, "graphics/aiee.png",
 		       scale_tween_point_vec(&aiee_animation_tween[0],
 					     &aiee_animation_tween[boost::size(aiee_animation_tween)])) {
 }

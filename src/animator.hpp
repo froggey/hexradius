@@ -5,6 +5,8 @@
 
 #include "hexradius.hpp"
 
+class Tile;
+
 namespace Animators {
 class Generic {
 public:
@@ -21,14 +23,14 @@ public:
 		float scale;
 	};
 	typedef std::vector<scale_tween_point> scale_tween_point_vec;
-	int tx, ty;
+	Tile *tile;
 	Uint32 init_ticks;
 	Uint32 runtime;
 	SDL_Surface *image;
 	scale_tween_point_vec scale_tween;
 
 	/* Runtime is number of milliseconds to run for. */
-	ImageAnimation(int tile_x, int tile_y, Uint32 runtime, const std::string &image,
+	ImageAnimation(Tile *tile, Uint32 runtime, const std::string &image,
 		       const scale_tween_point_vec &scale_tween = scale_tween_point_vec());
 	bool render();
 
@@ -39,25 +41,25 @@ private:
 
 class PawnCrush : public ImageAnimation {
 public:
-	PawnCrush(int tile_x, int tile_y);
+	PawnCrush(Tile *tile);
 	virtual protocol::message serialize();
 };
 
 class PawnPow : public ImageAnimation {
 public:
-	PawnPow(int tile_x, int tile_y);
+	PawnPow(Tile *tile);
 	virtual protocol::message serialize();
 };
 
 class PawnBoom : public ImageAnimation {
 public:
-	PawnBoom(int tile_x, int tile_y);
+	PawnBoom(Tile *tile);
 	virtual protocol::message serialize();
 };
 
 class PawnOhShitIFellDownAHole : public ImageAnimation {
 public:
-	PawnOhShitIFellDownAHole(int tile_x, int tile_y);
+	PawnOhShitIFellDownAHole(Tile *tile);
 	virtual protocol::message serialize();
 };
 }

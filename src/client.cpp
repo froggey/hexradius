@@ -646,29 +646,34 @@ void Client::handle_message_game(const protocol::message &msg) {
 		}
 		tile_animators.push_back(new TileAnimators::ElevationAnimator(tiles, center, delay_factor, mode, target_elevation));
 	} else if(msg.msg() == protocol::PARTICLE_ANIMATION) {
-		int tile_x = -1, tile_y = -1;
+		int tile_col = -1, tile_row = -1;
 		for(int i = 0; i < msg.misc_size(); i++) {
-			if(msg.misc(i).key() == "tile-x") {
-				tile_x = msg.misc(i).int_value();
-			} else if(msg.misc(i).key() == "tile-y") {
-				tile_y = msg.misc(i).int_value();
+			if(msg.misc(i).key() == "tile-col") {
+				tile_col = msg.misc(i).int_value();
+			} else if(msg.misc(i).key() == "tile-row") {
+				tile_row = msg.misc(i).int_value();
 			} else {
 				std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
 				return;
 			}
 		}
-		if(tile_x == -1 || tile_y == -1) {
+		if(tile_col == -1 || tile_row == -1) {
+			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
+			return;
+		}
+		Tile *tile = game_state->tile_at(tile_col, tile_row);
+		if(!tile) {
 			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
 			return;
 		}
 		if(msg.animation_name() == "crush") {
-			add_animator(new Animators::PawnCrush(tile_x, tile_y));
+			add_animator(new Animators::PawnCrush(tile));
 		} else if(msg.animation_name() == "pow") {
-			add_animator(new Animators::PawnPow(tile_x, tile_y));
+			add_animator(new Animators::PawnPow(tile));
 		} else if(msg.animation_name() == "boom") {
-			add_animator(new Animators::PawnBoom(tile_x, tile_y));
+			add_animator(new Animators::PawnBoom(tile));
 		} else if(msg.animation_name() == "ohshitifelldownahole") {
-			add_animator(new Animators::PawnOhShitIFellDownAHole(tile_x, tile_y));
+			add_animator(new Animators::PawnOhShitIFellDownAHole(tile));
 		} else {
 			std::cerr << "Recieved unsupported animation " << msg.animation_name() << std::endl;
 		}

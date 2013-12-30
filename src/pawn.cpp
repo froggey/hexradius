@@ -95,13 +95,13 @@ void Pawn::force_move(Tile *tile, ServerGameState *state) {
 
 	if(tile->has_black_hole) {
 		state->destroy_pawn(shared_from_this(), Pawn::BLACKHOLE);
-		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
+		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile));
 		return;
 	}
 
 	if(tile->smashed && !(flags & PWR_CLIMB)) {
 		state->destroy_pawn(shared_from_this(), Pawn::FELL_OUT_OF_THE_WORLD);
-		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile->screen_x, tile->screen_y));
+		state->add_animator(new Animators::PawnOhShitIFellDownAHole(tile));
 		return;
 	}
 
@@ -120,7 +120,7 @@ void Pawn::force_move(Tile *tile, ServerGameState *state) {
 
 void Pawn::detonate_mine(ServerGameState *state)
 {
-	state->add_animator(new Animators::PawnBoom(cur_tile->screen_x, cur_tile->screen_y));
+	state->add_animator(new Animators::PawnBoom(cur_tile));
 	cur_tile->has_mine = false;
 	state->update_tile(cur_tile);
 	// Shield protects from one mine.

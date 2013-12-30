@@ -360,7 +360,7 @@ void ServerGameState::move_pawn_to(pawn_ptr pawn, Tile *target)
 	// move_pawn_to is also called to recheck tile effects when a pawn's upgrade state changes.
 	if(pawn->cur_tile != target) {
 		if(target->pawn) {
-			add_animator(new Animators::PawnCrush(target->screen_x, target->screen_y));
+			add_animator(new Animators::PawnCrush(target));
 			destroy_pawn(target->pawn, Pawn::STOMP, pawn);
 		}
 
