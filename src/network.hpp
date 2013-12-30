@@ -35,6 +35,7 @@ class Server {
 
 		virtual ~base_client();
 		virtual void Write(const protocol::message &msg);
+		void WriteBasic(protocol::msgtype type);
 		virtual void send_quit_message(const std::string &msg);
 		void Quit(const std::string &msg, bool send_to_client = true);
 	};
@@ -68,7 +69,6 @@ class Server {
 		void FinishWrite(const boost::system::error_code& error, ptr cptr);
 		virtual void Write(const protocol::message &msg);
 		void Write(const protocol::message &msg, write_cb callback);
-		void WriteBasic(protocol::msgtype type);
 
 		void FinishQuit(const boost::system::error_code& error, ptr cptr);
 	};

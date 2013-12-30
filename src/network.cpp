@@ -190,7 +190,7 @@ void Server::Client::Write(const protocol::message &msg, write_cb callback) {
 	}
 }
 
-void Server::Client::WriteBasic(protocol::msgtype type) {
+void Server::base_client::WriteBasic(protocol::msgtype type) {
 	protocol::message msg;
 	msg.set_msg(type);
 
@@ -634,6 +634,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 	}
 	if(msg.msg() == protocol::MOVE) {
 		if(msg.pawns_size() != 1) {
+			client->WriteBasic(protocol::BADMOVE);
 			return true;
 		}
 
@@ -643,6 +644,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 		Tile *tile = game_state->tile_at(p_pawn.new_col(), p_pawn.new_row());
 
 		if(!pawn || !tile || pawn->colour != client->colour || *turn != client) {
+			client->WriteBasic(protocol::BADMOVE);
 			return true;
 		}
 
@@ -676,6 +678,7 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				pawn->flags &= ~PWR_JUMP;
 				game_state->update_pawn(pawn);
 			}
+			client->WriteBasic(protocol::OK);
 			if (!CheckForGameOver())
 				NextTurn();
 		}else{
@@ -694,7 +697,9 @@ bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message
 				update_one_pawn(pawn);
 			}
 
-			client->WriteBasic(protocol::OK);
+			if(!doing_worm_stuff) {
+				client->WriteBasic(protocol::OK);
+			}
 
 			if(!CheckForGameOver()) {
 				// Make sure the player still has pawns.
@@ -759,6 +764,7 @@ void Server::worm_tick(const boost::system::error_code &/*ec*/)
 
 	if(worm_range == 0) {
 		doing_worm_stuff = false;
+		(*turn)->WriteBasic(protocol::OK);
 		return;
 	}
 	worm_range -= 1;
@@ -783,6 +789,7 @@ void Server::worm_tick(const boost::system::error_code &/*ec*/)
 
 	if (choices.size() == 0) {
 		doing_worm_stuff = false;
+		(*turn)->WriteBasic(protocol::OK);
 		return;
 	}
 
