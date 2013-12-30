@@ -25,10 +25,11 @@ static tile_coord_fn tile_coord_fns[] = {
 };
 
 Server::Server(uint16_t port, const std::string &s) :
-	game_state(0), acceptor(io_service), scenario(*this), worm_timer(io_service)
+	game_state(0), acceptor(io_service), worm_timer(io_service)
 {
 	map_name = s;
-	scenario.load_file("scenario/" + s);
+	game_state = new ServerGameState(*this);
+	game_state->load_file("scenario/" + s);
 
 	idcounter = 0;
 
@@ -202,17 +203,39 @@ void Server::Client::FinishWrite(const boost::system::error_code& error, ptr /*c
 }
 
 void Server::StartGame(void) {
-	std::set<PlayerColour> colours;
+	std::set<PlayerColour> available_colours = game_state->colours();
+	std::set<PlayerColour> player_colours;
 
 	BOOST_FOREACH(Client::ptr c, clients) {
-		colours.insert(c->colour);
+		player_colours.insert(c->colour);
 	}
 
-	game_state = static_cast<ServerGameState *>(scenario.init_game(colours));
+	if(available_colours.size() < player_colours.size()) {
+		fprintf(stderr, "Too many teams for this map. This is a %u team amp.\n", (unsigned int)available_colours.size());
+		return;
+	}
+
+	std::map<PlayerColour, PlayerColour> colour_map;
+	for(std::set<PlayerColour>::iterator i(available_colours.begin()), j(player_colours.begin());
+	    j != player_colours.end();
+	    ++i, ++j) {
+		colour_map.insert(std::make_pair(*i, *j));
+	}
+
+	// Remove unused teams before recolouring.
+	for(std::set<PlayerColour>::iterator i(available_colours.begin()); i != available_colours.end(); ++i) {
+		if(colour_map.find(*i) == colour_map.end()) {
+			game_state->destroy_team_pawns(*i);
+		}
+	}
+
+	game_state->recolour_pawns(colour_map);
+
 	doing_worm_stuff = false;
 
 	protocol::message begin;
 	begin.set_msg(protocol::BEGIN);
+	game_state->serialize(begin);
 	WriteAll(begin);
 
 	state = GAME;
@@ -487,7 +510,6 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 			ginfo.mutable_players(i)->set_id((*c)->id);
 		}
 
-		scenario.store_proto(ginfo);
 		ginfo.set_map_name(map_name);
 
 		ginfo.set_fog_of_war(fog_of_war);
@@ -508,8 +530,11 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		StartGame();
 	}else if(msg.msg() == protocol::CHANGE_MAP && client->id == ADMIN_ID) {
 		try {
-			scenario.load_file("scenario/" + msg.map_name());
+			ServerGameState *new_state = new ServerGameState(*this);
+			new_state->load_file("scenario/" + msg.map_name());
 			map_name = msg.map_name();
+			delete game_state;
+			game_state = new_state;
 
 			for(client_set::iterator c = clients.begin(); c != clients.end(); c++)
 			{
@@ -534,7 +559,6 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 					ginfo.mutable_players(i)->set_id((*d)->id);
 				}
 
-				scenario.store_proto(ginfo);
 				ginfo.set_map_name(map_name);
 
 				ginfo.set_fog_of_war(fog_of_war);

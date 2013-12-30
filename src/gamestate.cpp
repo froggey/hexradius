@@ -256,6 +256,167 @@ void GameState::destroy_team_pawns(PlayerColour colour) {
 	}
 }
 
+std::set<PlayerColour> GameState::colours() const
+{
+	std::set<PlayerColour> colours;
+	for(Tile::List::const_iterator t = tiles.begin(); t != tiles.end(); t++) {
+		if((*t)->pawn) {
+			colours.insert((*t)->pawn->colour);
+		}
+	}
+	return colours;
+}
+
+void GameState::recolour_pawns(const std::map<PlayerColour, PlayerColour> &colours)
+{
+	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
+		if(!(*t)->pawn) continue;
+		std::map<PlayerColour, PlayerColour>::const_iterator i = colours.find((*t)->pawn->colour);
+		if(i == colours.end()) continue;
+		(*t)->pawn->colour = i->second;
+	}
+}
+
+void GameState::serialize(protocol::message &msg) const {
+	for(Tile::List::const_iterator t = tiles.begin(); t != tiles.end(); t++) {
+		msg.add_tiles();
+		(*t)->CopyToProto(msg.mutable_tiles(msg.tiles_size()-1));
+
+		if((*t)->pawn) {
+			msg.add_pawns();
+			(*t)->pawn->CopyToProto(msg.mutable_pawns(msg.pawns_size()-1), false);
+		}
+	}
+}
+
+void GameState::deserialize(const protocol::message &msg) {
+	tiles.clear();
+
+	for(int i = 0; i < msg.tiles_size(); i++) {
+		tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
+
+		Tile *tile = tile_at(msg.tiles(i).col(), msg.tiles(i).row());
+
+		tile->smashed = msg.tiles(i).smashed();
+
+		tile->has_mine    = msg.tiles(i).has_mine();
+		tile->mine_colour = (PlayerColour)(msg.tiles(i).mine_colour());
+
+		tile->has_landing_pad    = msg.tiles(i).has_landing_pad();
+		tile->landing_pad_colour = (PlayerColour)(msg.tiles(i).landing_pad_colour());
+
+		tile->has_eye    = msg.tiles(i).has_eye();
+		tile->eye_colour = (PlayerColour)(msg.tiles(i).eye_colour());
+
+		tile->has_black_hole   = msg.tiles(i).has_black_hole();
+		tile->black_hole_power = msg.tiles(i).black_hole_power();
+	}
+
+	for(int i = 0; i < msg.pawns_size(); i++) {
+		PlayerColour c = (PlayerColour)msg.pawns(i).colour();
+
+		if(c < BLUE || c > ORANGE) {
+			std::cerr << "Recieved pawn with invalid colour, ignoring" << std::endl;
+			continue;
+		}
+
+		Tile *tile = tile_at(msg.pawns(i).col(), msg.pawns(i).row());
+
+		if(!tile) {
+			std::cerr << "Recieved pawn with invalid location " << msg.pawns(i).col() << "," << msg.pawns(i).row() << " ignoring" << std::endl;
+			continue;
+		}
+
+		if(tile->pawn) {
+			std::cerr << "Recieved multiple pawns on a tile, ignoring" << std::endl;
+			continue;
+		}
+
+		tile->pawn = pawn_ptr(new Pawn(c, this, tile));
+	}
+}
+
+void GameState::load_file(const std::string &filename) {
+	FILE *fh = fopen(filename.c_str(), "rb");
+	if(!fh) {
+		throw std::runtime_error("Could not open " + filename);
+	}
+
+	// Read map header.
+	char hdr[4];
+	if(fread(hdr, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read header from map " + filename);
+	}
+	if(memcmp(hdr, "HRM1", 4) != 0) {
+		// Not a map1 format, punt to the old loader.
+		fclose(fh);
+		throw std::runtime_error("Unknown map format in map " + filename);
+	}
+
+	unsigned char len_bits[4];
+	if(fread(len_bits, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read length from map " + filename);
+	}
+	size_t len =
+		len_bits[0] |
+		(len_bits[1] << 8) |
+		(len_bits[2] << 16) |
+		(len_bits[3] << 24);
+	std::string pb(len, 0);
+	if(fread(&pb[0], len, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read data from map " + filename);
+	}
+	fclose(fh);
+
+	protocol::message msg;
+	msg.ParseFromString(pb);
+
+	deserialize(msg);
+}
+
+void GameState::save_file(const std::string &filename) const
+{
+	FILE *fh = fopen(filename.c_str(), "wb");
+	if(!fh)
+	{
+		throw std::runtime_error("Could not open " + filename);
+	}
+
+	if(fwrite("HRM1", 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write magic to map " + filename);
+	}
+
+	protocol::message msg;
+	msg.set_msg(protocol::MAP_DEFINITION);
+	serialize(msg);
+	std::string pb;
+	msg.SerializeToString(&pb);
+
+	unsigned char len[4];
+	len[0] = pb.size();
+	len[1] = (pb.size() >> 8);
+	len[2] = (pb.size() >> 16);
+	len[3] = (pb.size() >> 24);
+
+	if(fwrite(len, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write length to map " + filename);
+	}
+
+	if(fwrite(pb.data(), pb.size(), 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write to map " + filename);
+	}
+
+	if(fclose(fh)) {
+		throw std::runtime_error("Failed to save map " + filename);
+	}
+}
+
 ServerGameState::ServerGameState(Server &server) : server(server) {}
 
 void ServerGameState::add_animator(TileAnimators::Animator *ani) {

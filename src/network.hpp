@@ -14,7 +14,6 @@
 
 #include "hexradius.pb.h"
 #include "hexradius.hpp"
-#include "scenario.hpp"
 
 class ServerGameState;
 class Tile;
@@ -83,7 +82,6 @@ private:
 	uint16_t idcounter;
 
 	std::string map_name;
-	Scenario scenario;
 
 	client_iterator turn;
 	enum { LOBBY, GAME } state;

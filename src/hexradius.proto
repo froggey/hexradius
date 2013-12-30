@@ -2,7 +2,7 @@ package protocol;
 
 enum msgtype {
 	INIT = 1;	// Sent by client after connect, supply player_name
-	BEGIN = 2;	// Begin game
+	BEGIN = 2;	// Begin game. Contains map data.
 	TURN = 3;	// Set current turn to message.colour
 	OK = 4;		// OK for player to move, client should wait for this
 			// or BADMOVE after sending a move to the server before
@@ -12,7 +12,7 @@ enum msgtype {
 	PQUIT = 7;	// Player has quit
 	PJOIN = 8;	// New player has joined
 	GINFO = 9;	// Game info - sent to client if server accepts their INIT
-			// Contains scenario and currently joined players
+			// Contains map name, players and current settings.
 	GOVER = 10;	// Game over - player_id identifies the winning player
 			// unless is_draw is true. Return to lobby.
 	CCOLOUR = 11;	// Change a single player's colour, can be used by host

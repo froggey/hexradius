@@ -9,7 +9,6 @@ class GameState;
 
 struct Scenario : boost::noncopyable {
 	GameState *game_state;
-	std::set<PlayerColour> colours;
 
 	// Blech.
 	std::string last_filename;

@@ -14,7 +14,8 @@ class GameState : boost::noncopyable {
 public:
 	GameState();
 	virtual ~GameState();
-	Tile::List tiles;
+
+	Tile::List tiles; // The map.
 
 	/** Return all the pawns on the board. */
 	std::vector<pawn_ptr> all_pawns();
@@ -58,6 +59,23 @@ public:
 
 	/** Destroy all the pawns on the given team. */
 	void destroy_team_pawns(PlayerColour colour);
+
+	// Colours on the map.
+	std::set<PlayerColour> colours() const;
+
+	// Used by the server at the start of a game to convert map colours
+	// to client colours.
+	void recolour_pawns(const std::map<PlayerColour, PlayerColour> &colours);
+
+	// Serialize to protobuf message.
+	void serialize(protocol::message &msg) const;
+	// Deserialize from protobuf message.
+	void deserialize(const protocol::message &msg);
+
+	// Save to a file.
+	void save_file(const std::string &filename) const;
+	// Load state from a file.
+	void load_file(const std::string &filename);
 };
 
 class ServerGameState : public GameState {

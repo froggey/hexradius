@@ -52,7 +52,7 @@ static Uint32 redraw_callback(Uint32 interval, void *) {
 Client::Client(std::string host, uint16_t port) :
 	quit(false), game_state(0),
 	socket(io_service), redraw_timer(NULL), turn(0),
-	state(CONNECTING), scenario(), last_redraw(0), board(SDL_Rect()),
+	state(CONNECTING), last_redraw(0), board(SDL_Rect()),
 	dpawn(pawn_ptr()), mpawn(pawn_ptr()), hpawn(pawn_ptr()),
 	pmenu_area(SDL_Rect()), lobby_gui(0, 0, 800, 600)
 {
@@ -372,13 +372,8 @@ void Client::handle_message(const protocol::message &msg) {
 
 void Client::handle_message_lobby(const protocol::message &msg) {
 	if(msg.msg() == protocol::BEGIN) {
-		std::set<PlayerColour> colours;
-
-		BOOST_FOREACH(const Player &p, players) {
-			colours.insert(p.colour);
-		}
-
-		game_state = scenario.init_game(colours);
+		game_state = new GameState;
+		game_state->deserialize(msg);
 
 		state = GAME;
 
@@ -411,7 +406,6 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 
 		my_id = msg.player_id();
 
-		scenario.load_proto(msg);
 		map_name = msg.map_name();
 
 		for(int i = 0; i < msg.players_size(); i++) {
@@ -769,7 +763,7 @@ void Client::DrawScreen() {
 			FontStuff::BlitText(screen, rect, f, team_colours[(*p).colour], text);
 			rect.x += FontStuff::TextWidth(f, text);
 		}
-		
+
 		if(turn == my_id) {
 			rect.x = screen->w - RESIGN_BUTTON_WIDTH;
 			rect.w = RESIGN_BUTTON_WIDTH;
@@ -1108,10 +1102,7 @@ void Client::lobby_regen() {
 
 			for(int i = 0; i < 7; i++)
 			{
-				if(i == SPECTATE || scenario.colours.find((PlayerColour)i) != scenario.colours.end())
-				{
-					pc->add_item((PlayerColour)(i), team_names[i], team_colours[i]);
-				}
+				pc->add_item((PlayerColour)(i), team_names[i], team_colours[i]);
 			}
 
 			pc->select(p->colour);

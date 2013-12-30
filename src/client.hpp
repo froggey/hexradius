@@ -16,7 +16,6 @@
 #include "hexradius.pb.h"
 #include "gui.hpp"
 #include "animator.hpp"
-#include "scenario.hpp"
 #include "pawn.hpp"
 
 class GameState;
@@ -71,7 +70,6 @@ private:
 	enum { CONNECTING, LOBBY, GAME } state;
 
 	std::string map_name;
-	Scenario scenario;
 
 	int screen_w, screen_h;
 	unsigned int last_redraw;
