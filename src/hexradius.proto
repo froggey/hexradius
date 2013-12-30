@@ -39,6 +39,8 @@ enum msgtype {
 	RESIGN = 33;
 
         MAP_DEFINITION = 34; // Used in scenario files. Shouldn't go over the network (use GINIT)
+
+        KICK = 35; // Kick player.
 }
 
 enum colour {

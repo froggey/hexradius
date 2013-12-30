@@ -575,7 +575,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 			fog_of_war = msg.fog_of_war();
 		}
 		WriteAll(msg);
-	}else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
+	} else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		if(client->id == ADMIN_ID || client->id == msg.players(0).id()) {
 			Client *c = get_client(msg.players(0).id());
 
@@ -585,6 +585,16 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 			}else{
 				std::cout << "Invalid player ID in CCOLOUR message" << std::endl;
 			}
+		}
+	} else if(msg.msg() == protocol::KICK && client->id == ADMIN_ID &&
+		  // The admin cannot kick themselves.
+		  msg.player_id() != ADMIN_ID) {
+		Client *c = get_client(msg.player_id());
+		if(c) {
+			std::cout << "Kicking player " << msg.player_id() << std::endl;
+			c->Quit("Kicked");
+		} else {
+			std::cout << "Invalid player ID in KICK message" << std::endl;
 		}
 	}
 

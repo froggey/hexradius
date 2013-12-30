@@ -1046,11 +1046,11 @@ void Client::lobby_regen() {
 	pc->align(GUI::LEFT);
 	lobby_buttons.push_back(pc);
 
-	boost::shared_ptr<GUI::Checkbox> fow(new GUI::Checkbox(lobby_gui, 475, 65, 25, 25, 0, fog_of_war, my_id == ADMIN_ID));
+	boost::shared_ptr<GUI::Checkbox> fow(new GUI::Checkbox(lobby_gui, 535, 65, 25, 25, 0, fog_of_war, my_id == ADMIN_ID));
 	fow->set_callback(boost::bind(&Client::fog_of_war_cb, this, _1));
 	lobby_settings.push_back(fow);
 
-	boost::shared_ptr<GUI::TextButton> fow_label(new GUI::TextButton(lobby_gui, 475+30, 65, 160, 25, 0, "Fog of War"));
+	boost::shared_ptr<GUI::TextButton> fow_label(new GUI::TextButton(lobby_gui, 535+30, 65, 160, 25, 0, "Fog of War"));
 	fow_label->align(GUI::LEFT);
 	lobby_buttons.push_back(fow_label);
 
@@ -1107,6 +1107,12 @@ void Client::lobby_regen() {
 			lobby_players.push_back(pc);
 		}
 
+		if(my_id == ADMIN_ID && p->id != ADMIN_ID) {
+			boost::shared_ptr<GUI::TextButton> pkick(new GUI::TextButton(lobby_gui, 475, y, 50, 35, 4, "Kick",
+										     boost::bind(&Client::kick, this, p->id, _1, _2)));
+			lobby_buttons.push_back(pkick);
+		}
+
 		y += 40;
 	}
 }
@@ -1134,6 +1140,18 @@ bool Client::change_colour(uint16_t id, PlayerColour colour)
 	msg.add_players();
 	msg.mutable_players(0)->set_id(id);
 	msg.mutable_players(0)->set_colour((protocol::colour)colour);
+
+	WriteProto(msg);
+
+	return false;
+}
+
+bool Client::kick(uint16_t id, const GUI::TextButton &, const SDL_Event &)
+{
+	std::cout << "Kick " << id << std::endl;
+	protocol::message msg;
+	msg.set_msg(protocol::KICK);
+	msg.set_player_id(id);
 
 	WriteProto(msg);
 
