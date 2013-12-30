@@ -3,55 +3,54 @@
 
 #include "map.hpp"
 #include "pawn.hpp"
-#include "scenario.hpp"
 #include "gamestate.hpp"
 
 unsigned int Map::width() const
 {
 	unsigned int w = 0;
-	
+
 	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t)
 	{
 		w = std::max(w, (unsigned int)(t->second.col + 1));
 	}
-	
+
 	return w;
 }
 
 unsigned int Map::height() const
 {
 	unsigned int h = 0;
-	
+
 	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t)
 	{
 		h = std::max(h, (unsigned int)(t->second.row + 1));
 	}
-	
+
 	return h;
 }
 
 Tile *Map::get_tile(const Position &pos)
 {
 	std::map<Position,Tile>::iterator t = tiles.find(pos);
-	
+
 	return t != tiles.end() ? &(t->second) : NULL;
 }
 
 Tile *Map::touch_tile(const Position &pos)
 {
 	std::map<Position,Tile>::iterator t = tiles.insert(std::make_pair(pos, Tile(pos.first, pos.second, 0))).first;
-	
+
 	return &(t->second);
 }
 
 void Map::load(const std::string &filename)
 {
-	Scenario scn;
-	scn.load_file(filename);
+	GameState gs;
+	gs.load_file(filename);
 
 	std::map<Position,Tile> new_tiles;
 
-	for(Tile::List::iterator i = scn.game_state->tiles.begin(); i != scn.game_state->tiles.end(); ++i) {
+	for(Tile::List::iterator i = gs.tiles.begin(); i != gs.tiles.end(); ++i) {
 		std::map<Position,Tile>::iterator t = new_tiles.insert(std::make_pair(Position((*i)->col, (*i)->row), Tile((*i)->col, (*i)->row, 0))).first;
 		t->second = **i;
 		if(t->second.pawn) {
@@ -76,13 +75,12 @@ void Map::load(const std::string &filename)
 
 void Map::save(const std::string &filename) const
 {
-	Scenario scn;
-	scn.game_state = new GameState;
+	GameState gs;
 
 	for(std::map<Position,Tile>::const_iterator t = tiles.begin(); t != tiles.end(); ++t) {
 		const Tile *tile = &t->second;
-		scn.game_state->tiles.push_back(new Tile(*tile));
+		gs.tiles.push_back(new Tile(*tile));
 	}
 
-	scn.save_file(filename);
+	gs.save_file(filename);
 }

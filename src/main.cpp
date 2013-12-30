@@ -26,7 +26,6 @@
 #include "client.hpp"
 #include "menu.hpp"
 #include "gui.hpp"
-#include "scenario.hpp"
 #include "powers.hpp"
 
 namespace po = boost::program_options;

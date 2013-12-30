@@ -11,7 +11,6 @@
 #include "loadimage.hpp"
 #include "network.hpp"
 #include "gui.hpp"
-#include "scenario.hpp"
 
 bool running, submenu;
 
