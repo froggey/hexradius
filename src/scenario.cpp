@@ -23,27 +23,86 @@ Scenario::~Scenario() {
 #define LINE_ERR(s) \
 	throw std::runtime_error(filename + ":" + to_string(lnum) + ": " + s);
 
-void Scenario::load_file(std::string filename) {
+void Scenario::load_file(const std::string &filename) {
+	FILE *fh = fopen(filename.c_str(), "rb");
+	if(!fh) {
+		throw std::runtime_error("Could not open " + filename);
+	}
+
+	// Read map header.
+	char hdr[4];
+	if(fread(hdr, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read header from map " + filename);
+	}
+	if(memcmp(hdr, "HRM1", 4) != 0) {
+		// Not a map1 format, punt to the old loader.
+		fclose(fh);
+		throw std::runtime_error("Unknown map format in map " + filename);
+	}
+
+	unsigned char len_bits[4];
+	if(fread(len_bits, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read length from map " + filename);
+	}
+	size_t len =
+		len_bits[0] |
+		(len_bits[1] << 8) |
+		(len_bits[2] << 16) |
+		(len_bits[3] << 24);
+	std::string pb(len, 0);
+	if(fread(&pb[0], len, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Cannot read data from map " + filename);
+	}
+	fclose(fh);
+
+	protocol::message msg;
+	msg.ParseFromString(pb);
+
+	load_proto(msg);
+
 	last_filename = filename;
-	delete game_state;
-	game_state = server ?
-		static_cast<GameState*>(new ServerGameState(*server)) :
-		new GameState;
-	colours.clear();
+}
 
-	Map map;
-	map.load(filename);
-
-	for(std::map<Position,Tile>::iterator t = map.tiles.begin(); t != map.tiles.end(); ++t)
+void Scenario::save_file(const std::string &filename)
+{
+	FILE *fh = fopen(filename.c_str(), "wb");
+	if(!fh)
 	{
-		Tile *tile = new Tile(t->second);
-		game_state->tiles.push_back(tile);
+		throw std::runtime_error("Could not open " + filename);
+	}
 
-		if(t->second.pawn)
-		{
-			tile->pawn = pawn_ptr(new Pawn(t->second.pawn->colour, game_state, tile));
-			colours.insert(t->second.pawn->colour);
-		}
+	if(fwrite("HRM1", 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write magic to map " + filename);
+	}
+
+	protocol::message msg;
+	msg.set_msg(protocol::MAP_DEFINITION);
+	store_proto(msg);
+	std::string pb;
+	msg.SerializeToString(&pb);
+
+	unsigned char len[4];
+	len[0] = pb.size();
+	len[1] = (pb.size() >> 8);
+	len[2] = (pb.size() >> 16);
+	len[3] = (pb.size() >> 24);
+
+	if(fwrite(len, 4, 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write length to map " + filename);
+	}
+
+	if(fwrite(pb.data(), pb.size(), 1, fh) != 1) {
+		fclose(fh);
+		throw std::runtime_error("Failed to write to map " + filename);
+	}
+
+	if(fclose(fh)) {
+		throw std::runtime_error("Failed to save map " + filename);
 	}
 }
 

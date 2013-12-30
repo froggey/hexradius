@@ -21,7 +21,9 @@ struct Scenario : boost::noncopyable {
 
 	/** Load a scenario from the given file.
 	 * Throws an exception if the file doesn't exist. */
-	void load_file(std::string filename);
+	void load_file(const std::string &filename);
+	/** Save the current scenario to the given file */
+	void save_file(const std::string &filename);
 
 	/** Load a scenario from a network message. */
 	void load_proto(const protocol::message &msg);
