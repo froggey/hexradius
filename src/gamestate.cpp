@@ -293,23 +293,10 @@ void GameState::deserialize(const protocol::message &msg) {
 	tiles.clear();
 
 	for(int i = 0; i < msg.tiles_size(); i++) {
-		tiles.push_back(new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height()));
+		Tile *tile = new Tile(msg.tiles(i).col(), msg.tiles(i).row(), msg.tiles(i).height());
+		tiles.push_back(tile);
 
-		Tile *tile = tile_at(msg.tiles(i).col(), msg.tiles(i).row());
-
-		tile->smashed = msg.tiles(i).smashed();
-
-		tile->has_mine    = msg.tiles(i).has_mine();
-		tile->mine_colour = (PlayerColour)(msg.tiles(i).mine_colour());
-
-		tile->has_landing_pad    = msg.tiles(i).has_landing_pad();
-		tile->landing_pad_colour = (PlayerColour)(msg.tiles(i).landing_pad_colour());
-
-		tile->has_eye    = msg.tiles(i).has_eye();
-		tile->eye_colour = (PlayerColour)(msg.tiles(i).eye_colour());
-
-		tile->has_black_hole   = msg.tiles(i).has_black_hole();
-		tile->black_hole_power = msg.tiles(i).black_hole_power();
+		tile->update_from_proto(msg.tiles(i));
 	}
 
 	for(int i = 0; i < msg.pawns_size(); i++) {

@@ -195,7 +195,7 @@ void Client::run() {
 				if(tile && tile->pawn && tile->pawn->colour == my_colour) {
 					dpawn = tile->pawn;
 				}
-				else if(turn == my_id && xd > screen->w - RESIGN_BUTTON_WIDTH && yd < RESIGN_BUTTON_HEIGHT) {
+				else if(turn == my_id && xd > int(screen->w - RESIGN_BUTTON_WIDTH) && yd < int(RESIGN_BUTTON_HEIGHT)) {
 					protocol::message msg;
 					msg.set_msg(protocol::RESIGN);
 					WriteProto(msg);
@@ -494,18 +494,7 @@ void Client::handle_message_game(const protocol::message &msg) {
 				continue;
 			}
 
-			tile->height = msg.tiles(i).height();
-			tile->has_power = msg.tiles(i).power();
-			tile->smashed = msg.tiles(i).smashed();
-			tile->has_mine = msg.tiles(i).has_mine();
-			tile->mine_colour = (PlayerColour)msg.tiles(i).mine_colour();
-			tile->has_landing_pad = msg.tiles(i).has_landing_pad();
-			tile->landing_pad_colour = (PlayerColour)msg.tiles(i).landing_pad_colour();
-			tile->has_black_hole = msg.tiles(i).has_black_hole();
-			tile->black_hole_power = msg.tiles(i).black_hole_power();
-			tile->has_eye = msg.tiles(i).has_eye();
-			tile->eye_colour = (PlayerColour)msg.tiles(i).eye_colour();
-			tile->wrap = msg.tiles(i).wrap();
+			tile->update_from_proto(msg.tiles(i));
 		}
 
 		for(int i = 0; i < msg.pawns_size(); i++) {

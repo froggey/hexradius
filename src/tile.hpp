@@ -52,6 +52,7 @@ struct Tile {
 	bool SetHeight(int h);
 
 	void CopyToProto(protocol::tile *t) const;
+	void update_from_proto(const protocol::tile &t);
 };
 
 Tile::List RandomTiles(Tile::List tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied);

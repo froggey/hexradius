@@ -570,7 +570,7 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 		if(event.type == SDL_QUIT)
 		{
 			running = false;
-			goto END;
+			break;
 		}
 
 		if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
@@ -734,8 +734,6 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 
 		redraw();
 	}
-
-	END:
 
 	delete mp_text;
 	delete mh_text;

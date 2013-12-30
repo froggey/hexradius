@@ -41,6 +41,24 @@ void Tile::CopyToProto(protocol::tile *t) const {
 	t->set_wrap(wrap);
 }
 
+void Tile::update_from_proto(const protocol::tile &t)
+{
+	assert(!t.has_col() || (unsigned int)col == t.col());
+	assert(!t.has_row() || (unsigned int)row == t.row());
+	if(t.has_height()) height = t.height();
+	if(t.has_power()) has_power = t.power();
+	if(t.has_smashed()) smashed = t.smashed();
+	if(t.has_has_mine()) has_mine = t.has_mine();
+	if(t.has_mine_colour()) mine_colour = PlayerColour(t.mine_colour());
+	if(t.has_has_landing_pad()) has_landing_pad = t.has_landing_pad();
+	if(t.has_landing_pad_colour()) landing_pad_colour = PlayerColour(t.landing_pad_colour());
+	if(t.has_has_black_hole()) has_black_hole = t.has_black_hole();
+	if(t.has_black_hole_power()) black_hole_power = t.black_hole_power();
+	if(t.has_has_eye()) has_eye = t.has_eye();
+	if(t.has_eye_colour()) eye_colour = PlayerColour(t.eye_colour());
+	if(t.has_wrap()) wrap = t.wrap();
+}
+
 Tile::List RandomTiles(Tile::List _tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied) {
 	Tile::List ret, tiles;
 
