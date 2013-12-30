@@ -1046,6 +1046,12 @@ void Client::lobby_regen() {
 	pc->align(GUI::LEFT);
 	lobby_buttons.push_back(pc);
 
+	if(my_id == ADMIN_ID) {
+		boost::shared_ptr<GUI::TextButton> ai(new GUI::TextButton(lobby_gui, 535, 100, 135, 35, 5, "Add AI",
+									  boost::bind(&Client::add_ai, this, _1, _2)));
+		lobby_buttons.push_back(ai);
+	}
+
 	boost::shared_ptr<GUI::Checkbox> fow(new GUI::Checkbox(lobby_gui, 535, 65, 25, 25, 0, fog_of_war, my_id == ADMIN_ID));
 	fow->set_callback(boost::bind(&Client::fog_of_war_cb, this, _1));
 	lobby_settings.push_back(fow);
@@ -1108,8 +1114,9 @@ void Client::lobby_regen() {
 		}
 
 		if(my_id == ADMIN_ID && p->id != ADMIN_ID) {
-			boost::shared_ptr<GUI::TextButton> pkick(new GUI::TextButton(lobby_gui, 475, y, 50, 35, 4, "Kick",
+			boost::shared_ptr<GUI::TextButton> pkick(new GUI::TextButton(lobby_gui, 475, y, 50, 35, 0, "Kick",
 										     boost::bind(&Client::kick, this, p->id, _1, _2)));
+			pkick->enabled = true;
 			lobby_buttons.push_back(pkick);
 		}
 
@@ -1153,6 +1160,15 @@ bool Client::kick(uint16_t id, const GUI::TextButton &, const SDL_Event &)
 	msg.set_msg(protocol::KICK);
 	msg.set_player_id(id);
 
+	WriteProto(msg);
+
+	return false;
+}
+
+bool Client::add_ai(const GUI::TextButton &, const SDL_Event &)
+{
+	protocol::message msg;
+	msg.set_msg(protocol::ADD_AI);
 	WriteProto(msg);
 
 	return false;

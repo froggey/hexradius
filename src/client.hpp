@@ -32,6 +32,7 @@ public:
 	std::list<TileAnimators::Animator*> tile_animators;
 
 	void send_begin();
+	bool add_ai(const GUI::TextButton &, const SDL_Event &);
 	bool kick(uint16_t id, const GUI::TextButton &, const SDL_Event &);
 	bool change_colour(uint16_t id, PlayerColour colour);
 	bool change_map(const std::string &map);

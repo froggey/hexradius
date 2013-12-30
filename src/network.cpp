@@ -107,6 +107,10 @@ Server::base_client::~base_client()
 {
 }
 
+void Server::base_client::ai_think()
+{
+}
+
 void Server::base_client::Write(const protocol::message &)
 {
 }
@@ -357,6 +361,8 @@ void Server::NextTurn() {
 	tmsg.set_player_id((*turn)->id);
 
 	WriteAll(tmsg);
+
+	io_service.post(boost::bind(&base_client::ai_think, *turn));
 }
 
 bool Server::CheckForGameOver() {
@@ -492,6 +498,145 @@ void Server::black_hole_suck_pawn(Tile *tile, pawn_ptr pawn) {
 		game_state->move_pawn_to(pawn, target);
 }
 
+static const char *ai_names[] = {
+	"IdeaFactory",
+	"HAL 9000",
+	"SHODAN",
+	"GLaDOS",
+	"SkyNet",
+	"Bomb #20",
+	"Wintermute",
+	"Deep Thought",
+	0
+};
+
+void Server::add_ai_player()
+{
+	boost::shared_ptr<base_client> client(new ai_client(*this));
+
+	// Pick unused name.
+	std::set<std::string> names;
+	for(unsigned int i = 0; ai_names[i]; ++i) {
+		names.insert(ai_names[i]);
+	}
+	for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
+		names.erase((*i)->playername);
+	}
+	if(names.empty()) {
+		std::cout << "Too many AIs?" << std::endl;
+		return;
+	}
+	size_t name_id = rand() % names.size();
+	std::set<std::string>::iterator name_itr(names.begin());
+	while(name_id--) ++name_itr;
+	client->playername = *name_itr;
+
+	// Pick a colour, prioritize unused colours.
+	std::set<PlayerColour> colours;
+	for(unsigned int i = 0; i < 6; ++i) {
+		colours.insert(PlayerColour(i));
+	}
+	for(client_set::iterator i = clients.begin(); i != clients.end(); i++) {
+		colours.erase((*i)->colour);
+	}
+	if(colours.empty()) {
+		// All used, pick a random one.
+		for(unsigned int i = 0; i < 6; ++i) {
+			colours.insert(PlayerColour(i));
+		}
+	}
+	size_t colour_id = rand() % colours.size();
+	std::set<PlayerColour>::iterator colour_itr(colours.begin());
+	while(colour_id--) ++colour_itr;
+	client->colour = *colour_itr;
+
+	std::pair<client_set::iterator,bool> ir;
+
+	do {
+		client->id = idcounter++;
+		ir = clients.insert(client);
+	} while(!ir.second);
+
+	protocol::message pjoin;
+
+	pjoin.set_msg(protocol::PJOIN);
+
+	pjoin.add_players();
+	pjoin.mutable_players(0)->set_name(client->playername);
+	pjoin.mutable_players(0)->set_colour((protocol::colour)client->colour);
+	pjoin.mutable_players(0)->set_id(client->id);
+
+	WriteAll(pjoin, client.get());
+}
+
+void Server::ai_client::ai_think()
+{
+	std::vector<pawn_ptr> my_pawns = server.game_state->player_pawns(colour);
+	std::random_shuffle(my_pawns.begin(), my_pawns.end());
+
+	pawn_ptr threatened_pawn;
+	Tile *threat_target;
+	pawn_ptr move_pawn;
+	Tile *move_target;
+	for(std::vector<pawn_ptr>::iterator itr(my_pawns.begin()); itr != my_pawns.end(); ++itr) {
+		pawn_ptr pawn = *itr;
+		assert(pawn);
+		for(int i = 0; i < 6; ++i) {
+			Tile *tile = (server.game_state->*(tile_coord_fns[i]))(pawn->cur_tile);
+			// Should move away from pawns above on cliffs.
+			if(tile && pawn->can_move(tile, server.game_state) && tile->pawn && tile->pawn->colour != pawn->colour) {
+				threatened_pawn = pawn;
+				threat_target = tile;
+			}
+			if(tile && pawn->can_move(tile, server.game_state)) {
+				move_pawn = pawn;
+				move_target = tile;
+			}
+		}
+	}
+	if(threatened_pawn) {
+		assert(threatened_pawn && threat_target);
+		protocol::message msg;
+		msg.set_msg(protocol::MOVE);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(threatened_pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(threatened_pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_new_col(threat_target->col);
+		msg.mutable_pawns(0)->set_new_row(threat_target->row);
+		last_was_move = true;
+		server.handle_msg_game(*server.turn, msg);
+	} else if(move_pawn) {
+		assert(move_pawn && move_target);
+		protocol::message msg;
+		msg.set_msg(protocol::MOVE);
+		msg.add_pawns();
+		msg.mutable_pawns(0)->set_col(move_pawn->cur_tile->col);
+		msg.mutable_pawns(0)->set_row(move_pawn->cur_tile->row);
+		msg.mutable_pawns(0)->set_new_col(move_target->col);
+		msg.mutable_pawns(0)->set_new_row(move_target->row);
+		last_was_move = true;
+		server.handle_msg_game(*server.turn, msg);
+	} else {
+		protocol::message msg;
+		msg.set_msg(protocol::RESIGN);
+		server.handle_msg_game(*server.turn, msg);
+	}
+}
+
+void Server::ai_client::Write(const protocol::message &msg)
+{
+	if(msg.msg() == protocol::OK && last_was_move) {
+		last_was_move = false;
+		return;
+	}
+	last_was_move = false;
+	if(msg.msg() == protocol::OK || msg.msg() == protocol::BADMOVE) {
+		if(&**server.turn == this) {
+			server.io_service.post(boost::bind(&ai_client::ai_think, this));
+		}
+	}
+}
+
 bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg) {
 	if(msg.msg() == protocol::INIT) {
 		int c;
@@ -623,12 +768,14 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		} else {
 			std::cout << "Invalid player ID in KICK message" << std::endl;
 		}
+	} else if(msg.msg() == protocol::ADD_AI && client->id == ADMIN_ID) {
+		add_ai_player();
 	}
 
 	return true;
 }
 
-bool Server::handle_msg_game(Server::Client::ptr client, const protocol::message &msg) {
+bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, const protocol::message &msg) {
 	if(doing_worm_stuff) {
 		return true;
 	}

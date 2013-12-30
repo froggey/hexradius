@@ -38,6 +38,7 @@ class Server {
 		void WriteBasic(protocol::msgtype type);
 		virtual void send_quit_message(const std::string &msg);
 		void Quit(const std::string &msg, bool send_to_client = true);
+		virtual void ai_think();
 	};
 	struct Client : public boost::enable_shared_from_this<Server::Client>, public base_client {
 		typedef boost::shared_ptr<Server::Client> ptr;
@@ -71,6 +72,13 @@ class Server {
 		void Write(const protocol::message &msg, write_cb callback);
 
 		void FinishQuit(const boost::system::error_code& error, ptr cptr);
+	};
+	struct ai_client : public base_client {
+		ai_client(Server &s) : base_client(s), last_was_move(false) {}
+		virtual void ai_think();
+		virtual void Write(const protocol::message &msg);
+
+		bool last_was_move;
 	};
 
 	struct client_compare {
@@ -124,6 +132,7 @@ private:
 	void WriteAll(const protocol::message &msg, Server::base_client *exempt = NULL);
 
 	void StartGame();
+	void add_ai_player();
 	bool CheckForGameOver();
 
 	void NextTurn();
@@ -133,7 +142,7 @@ private:
 	void black_hole_suck_pawn(Tile *tile, pawn_ptr pawn);
 
 	bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
-	bool handle_msg_game(Server::Client::ptr client, const protocol::message &msg);
+	bool handle_msg_game(boost::shared_ptr<base_client> client, const protocol::message &msg);
 
 	Server::base_client *get_client(uint16_t id);
 
