@@ -46,6 +46,8 @@ private:
 		PlayerColour colour;
 		uint16_t id;
 
+		uint32_t score;
+
 		bool operator()(const Player left, const Player right) {
 			return left.id < right.id;
 		}
@@ -83,6 +85,7 @@ private:
 	double climb_offset;
 
 	bool fog_of_war;
+	bool king_of_the_hill;
 
 	/* Pawn currently being dragged. */
 	pawn_ptr dpawn;
@@ -130,6 +133,7 @@ private:
 
 	void lobby_regen();
 	void fog_of_war_cb(const GUI::Checkbox &checkbox);
+	void king_of_the_hill_cb(const GUI::Checkbox &checkbox);
 
 	Player *get_player(uint16_t id) {
 		Player key;

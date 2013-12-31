@@ -11,7 +11,8 @@ Tile::Tile(int c, int r, int h) :
 	animating(false), screen_x(0), screen_y(0),
 	render_pawn(pawn_ptr()),
 	has_mine(false), has_landing_pad(false),
-	has_black_hole(false), has_eye(false), wrap(0) {
+	has_black_hole(false), has_eye(false), hill(false),
+	wrap(0) {
 }
 
 bool Tile::SetHeight(int h) {
@@ -39,6 +40,7 @@ void Tile::CopyToProto(protocol::tile *t) const {
 	t->set_has_eye(has_eye);
 	t->set_eye_colour(eye_colour);
 	t->set_wrap(wrap);
+	t->set_hill(hill);
 }
 
 void Tile::update_from_proto(const protocol::tile &t)
@@ -57,6 +59,7 @@ void Tile::update_from_proto(const protocol::tile &t)
 	if(t.has_has_eye()) has_eye = t.has_eye();
 	if(t.has_eye_colour()) eye_colour = PlayerColour(t.eye_colour());
 	if(t.has_wrap()) wrap = t.wrap();
+	if(t.has_hill()) hill = t.hill();
 }
 
 Tile::List RandomTiles(Tile::List _tiles, int num, bool unique, bool include_mines, bool include_holes, bool include_occupied) {

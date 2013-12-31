@@ -270,6 +270,7 @@ static void redraw()
 	SDL_Surface *tile_img          = ImgStuff::GetImage("graphics/hextile.png");
 	SDL_Surface *smashed_tile      = ImgStuff::GetImage("graphics/hextile-broken.png");
 	SDL_Surface *tint_tile         = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,100,0));
+	SDL_Surface *hill_tile         = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(212, 175, 55));
 	SDL_Surface *smashed_tint_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,100,0));
 	SDL_Surface *mine              = ImgStuff::GetImage("graphics/mines.png");
 	SDL_Surface *landing_pad       = ImgStuff::GetImage("graphics/landingpad.png");
@@ -307,11 +308,11 @@ static void redraw()
 
 			bool highlight = (menu_open && menu_tx == tx && menu_ty == ty);
 
-			if(tile->smashed)
-			{
+			if(tile->smashed) {
 				ensure_SDL_BlitSurface(highlight ? smashed_tint_tile : smashed_tile, NULL, screen, &rect);
-			}
-			else{
+			} else if(tile->hill && !highlight) {
+				ensure_SDL_BlitSurface(hill_tile, NULL, screen, &rect);
+			} else {
 				ensure_SDL_BlitSurface(highlight ? tint_tile : tile_img, NULL, screen, &rect);
 			}
 
@@ -404,6 +405,11 @@ static void redraw()
 
 			FontStuff::BlitText(screen, t_rect, font, (is_black_hole(tile) ? active_text_colour : normal_text_colour), "Black hole");
 			t_rect.y += fh;
+
+			if(tile) {
+				FontStuff::BlitText(screen, t_rect, font, (tile->hill ? active_text_colour : normal_text_colour), "Hill");
+				t_rect.y += fh;
+			}
 		}
 
 		if(tile)
@@ -594,7 +600,7 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 				Tile *tile = map.get_tile(Position(menu_tx, menu_ty));
 
 				if((unsigned int)mouse_x < menu_bx + fw * strlen("Black hole") &&
-				   row >= 2 && row <= 5)
+				   row >= 2 && row <= 6)
 				{
 					if(row == 2)
 					{
@@ -613,6 +619,8 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 							tile->has_black_hole = true;
 							tile->black_hole_power = 1;
 							tile->smashed = false;
+						} else if(row - 3 == 3) { // hill
+							tile->hill = !tile->hill;
 						} else assert(!"Bad tile type?");
 
 						if(!is_normal(tile))

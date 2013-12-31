@@ -35,6 +35,8 @@ struct Tile {
 	bool has_eye;
 	PlayerColour eye_colour;
 
+	bool hill;
+
 	struct PowerMessage {
 		int power;
 		bool added;

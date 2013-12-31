@@ -40,6 +40,7 @@ Server::Server(uint16_t port, const std::string &s) :
 	pspawn_num = 1;
 
 	fog_of_war = false;
+	king_of_the_hill = false;
 
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 
@@ -219,6 +220,15 @@ void Server::Client::FinishWrite(const boost::system::error_code& error, ptr /*c
 }
 
 void Server::StartGame(void) {
+	if(king_of_the_hill && game_state->hill_tiles().empty()) {
+		fprintf(stderr, "No hills on this map!\n");
+		return;
+	}
+
+	for(client_iterator c(clients.begin()); c != clients.end(); ++c) {
+		(*c)->score = 0;
+	}
+
 	std::set<PlayerColour> available_colours = game_state->colours();
 	std::set<PlayerColour> player_colours;
 
@@ -333,6 +343,22 @@ void Server::NextTurn() {
 	client_set::iterator last = turn;
 
 	black_hole_suck();
+
+	if(king_of_the_hill) {
+		std::vector<Tile *> tiles = game_state->hill_tiles();
+		for(std::vector<Tile *>::iterator t(tiles.begin()); t != tiles.end(); ++t) {
+			if(!(*t)->pawn) continue;
+			if((*last)->colour != (*t)->pawn->colour) continue;
+			(*last)->score += 1;
+			protocol::message msg;
+			msg.set_msg(protocol::SCORE_UPDATE);
+			msg.add_players();
+			msg.mutable_players(0)->set_id((*last)->id);
+			msg.mutable_players(0)->set_score((*last)->score);
+			WriteAll(msg);
+		}
+	}
+
 	if(CheckForGameOver()) {
 		return;
 	}
@@ -378,6 +404,11 @@ bool Server::CheckForGameOver() {
 		if (game_state->player_pawns((*it)->colour).size()) {
 			alive++;
 			winner_id = (*it)->id;
+			if(king_of_the_hill && (*it)->score > 30) {
+				alive = 1;
+				fprintf(stderr, "Score limit reached!\n");
+				break;
+			}
 		}
 	}
 
@@ -691,6 +722,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		ginfo.set_map_name(map_name);
 
 		ginfo.set_fog_of_war(fog_of_war);
+		ginfo.set_king_of_the_hill(king_of_the_hill);
 
 		client->Write(ginfo);
 
@@ -740,6 +772,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 				ginfo.set_map_name(map_name);
 
 				ginfo.set_fog_of_war(fog_of_war);
+				ginfo.set_king_of_the_hill(king_of_the_hill);
 
 				(*c)->Write(ginfo);
 			}
@@ -751,6 +784,9 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 	} else if(msg.msg() == protocol::CHANGE_SETTING && client->id == ADMIN_ID) {
 		if(msg.has_fog_of_war()) {
 			fog_of_war = msg.fog_of_war();
+		}
+		if(msg.has_king_of_the_hill()) {
+			king_of_the_hill = msg.king_of_the_hill();
 		}
 		WriteAll(msg);
 	} else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {

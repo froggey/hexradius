@@ -42,6 +42,8 @@ enum msgtype {
 
         KICK = 35; // Kick player.
         ADD_AI = 36; // Add an AI player.
+
+        SCORE_UPDATE = 37;
 }
 
 enum colour {
@@ -74,6 +76,7 @@ message tile {
 	optional uint32 wrap = 12;
 	optional bool has_eye = 13;
 	optional uint32 eye_colour = 14;
+        optional bool hill = 15;
 }
 
 message pawn {
@@ -103,6 +106,8 @@ message player {
 	optional string name = 1;
 	optional colour colour = 2;
 	optional uint32 id = 3;
+
+        optional uint32 score = 4;
 }
 
 message scenario {
@@ -137,4 +142,5 @@ message message {
 	optional string map_name = 17;
 
 	optional bool fog_of_war = 18;
+	optional bool king_of_the_hill = 19;
 }

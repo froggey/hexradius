@@ -375,6 +375,11 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		game_state = new GameState;
 		game_state->deserialize(msg);
 
+		for(player_set::iterator p(players.begin()); p != players.end(); ++p) {
+			Player *player = (Player *)&*p; // why is this const???
+			player->score = 0;
+		}
+
 		state = GAME;
 
 		TTF_Font *bfont = FontStuff::LoadFont("fonts/DejaVuSansMono-Bold.ttf", 14);
@@ -422,6 +427,11 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 		}
 
 		fog_of_war = msg.fog_of_war();
+		if(msg.has_king_of_the_hill()) {
+			king_of_the_hill = msg.king_of_the_hill();
+		} else {
+			king_of_the_hill = false;
+		}
 
 		lobby_regen();
 	}else if(msg.msg() == protocol::PJOIN) {
@@ -455,6 +465,9 @@ void Client::handle_message_lobby(const protocol::message &msg) {
 	} else if(msg.msg() == protocol::CHANGE_SETTING) {
 		if(msg.has_fog_of_war()) {
 			fog_of_war = msg.fog_of_war();
+		}
+		if(msg.has_king_of_the_hill()) {
+			king_of_the_hill = msg.king_of_the_hill();
 		}
 		lobby_regen();
 	}else{
@@ -674,6 +687,11 @@ void Client::handle_message_game(const protocol::message &msg) {
 		tile->power_messages.push_back(Tile::PowerMessage(msg.pawns(0).has_use_power() ?
 								  msg.pawns(0).use_power() :
 								  -1, false));
+	} else if(msg.msg() == protocol::SCORE_UPDATE) {
+		for(int i = 0; i < msg.players_size(); ++i) {
+			Player *p = get_player(msg.players(i).id());
+			p->score = msg.players(i).score();
+		}
 	}else{
 		std::cerr << "Message " << msg.msg() << " recieved in GAME, ignoring" << std::endl;
 	}
@@ -694,6 +712,8 @@ void Client::DrawScreen() {
 	SDL_Surface *smashed_jump_candidate_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,0,100));
 	SDL_Surface *fow_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(100,100,100));
 	SDL_Surface *smashed_fow_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(100,100,100));
+	SDL_Surface *hill_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(212, 175, 55));
+	SDL_Surface *smashed_hill_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(212, 175, 55));
 	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *smashed_line_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
@@ -747,6 +767,10 @@ void Client::DrawScreen() {
 				text += to_string(visible_pawns + invisible_pawns);
 			} else {
 				text += to_string(visible_pawns);
+			}
+			if(king_of_the_hill) {
+				text += "  ";
+				text += to_string(p->score);
 			}
 			text += ")  ";
 			FontStuff::BlitText(screen, rect, f, team_colours[(*p).colour], text);
@@ -841,6 +865,8 @@ void Client::DrawScreen() {
 				tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
 			} else if(fog_of_war && visible_tiles.find(*ti) == visible_tiles.end()) {
 				tile_img = (*ti)->smashed ? smashed_fow_tile : fow_tile;
+			} else if(king_of_the_hill && (*ti)->hill) {
+				tile_img = (*ti)->smashed ? smashed_hill_tile : hill_tile;
 			} else if(htile && options.show_lines) {
 				if(diag_row != (*ti)->row) {
 					diag_cols(htile, (*ti)->row, bs_col, fs_col);
@@ -1047,7 +1073,7 @@ void Client::lobby_regen() {
 	lobby_buttons.push_back(pc);
 
 	if(my_id == ADMIN_ID) {
-		boost::shared_ptr<GUI::TextButton> ai(new GUI::TextButton(lobby_gui, 535, 100, 135, 35, 5, "Add AI",
+		boost::shared_ptr<GUI::TextButton> ai(new GUI::TextButton(lobby_gui, 535, 130, 135, 35, 5, "Add AI",
 									  boost::bind(&Client::add_ai, this, _1, _2)));
 		lobby_buttons.push_back(ai);
 	}
@@ -1059,6 +1085,14 @@ void Client::lobby_regen() {
 	boost::shared_ptr<GUI::TextButton> fow_label(new GUI::TextButton(lobby_gui, 535+30, 65, 160, 25, 0, "Fog of War"));
 	fow_label->align(GUI::LEFT);
 	lobby_buttons.push_back(fow_label);
+
+	boost::shared_ptr<GUI::Checkbox> koth(new GUI::Checkbox(lobby_gui, 535, 95, 25, 25, 0, king_of_the_hill, my_id == ADMIN_ID));
+	koth->set_callback(boost::bind(&Client::king_of_the_hill_cb, this, _1));
+	lobby_settings.push_back(koth);
+
+	boost::shared_ptr<GUI::TextButton> koth_label(new GUI::TextButton(lobby_gui, 535+30, 95, 160, 25, 0, "King of the Hill"));
+	koth_label->align(GUI::LEFT);
+	lobby_buttons.push_back(koth_label);
 
 	if(my_id == ADMIN_ID) {
 		boost::shared_ptr< GUI::DropDown<std::string> > mn(new GUI::DropDown<std::string>(lobby_gui, 475, 20, 305, 35, 1));
@@ -1129,6 +1163,14 @@ void Client::fog_of_war_cb(const GUI::Checkbox &checkbox)
 	protocol::message msg;
 	msg.set_msg(protocol::CHANGE_SETTING);
 	msg.set_fog_of_war(checkbox.state);
+	WriteProto(msg);
+}
+
+void Client::king_of_the_hill_cb(const GUI::Checkbox &checkbox)
+{
+	protocol::message msg;
+	msg.set_msg(protocol::CHANGE_SETTING);
+	msg.set_king_of_the_hill(checkbox.state);
 	WriteProto(msg);
 }
 

@@ -23,6 +23,9 @@ public:
 	/** Return all the pawns belonging to a given player. */
 	std::vector<pawn_ptr> player_pawns(PlayerColour colour);
 
+	/// Return all hill tiles.
+	std::vector<Tile *> hill_tiles();
+
 	/** Return the tile at given board column & row,
 	 * or null if there is no tile at that location. */
 	Tile *tile_at(int column, int row);

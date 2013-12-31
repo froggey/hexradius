@@ -40,6 +40,19 @@ std::vector<pawn_ptr> GameState::player_pawns(PlayerColour colour) {
 	return pawns;
 }
 
+std::vector<Tile *> GameState::hill_tiles()
+{
+	std::vector<Tile *> tiles;
+
+	for(Tile::List::iterator i = this->tiles.begin(); i != this->tiles.end(); ++i) {
+		if((*i)->hill) {
+			tiles.push_back(*i);
+		}
+	}
+
+	return tiles;
+}
+
 Tile *GameState::tile_at(int column, int row) {
 	for(Tile::List::iterator i = tiles.begin(); i != tiles.end(); ++i) {
 		if((*i)->col == column && (*i)->row == row) {

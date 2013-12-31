@@ -31,6 +31,8 @@ class Server {
 		std::string playername;
 		PlayerColour colour;
 
+		uint32_t score;
+
 		bool qcalled;
 
 		virtual ~base_client();
@@ -113,6 +115,7 @@ private:
 	int pspawn_num;
 
 	bool fog_of_war;
+	bool king_of_the_hill;
 
 	bool doing_worm_stuff;
 	pawn_ptr worm_pawn;
