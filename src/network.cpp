@@ -235,6 +235,7 @@ void Server::StartGame(void) {
 	std::set<PlayerColour> player_colours;
 
 	BOOST_FOREACH(boost::shared_ptr<base_client> c, clients) {
+		if(c->colour == SPECTATE) continue;
 		player_colours.insert(c->colour);
 	}
 
