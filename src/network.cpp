@@ -750,7 +750,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 		WriteAll(msg);
 	} else if(msg.msg() == protocol::CCOLOUR && msg.players_size() == 1) {
 		if(client->id == ADMIN_ID || client->id == msg.players(0).id()) {
-			base_client *c = get_client(msg.players(0).id());
+			boost::shared_ptr<Server::base_client> c = get_client(msg.players(0).id());
 
 			if(c) {
 				c->colour = (PlayerColour)msg.players(0).colour();
@@ -762,7 +762,7 @@ bool Server::handle_msg_lobby(Server::Client::ptr client, const protocol::messag
 	} else if(msg.msg() == protocol::KICK && client->id == ADMIN_ID &&
 		  // The admin cannot kick themselves.
 		  msg.player_id() != ADMIN_ID) {
-		base_client *c = get_client(msg.player_id());
+		boost::shared_ptr<Server::base_client> c = get_client(msg.player_id());
 		if(c) {
 			std::cout << "Kicking player " << msg.player_id() << std::endl;
 			c->Quit("Kicked");
@@ -873,16 +873,16 @@ bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, cons
 	return true;
 }
 
-Server::base_client *Server::get_client(uint16_t id) {
+boost::shared_ptr<Server::base_client> Server::get_client(uint16_t id) {
 	client_iterator i = clients.begin();
 
 	for(; i != clients.end(); i++) {
 		if((*i)->id == id) {
-			return i->get();
+			return *i;
 		}
 	}
 
-	return NULL;
+	return boost::shared_ptr<Server::base_client>();
 }
 
 void Server::update_one_pawn(pawn_ptr pawn)

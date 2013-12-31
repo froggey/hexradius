@@ -144,7 +144,7 @@ private:
 	bool handle_msg_lobby(Server::Client::ptr client, const protocol::message &msg);
 	bool handle_msg_game(boost::shared_ptr<base_client> client, const protocol::message &msg);
 
-	Server::base_client *get_client(uint16_t id);
+	boost::shared_ptr<Server::base_client> get_client(uint16_t id);
 
 	// Send an UPDATE message for one pawn.
 	void update_one_pawn(pawn_ptr pawn);
