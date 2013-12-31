@@ -14,6 +14,8 @@
 #include "animator.hpp"
 #include "tile_anims.hpp"
 
+#define KING_OF_THE_HILL_LIMIT 50
+
 typedef Tile *(GameState::*tile_coord_fn)(Tile *);
 static tile_coord_fn tile_coord_fns[] = {
 	&GameState::tile_left_of,
@@ -404,7 +406,7 @@ bool Server::CheckForGameOver() {
 		if (game_state->player_pawns((*it)->colour).size()) {
 			alive++;
 			winner_id = (*it)->id;
-			if(king_of_the_hill && (*it)->score > 30) {
+			if(king_of_the_hill && (*it)->score >= KING_OF_THE_HILL_LIMIT) {
 				alive = 1;
 				fprintf(stderr, "Score limit reached!\n");
 				break;
