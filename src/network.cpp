@@ -239,6 +239,11 @@ void Server::StartGame(void) {
 		player_colours.insert(c->colour);
 	}
 
+	if(player_colours.size() <= 1) {
+		fprintf(stderr, "Too few players. Need at least two.\n");
+		return;
+	}
+
 	if(available_colours.size() < player_colours.size()) {
 		fprintf(stderr, "Too many teams for this map. This is a %u team map.\n", (unsigned int)available_colours.size());
 		return;
