@@ -542,32 +542,31 @@ static void def_power(const char *name,
 static void def_directional_power(const char *name,
 				  boost::function<void(tile_area_function, pawn_ptr, ServerGameState *)> use_fn,
 				  boost::function<bool(tile_area_function, pawn_ptr, ServerGameState *)> test_fn,
-				  int radial_probability,
-				  int linear_probability,
+				  int probability,
 				  unsigned int requirements = 0)
 {
 	def_power(name,
 		  boost::bind(use_fn, radial_tiles, _1, _2),
 		  boost::bind(test_fn, radial_tiles, _1, _2),
-		  radial_probability,
+		  probability/4,
 		  Powers::Power::radial,
 		  requirements);
 	def_power(name,
 		  boost::bind(use_fn, row_tiles, _1, _2),
 		  boost::bind(test_fn, row_tiles, _1, _2),
-		  linear_probability,
+		  probability/4,
 		  Powers::Power::row,
 		  requirements);
 	def_power(name,
 		  boost::bind(use_fn, bs_tiles, _1, _2),
 		  boost::bind(test_fn, bs_tiles, _1, _2),
-		  linear_probability,
+		  probability/4,
 		  Powers::Power::nw_se,
 		  requirements);
 	def_power(name,
 		  boost::bind(use_fn, fs_tiles, _1, _2),
 		  boost::bind(test_fn, fs_tiles, _1, _2),
-		  linear_probability,
+		  probability/4,
 		  Powers::Power::ne_sw,
 		  requirements);
 }
@@ -585,31 +584,32 @@ static void def_upgrade_power(const char *name, uint32_t upgrade, int probabilit
 std::vector<Powers::Power> Powers::powers;
 void Powers::init_powers()
 {
-	def_directional_power("Destroy", use_destroy_power, test_destroy_power, 50, 50);
-	def_directional_power("Annihilate", use_annihilate_power, test_annihilate_power, 50, 50);
-	def_directional_power("Smash", use_smash_power, test_smash_power, 50, 50);
-	def_directional_power("Elevate", use_elevate_power, test_elevate_power, 35, 35);
-	def_directional_power("Dig", use_dig_power, test_dig_power, 35, 35);
-	def_directional_power("Purify", use_purify_power, test_purify_power, 50, 50);
-	def_directional_power("Mine", use_mine_power, test_mine_power, 40, 20);
-	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 50, 50);
-	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 50, 50);
-	def_directional_power("Confuse", use_confuse_power, test_confuse_power, 30, 30);
-	def_directional_power("Hijack", use_hijack_power, test_hijack_power, 25, 25);
+	def_directional_power("Destroy", use_destroy_power, test_destroy_power, 100);
+	def_directional_power("Annihilate", use_annihilate_power, test_annihilate_power, 100);
+	def_directional_power("Smash", use_smash_power, test_smash_power, 100);
+	def_directional_power("Elevate", use_elevate_power, test_elevate_power, 70);
+	def_directional_power("Dig", use_dig_power, test_dig_power, 70);
+	def_directional_power("Purify", use_purify_power, test_purify_power, 100);
+	def_directional_power("Mine", use_mine_power, test_mine_power, 80);
+	def_directional_power("Pick Up", use_pickup_power, test_pickup_power, 100);
+	def_directional_power("Repaint", use_repaint_power, test_repaint_power, 100);
+	def_directional_power("Confuse", use_confuse_power, test_confuse_power, 60);
+	def_directional_power("Hijack", use_hijack_power, test_hijack_power, 50);
+	int wrap_prob = 100;
 	def_power("Wrap",
 		  boost::bind(use_wrap_power, row_tiles, _1, _2, Powers::Power::row),
 		  boost::bind(test_wrap_power, row_tiles, _1, _2, Powers::Power::row),
-		  50,
+		  wrap_prob/3,
 		  Powers::Power::row);
 	def_power("Wrap",
 		  boost::bind(use_wrap_power, bs_tiles, _1, _2, Powers::Power::nw_se),
 		  boost::bind(test_wrap_power, bs_tiles, _1, _2, Powers::Power::nw_se),
-		  50,
+		  wrap_prob/3,
 		  Powers::Power::nw_se);
 	def_power("Wrap",
 		  boost::bind(use_wrap_power, fs_tiles, _1, _2, Powers::Power::ne_sw),
 		  boost::bind(test_wrap_power, fs_tiles, _1, _2, Powers::Power::ne_sw),
-		  50,
+		  wrap_prob/3,
 		  Powers::Power::ne_sw);
 
 	def_upgrade_power("Hover", PWR_CLIMB, 30);
@@ -626,13 +626,15 @@ void Powers::init_powers()
 	def_power("Black Hole", &black_hole, can_black_hole, 15, Powers::Power::undirected);
 	def_power("Worm", &use_worm, can_worm, 40, Powers::Power::undirected);
 
+	int prod_prob = 100;
 	for(int i = 0; i < 6; ++i) {
 		def_power("Prod",
 			  boost::bind(use_prod, i, _1, _2),
 			  boost::bind(can_prod, i, _1, _2),
-			  20,
+			  prod_prob/6,
 			  Powers::Power::Directionality(Powers::Power::northeast + i));
 	}
 
 	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
+	//def_power("Temporal Rift", &use_rift, can_rift, 50, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
 }
