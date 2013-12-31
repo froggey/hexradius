@@ -500,6 +500,34 @@ static bool can_prod(int, pawn_ptr, ServerGameState *) {
 	return true;
 }
 
+/// Scramble Powers: Change a pawn's powers into the same number of randomly chosen ones
+static bool can_scramble(pawn_ptr pawn, ServerGameState *) {
+	return pawn->powers.size() > 1; // Not including the scramble power.
+}
+
+static void use_scramble(pawn_ptr pawn, ServerGameState *state) {
+	int total_powers = -1; // Minus the scramble power.
+	for(Pawn::PowerList::iterator itr = pawn->powers.begin(); itr != pawn->powers.end(); ++itr) {
+		total_powers += itr->second;
+	}
+
+	// Remove everything but one scramble.
+	// Pawn::UsePower keeps an iterator into the power list.
+	for(size_t i = 0; i < Powers::powers.size(); ++i) {
+		if(Powers::powers[i].name == std::string("Scramble Powers")) {
+			pawn->powers[i] = 1;
+		} else {
+			pawn->powers.erase(int(i));
+		}
+	}
+
+	// Add new powers.
+	for(int i = 0; i < total_powers; ++i) {
+		pawn->AddPower(Powers::RandomPower(false));
+	}
+	state->update_pawn(pawn);
+}
+
 //typedef boost::function<Tile*(GameState *, Tile *)> direction_fn;
 static Tile *(GameState::*directions[])(Tile *) = {
 	&GameState::tile_ne_of,
@@ -636,5 +664,5 @@ void Powers::init_powers()
 	}
 
 	def_power("Watchful Eye", &use_eye, can_eye, 20, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
-	//def_power("Temporal Rift", &use_rift, can_rift, 50, Powers::Power::undirected, Powers::REQ_FOG_OF_WAR);
+	def_power("Scramble Powers", &use_scramble, can_scramble, 40, Powers::Power::undirected);
 }
