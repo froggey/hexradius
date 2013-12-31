@@ -73,7 +73,7 @@ Client::Client(std::string host, uint16_t port) :
 
 	socket.async_connect(ep, boost::bind(&Client::connect_callback, this, boost::asio::placeholders::error));
 
-	//redraw_timer = SDL_AddTimer(FRAME_DELAY, &redraw_callback, NULL);
+	redraw_timer = SDL_AddTimer(FRAME_DELAY, &redraw_callback, NULL);
 	network_thread = boost::thread(boost::bind(&Client::net_thread_main, this));
 }
 
