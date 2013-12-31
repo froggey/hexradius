@@ -385,6 +385,11 @@ bool Server::CheckForGameOver() {
 		worm_timer.cancel();
 		doing_worm_stuff = false;
 
+		// Reload the map!
+		delete game_state;
+		game_state = new ServerGameState(*this);
+		game_state->load_file("scenario/" + map_name);
+
 		state = LOBBY;
 
 		protocol::message gover;
