@@ -619,6 +619,7 @@ void Server::ai_client::ai_think()
 	} else {
 		protocol::message msg;
 		msg.set_msg(protocol::RESIGN);
+		last_was_move = true;
 		server.handle_msg_game(*server.turn, msg);
 	}
 }
