@@ -972,50 +972,52 @@ void Client::DrawScreen() {
 
 void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::set<Tile *> &infravision_tiles, const std::set<Tile *> &visible_tiles) {
 	bool invis = !!(pawn->flags & PWR_INVISIBLE);
-	bool hide = (invis &&
-		     (pawn->colour != my_colour) &&
-		     (infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end())) ||
-		(fog_of_war && visible_tiles.find(pawn->cur_tile) == visible_tiles.end() && pawn != dpawn);
 
-	if (!hide) {
-		const ImgStuff::TintValues tint(0, 0, 0, invis ? 128 : 255);
-		SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png", tint);
-		SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png", tint);
-		SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png", tint);
-		SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png", tint);
-		SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png", tint);
-		SDL_Surface *confused = ImgStuff::GetImage("graphics/confused.png", tint);
+	// Invisible pawns can't been seen by other players, unless exposed by infravision.
+	if((invis && ((pawn->colour != my_colour) && my_colour != SPECTATE) &&
+	     (infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end())))
+		return;
+	// fog of war hides pawns.
+	if((fog_of_war && visible_tiles.find(pawn->cur_tile) == visible_tiles.end() && pawn != dpawn))
+		return;
 
-		unsigned int frame = torus_frame;
+	const ImgStuff::TintValues tint(0, 0, 0, invis ? 128 : 255);
+	SDL_Surface *pawn_graphics = ImgStuff::GetImage("graphics/pawns.png", tint);
+	SDL_Surface *range_overlay = ImgStuff::GetImage("graphics/upgrades/range.png", tint);
+	SDL_Surface *shadow = ImgStuff::GetImage("graphics/shadow.png", tint);
+	SDL_Surface *shield = ImgStuff::GetImage("graphics/upgrades/shield.png", tint);
+	SDL_Surface *infravision = ImgStuff::GetImage("graphics/upgrades/infravision.png", tint);
+	SDL_Surface *confused = ImgStuff::GetImage("graphics/confused.png", tint);
 
-		if (pawn != dpawn)
-			ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
+	unsigned int frame = torus_frame;
 
-		if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
-			rect.x -= climb_offset;
-			rect.y -= climb_offset;
-		}
+	if (pawn != dpawn)
+		ensure_SDL_BlitSurface(shadow, &base, screen, &rect);
 
-		if(pawn == hpawn && pawn->colour == my_colour) {
-			frame = 10;
-		} else if(!pawn->has_power()) {
-			frame = 0;
-		}
-
-		SDL_Rect srect = { frame * 50, (pawn->colour * 50) + base.y, 50, base.h };
-		ensure_SDL_BlitSurface(pawn_graphics, &srect, screen, &rect);
-
-		srect.x = pawn->range * 50;
-		srect.y = (pawn->colour * 50) + base.y;
-		ensure_SDL_BlitSurface(range_overlay, &srect, screen, &rect);
-
-		if(pawn->flags & PWR_SHIELD)
-			ensure_SDL_BlitSurface(shield, &base, screen, &rect);
-		if(pawn->flags & PWR_INFRAVISION)
-			ensure_SDL_BlitSurface(infravision, &base, screen, &rect);
-		if(pawn->flags & PWR_CONFUSED)
-			ensure_SDL_BlitSurface(confused, &base, screen, &rect);
+	if(pawn->flags & PWR_CLIMB && pawn != dpawn) {
+		rect.x -= climb_offset;
+		rect.y -= climb_offset;
 	}
+
+	if(pawn == hpawn && pawn->colour == my_colour) {
+		frame = 10;
+	} else if(!pawn->has_power()) {
+		frame = 0;
+	}
+
+	SDL_Rect srect = { frame * 50, (pawn->colour * 50) + base.y, 50, base.h };
+	ensure_SDL_BlitSurface(pawn_graphics, &srect, screen, &rect);
+
+	srect.x = pawn->range * 50;
+	srect.y = (pawn->colour * 50) + base.y;
+	ensure_SDL_BlitSurface(range_overlay, &srect, screen, &rect);
+
+	if(pawn->flags & PWR_SHIELD)
+		ensure_SDL_BlitSurface(shield, &base, screen, &rect);
+	if(pawn->flags & PWR_INFRAVISION)
+		ensure_SDL_BlitSurface(infravision, &base, screen, &rect);
+	if(pawn->flags & PWR_CONFUSED)
+		ensure_SDL_BlitSurface(confused, &base, screen, &rect);
 }
 
 void Client::draw_pawn_tile(pawn_ptr pawn, Tile *tile, const std::set<Tile *> &infravision_tiles, const std::set<Tile *> &visible_tiles) {
