@@ -32,6 +32,8 @@ static unsigned int menu_bx, menu_by;
 static unsigned int menu_width, menu_height;
 static unsigned int menu_tx, menu_ty;
 
+static bool must_quit = false;
+
 static unsigned int tile_x_pos(unsigned int tile_x, unsigned int tile_y, int tile_height)
 {
 	return BOARD_OFFSET
@@ -215,6 +217,11 @@ static void save_map_cb(const GUI::TextButton &, const SDL_Event &)
 	}
 
 	printf("Saved map to %s\n", path.c_str());
+}
+
+static void quit_cb(const GUI::TextButton &, const SDL_Event &)
+{
+	must_quit = true;
 }
 
 static const SDL_Color active_text_colour = { 255, 0,   0, 0 };
@@ -560,6 +567,7 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 
 	GUI::TextButton load_button(toolbar, 425, 5, 50, 25, 3, "Load", &load_map_cb);
 	GUI::TextButton save_button(toolbar, 480, 5, 50, 25, 4, "Save", &save_map_cb);
+	GUI::TextButton quit_button(toolbar, 535, 5, 50, 25, 5, "Quit", &quit_cb);
 
 	load_map_cb(load_button, SDL_Event());
 
@@ -571,7 +579,9 @@ void editor_main(const GUI::TextButton &, const SDL_Event &)
 
 	SDL_Event event;
 
-	while(SDL_WaitEvent(&event))
+	must_quit = false;
+
+	while(SDL_WaitEvent(&event) && !must_quit)
 	{
 		if(event.type == SDL_QUIT)
 		{
