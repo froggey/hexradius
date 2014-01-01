@@ -177,6 +177,7 @@ void Client::run() {
 		if(dpawn && dpawn->destroyed()) dpawn.reset();
 		if(mpawn && mpawn->destroyed()) mpawn.reset();
 		if(hpawn && hpawn->destroyed()) hpawn.reset();
+		if(direction_pawn && direction_pawn->destroyed()) direction_pawn.reset();
 
 		if(state == CONNECTING || state == LOBBY) {
 			lobby_gui.handle_event(event);
@@ -205,30 +206,66 @@ void Client::run() {
 		else if(event.type == SDL_MOUSEBUTTONUP && turn == my_id && tile_animators.empty()) {
 			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
+			pawn_ptr new_direction_pawn;
+
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
 				if(within_rect(pmenu_area, event.button.x, event.button.y)) {
-					std::vector<pmenu_entry>::iterator i = pmenu.begin();
-
-					while(i != pmenu.end()) {
-						if(within_rect((*i).rect, event.button.x, event.button.y)) {
+					for(std::vector<pmenu_entry>::iterator i = pmenu.begin();
+					    i != pmenu.end();
+					    ++i) {
+						if(!within_rect((*i).rect, event.button.x, event.button.y)) {
+							continue;
+						}
+						unsigned int direction = Powers::powers[(*i).power].direction;
+						if(direction == Powers::Power::targeted) {
+							// Must pick a target, skip the direction menu.
+							assert(0);
+						} else if((direction & (direction - 1)) == 0) {
+							// This power uses exactly one direction and is not targeted
+							// Don't draw the direction menu.
 							protocol::message msg;
 							msg.set_msg(protocol::USE);
 
 							msg.add_pawns();
 							mpawn->CopyToProto(msg.mutable_pawns(0), false);
 							msg.mutable_pawns(0)->set_use_power((*i).power);
+							msg.set_power_direction(direction);
 
 							WriteProto(msg);
-							break;
+						} else {
+							new_direction_pawn = mpawn;
+							direction_power = i->power;
 						}
-
-						i++;
 					}
 
 					dpawn.reset();
+				} else if(within_rect(direction_menu_area, event.button.x, event.button.y)) {
+					for(std::vector<pmenu_entry>::iterator i = direction_menu.begin();
+					    i != direction_menu.end();
+					    ++i) {
+						if(!within_rect(i->rect, event.button.x, event.button.y)) {
+							continue;
+						}
+						if((unsigned int)i->power == Powers::Power::targeted) {
+							// Must pick a target
+							assert(0);
+						} else {
+							protocol::message msg;
+							msg.set_msg(protocol::USE);
+
+							msg.add_pawns();
+							direction_pawn->CopyToProto(msg.mutable_pawns(0), false);
+							msg.mutable_pawns(0)->set_use_power(direction_power);
+							msg.set_power_direction(i->power);
+
+							WriteProto(msg);
+						}
+						break;
+					}
 				}
 			}
 
+			direction_pawn = new_direction_pawn;
 			mpawn.reset();
 
 			if(event.button.button == SDL_BUTTON_LEFT && dpawn) {
@@ -967,6 +1004,13 @@ void Client::DrawScreen() {
 		draw_pmenu(hpawn);
 	}
 
+	direction_menu.clear();
+	direction_menu_area.w = 0;
+	direction_menu_area.h = 0;
+	if(direction_pawn) {
+		draw_direction_menu(direction_pawn, direction_power);
+	}
+
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
@@ -1273,19 +1317,39 @@ void Client::diag_cols(Tile *htile, int row, int &bs_col, int &fs_col) {
 // They must to be seperate from the actual name because they have to be
 // rendered using DejaVu Serif.
 // Save this file with UTF-8 or I'll set you on fire.
-static const char *direction_suffixes[11] = {
-	"", // Undirected
-	" ↔", // Row.    U+2194 LEFT RIGHT ARROW
-	" ⥁", // Radial. U+2941 CLOCKWISE CLOSED CIRCLE ARROW
-	" ⤡", // NW-SE.  U+2921 NORTH WEST AND SOUTH EAST ARROW
-	" ⤢", // NE-SW.  U+2922 NORTH EAST AND SOUTH WEST ARROW
-	" ↗", // NE.     U+2197 NORTH EAST ARROW
-	" →", // E.      U+2192 RIGHTWARDS ARROW
-	" ↘", // SE.     U+2198 SOUTH EAST ARROW
-	" ↙", // SW.     U+2199 SOUTH WEST ARROW
-	" ←", // W.      U+2190 LEFTWARDS ARROW
-	" ↖", // NW.     U+2196 NORTH WEST ARROW
+static struct {
+	unsigned int direction;
+	const char *string;
+} direction_entry[] = {
+	{Powers::Power::radial,              "⥁"}, // U+2941 CLOCKWISE CLOSED CIRCLE ARROW
+	//{Powers::Power::radial,              "⎔"}, // U+2394 SOFTWARE-FUNCTION SYMBOL (not supported by dejavuserif)
+	{Powers::Power::east_west,           "↔"}, // U+2194 LEFT RIGHT ARROW
+	{Powers::Power::northeast_southwest, "⤢"}, // U+2922 NORTH EAST AND SOUTH WEST ARROW
+	{Powers::Power::northwest_southeast, "⤡"}, // U+2921 NORTH WEST AND SOUTH EAST ARROW
+	{Powers::Power::east,                "→"}, // U+2192 RIGHTWARDS ARROW
+	{Powers::Power::southeast,           "↘"}, // U+2198 SOUTH EAST ARROW
+	{Powers::Power::southwest,           "↙"}, // U+2199 SOUTH WEST ARROW
+	{Powers::Power::west,                "←"}, // U+2190 LEFTWARDS ARROW
+	{Powers::Power::northwest,           "↖"}, // U+2196 NORTH WEST ARROW
+	{Powers::Power::northeast,           "↗"}, // U+2197 NORTH EAST ARROW
+	//{Powers::Power::targeted,            "⦻"}, // U+29BB CIRCLE WITH SUPERIMPOSED X (not supported)
+	{Powers::Power::targeted,            "¤"}, // U+00A4 CURRENCY SIGN
+	//{Powers::Power::point,               "・"}, // U+30FB KATAKANA MIDDLE DOT (not supported)
+	{Powers::Power::point,               "•"}, // U+2022 BULLET
 };
+
+static std::string direction_symbol(unsigned int direction)
+{
+	std::string result;
+
+	for(unsigned int i = 0; i < sizeof direction_entry / sizeof direction_entry[0]; ++i) {
+		if(direction & direction_entry[i].direction) {
+			result += direction_entry[i].string;
+		}
+	}
+
+	return result;
+}
 
 void Client::draw_pmenu(pawn_ptr pawn) {
 	TTF_Font *font = FontStuff::LoadFont("fonts/DejaVuSansMono.ttf", 14);
@@ -1312,8 +1376,13 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 	}
 
 	for(Pawn::PowerList::iterator i = pawn->powers.begin(); i != pawn->powers.end(); i++) {
-		int w = FontStuff::TextWidth(font, Powers::powers[i->first].name);
-		w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[i->first].direction]);
+		Powers::Power &power = Powers::powers[i->first];
+		int w = FontStuff::TextWidth(font, power.name);
+		if(power.direction != Powers::Power::undirected) {
+			std::string direction = direction_symbol(power.direction);
+			w += FontStuff::TextWidth(symbol_font, " ");
+			w += FontStuff::TextWidth(symbol_font, direction);
+		}
 		if(w > rect.w) {
 			rect.w = w;
 		}
@@ -1358,14 +1427,18 @@ void Client::draw_pmenu(pawn_ptr pawn) {
 
 		FontStuff::BlitText(screen, rect, font, font_colour, to_string(i->second));
 
+		int original_x = rect.x;
 		rect.x += fw*3;
 
-		int name_width = FontStuff::BlitText(screen, rect, font, font_colour, Powers::powers[i->first].name);
-		rect.x += name_width;
-		FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_suffixes[Powers::powers[i->first].direction]);
-		rect.x -= name_width;
+		Powers::Power &power = Powers::powers[i->first];
+		rect.x += FontStuff::BlitText(screen, rect, font, font_colour, power.name);
+		if(power.direction != Powers::Power::undirected) {
+			std::string direction = direction_symbol(power.direction);
+			rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, " ");
+			rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction);
+		}
 
-		rect.x -= fw*3;
+		rect.x = original_x;
 		rect.y += fh;
 	}
 }
@@ -1384,8 +1457,11 @@ void Client::draw_power_message(Tile* tile, Tile::PowerMessage& pm) {
 
 	SDL_Rect rect;
 	rect.w = FontStuff::TextWidth(font, str);
-	if (!hide)
-		rect.w += FontStuff::TextWidth(symbol_font, direction_suffixes[Powers::powers[pm.power].direction]);
+	if (!hide && Powers::powers[pm.power].direction != Powers::Power::undirected) {
+		std::string direction = direction_symbol(Powers::powers[pm.power].direction);
+		rect.w += FontStuff::TextWidth(symbol_font, " ");
+		rect.w += FontStuff::TextWidth(symbol_font, direction);
+	}
 	rect.w += fw;
 	rect.h = fh;
 	rect.x = tile->screen_x - rect.w / 2 + TILE_WIDTH / 2;
@@ -1396,6 +1472,66 @@ void Client::draw_power_message(Tile* tile, Tile::PowerMessage& pm) {
 	SDL_Color font_colour = {0, 255, 0, 0};
 
 	rect.x += FontStuff::BlitText(screen, rect, font, font_colour, str);
-	if (!hide)
-		rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_suffixes[Powers::powers[pm.power].direction]);
+	if (!hide && Powers::powers[pm.power].direction != Powers::Power::undirected) {
+		std::string direction = direction_symbol(Powers::powers[pm.power].direction);
+		rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, " ");
+		rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction);
+	}
+}
+
+void Client::draw_direction_menu(pawn_ptr pawn, int power_id)
+{
+	Powers::Power &power = Powers::powers[power_id];
+	TTF_Font *symbol_font = FontStuff::LoadFont("fonts/DejaVuSerif.ttf", 24);
+
+	int fh = TTF_FontLineSkip(symbol_font);
+
+	int mouse_x, mouse_y;
+	SDL_GetMouseState(&mouse_x, &mouse_y);
+
+	SDL_Rect rect = {
+		pawn->cur_tile->screen_x+TILE_WIDTH,
+		pawn->cur_tile->screen_y,
+		0, fh
+	};
+
+	for(unsigned int i = 0; i < sizeof direction_entry / sizeof direction_entry[0]; ++i) {
+		if(power.direction & direction_entry[i].direction) {
+			rect.w += FontStuff::TextWidth(symbol_font, direction_entry[i].string);
+		}
+	}
+
+	if(rect.x+rect.w > screen_w) {
+		rect.x = pawn->cur_tile->screen_x-rect.w;
+	}
+	if(rect.y+rect.h > screen_h) {
+		rect.y = pawn->cur_tile->screen_y-rect.h;
+	}
+
+	ImgStuff::draw_rect(rect, ImgStuff::Colour(0,0,0), 178);
+
+	direction_menu_area = rect;
+	rect.h = fh;
+
+	SDL_Color font_colour = {0,255,0, 0};
+
+	for(unsigned int i = 0; i < sizeof direction_entry / sizeof direction_entry[0]; ++i) {
+		if((power.direction & direction_entry[i].direction) == 0) {
+			continue;
+		}
+		int width = FontStuff::TextWidth(symbol_font, direction_entry[i].string);
+
+		if(mouse_x >= rect.x && mouse_x < rect.x+width && mouse_y >= rect.y && mouse_y < rect.y+rect.h) {
+			int tmp = rect.w;
+			rect.w = width;
+			pmenu_entry foobar = {rect, direction_entry[i].direction};
+			direction_menu.push_back(foobar);
+			ImgStuff::draw_rect(rect, ImgStuff::Colour(90,90,0), 178);
+			rect.w = tmp;
+		}
+
+		FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_entry[i].string);
+
+		rect.x += width;
+	}
 }

@@ -143,4 +143,6 @@ message message {
 
 	optional bool fog_of_war = 18;
 	optional bool king_of_the_hill = 19;
+
+        optional uint32 power_direction = 20;
 }

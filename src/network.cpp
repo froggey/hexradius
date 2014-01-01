@@ -885,9 +885,92 @@ bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, cons
 		Tile *tile = game_state->tile_at(msg.pawns(0).col(), msg.pawns(0).row());
 		pawn_ptr pawn = tile ? tile->pawn : pawn_ptr();
 
-		int power = msg.pawns(0).use_power();
+		if(!pawn) {
+			fprintf(stderr, "No pawn\n");
+			client->WriteBasic(protocol::BADMOVE);
+			return true;
+		}
 
-		if(!pawn || !pawn->UsePower(power, game_state)) {
+		size_t power = msg.pawns(0).use_power();
+
+		if(power >= Powers::powers.size() || !msg.has_power_direction()) {
+			client->WriteBasic(protocol::BADMOVE);
+			return true;
+		}
+
+		std::vector<Tile *> area;
+
+		if(Powers::powers[power].direction != msg.power_direction() &&
+		   (Powers::powers[power].direction & msg.power_direction()) == 0) {
+			fprintf(stderr, "Power %s does not support direction %x. Supports %x\n",
+				Powers::powers[power].name,
+				msg.power_direction(),
+				Powers::powers[power].direction);
+			client->WriteBasic(protocol::BADMOVE);
+			return true;
+		}
+		switch(msg.power_direction()) {
+		case Powers::Power::undirected:
+			break;
+		case Powers::Power::east_west:
+			area = pawn->RowTiles();
+			break;
+		case Powers::Power::northeast_southwest:
+			area = pawn->fs_tiles();
+			break;
+		case Powers::Power::northwest_southeast:
+			area = pawn->bs_tiles();
+			break;
+		case Powers::Power::radial:
+			area = pawn->RadialTiles();
+			break;
+		case Powers::Power::east:
+			area = std::vector<Tile *>(1, game_state->tile_right_of(pawn->cur_tile));
+			break;
+		case Powers::Power::west:
+			area = std::vector<Tile *>(1, game_state->tile_left_of(pawn->cur_tile));
+			break;
+		case Powers::Power::northeast:
+			area = std::vector<Tile *>(1, game_state->tile_ne_of(pawn->cur_tile));
+			break;
+		case Powers::Power::southwest:
+			area = std::vector<Tile *>(1, game_state->tile_sw_of(pawn->cur_tile));
+			break;
+		case Powers::Power::northwest:
+			area = std::vector<Tile *>(1, game_state->tile_nw_of(pawn->cur_tile));
+			break;
+		case Powers::Power::southeast:
+			area = std::vector<Tile *>(1, game_state->tile_se_of(pawn->cur_tile));
+			break;
+		case Powers::Power::targeted: {
+			if(msg.tiles_size() != 1) {
+				client->WriteBasic(protocol::BADMOVE);
+				return true;
+			}
+			Tile *t = game_state->tile_at(msg.tiles(0).col(), msg.tiles(0).row());
+			if(!t) {
+				client->WriteBasic(protocol::BADMOVE);
+				return true;
+			}
+			area = std::vector<Tile *>(1, t);
+			break;
+		}
+		case Powers::Power::point:
+			area = std::vector<Tile *>(1, pawn->cur_tile);
+			break;
+		default:
+			fprintf(stderr, "Ignoring bad power direction %x\n", msg.power_direction());
+			client->WriteBasic(protocol::BADMOVE);
+			return true;
+		}
+
+		if((msg.power_direction() & Powers::Power::adjacent) && !area[0]) {
+			fprintf(stderr, "No tile adjacent\n");
+			client->WriteBasic(protocol::BADMOVE);
+			return true;
+		}
+
+		if(!pawn->UsePower(power, area, game_state)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
 			if(!pawn->destroyed()) {

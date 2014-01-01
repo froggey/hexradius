@@ -94,6 +94,9 @@ private:
 	/* Pawn the mouse is currently over,
 	 * only valid if no dpawn or mpawn. */
 	pawn_ptr hpawn;
+	// Pawn using a power, used for drawing the direction menu.
+	pawn_ptr direction_pawn;
+	int direction_power; // Power being used.
 
 	struct pmenu_entry {
 		SDL_Rect rect;
@@ -102,6 +105,9 @@ private:
 
 	std::vector<pmenu_entry> pmenu;
 	SDL_Rect pmenu_area;
+
+	std::vector<pmenu_entry> direction_menu;
+	SDL_Rect direction_menu_area;
 
 	GUI lobby_gui;
 	std::vector<boost::shared_ptr<GUI::TextButton> > lobby_players;
@@ -130,6 +136,7 @@ private:
 	void diag_cols(Tile *htile, int row, int &bs_col, int &fs_col);
 	void draw_pmenu(pawn_ptr pawn);
 	void draw_power_message(Tile* tile, Tile::PowerMessage& pm);
+	void draw_direction_menu(pawn_ptr pawn, int power);
 
 	void lobby_regen();
 	void fog_of_war_cb(const GUI::Checkbox &checkbox);
