@@ -97,6 +97,8 @@ private:
 	// Pawn using a power, used for drawing the direction menu.
 	pawn_ptr direction_pawn;
 	int direction_power; // Power being used.
+	// Pawn using a power, waiting for a target.
+	pawn_ptr target_pawn;
 
 	struct pmenu_entry {
 		SDL_Rect rect;

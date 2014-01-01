@@ -178,6 +178,7 @@ void Client::run() {
 		if(mpawn && mpawn->destroyed()) mpawn.reset();
 		if(hpawn && hpawn->destroyed()) hpawn.reset();
 		if(direction_pawn && direction_pawn->destroyed()) direction_pawn.reset();
+		if(target_pawn && target_pawn->destroyed()) target_pawn.reset();
 
 		if(state == CONNECTING || state == LOBBY) {
 			lobby_gui.handle_event(event);
@@ -193,7 +194,7 @@ void Client::run() {
 				xd = event.button.x;
 				yd = event.button.y;
 
-				if(tile && tile->pawn && tile->pawn->colour == my_colour) {
+				if(tile && tile->pawn && tile->pawn->colour == my_colour && !target_pawn) {
 					dpawn = tile->pawn;
 				}
 				else if(turn == my_id && xd > int(screen->w - RESIGN_BUTTON_WIDTH) && yd < int(RESIGN_BUTTON_HEIGHT)) {
@@ -207,6 +208,7 @@ void Client::run() {
 			Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
 
 			pawn_ptr new_direction_pawn;
+			pawn_ptr new_target_pawn;
 
 			if(event.button.button == SDL_BUTTON_LEFT && xd == event.button.x && yd == event.button.y) {
 				if(within_rect(pmenu_area, event.button.x, event.button.y)) {
@@ -219,7 +221,8 @@ void Client::run() {
 						unsigned int direction = Powers::powers[(*i).power].direction;
 						if(direction == Powers::Power::targeted) {
 							// Must pick a target, skip the direction menu.
-							assert(0);
+							new_target_pawn = mpawn;
+							direction_power = i->power;
 						} else if((direction & (direction - 1)) == 0) {
 							// This power uses exactly one direction and is not targeted
 							// Don't draw the direction menu.
@@ -248,7 +251,8 @@ void Client::run() {
 						}
 						if((unsigned int)i->power == Powers::Power::targeted) {
 							// Must pick a target
-							assert(0);
+							new_target_pawn = mpawn;
+							direction_power = i->power;
 						} else {
 							protocol::message msg;
 							msg.set_msg(protocol::USE);
@@ -262,10 +266,27 @@ void Client::run() {
 						}
 						break;
 					}
+				} else if(target_pawn) {
+					Tile *tile = game_state->tile_at_screen(event.button.x, event.button.y);
+					if(tile && tile->pawn) {
+						protocol::message msg;
+						msg.set_msg(protocol::USE);
+
+						msg.add_pawns();
+						target_pawn->CopyToProto(msg.mutable_pawns(0), false);
+						msg.mutable_pawns(0)->set_use_power(direction_power);
+						msg.set_power_direction(Powers::Power::targeted);
+						msg.add_tiles();
+						msg.mutable_tiles(0)->set_col(tile->col);
+						msg.mutable_tiles(0)->set_row(tile->row);
+
+						WriteProto(msg);
+					}
 				}
 			}
 
 			direction_pawn = new_direction_pawn;
+			target_pawn = new_target_pawn;
 			mpawn.reset();
 
 			if(event.button.button == SDL_BUTTON_LEFT && dpawn) {
@@ -755,6 +776,8 @@ void Client::DrawScreen() {
 	SDL_Surface *smashed_hill_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(212, 175, 55));
 	SDL_Surface *line_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(0,20,0));
 	SDL_Surface *smashed_line_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(0,20,0));
+	SDL_Surface *target_tile = ImgStuff::GetImage("graphics/hextile.png", ImgStuff::TintValues(100,0,0));
+	SDL_Surface *smashed_target_tile = ImgStuff::GetImage("graphics/hextile-broken.png", ImgStuff::TintValues(1000,0,0));
 	SDL_Surface *pickup = ImgStuff::GetImage("graphics/pickup.png");
 	SDL_Surface *mine = ImgStuff::GetImage("graphics/mines.png");
 	SDL_Surface *landing_pad = ImgStuff::GetImage("graphics/landingpad.png");
@@ -898,7 +921,9 @@ void Client::DrawScreen() {
 
 			SDL_Surface *tile_img = (*ti)->smashed ? smashed_tile : tile;
 
-			if(htile == *ti) {
+			if(target_pawn && htile == *ti) {
+				tile_img = (*ti)->smashed ? smashed_target_tile : target_tile;
+			} else if(htile == *ti) {
 				tile_img = (*ti)->smashed ? smashed_tint_tile : tint_tile;
 			} else if(std::find(jump_tiles.begin(), jump_tiles.end(), *ti) != jump_tiles.end()) {
 				tile_img = (*ti)->smashed ? smashed_jump_candidate_tile : jump_candidate_tile;
