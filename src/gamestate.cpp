@@ -476,7 +476,7 @@ void ServerGameState::add_power_notification(pawn_ptr pawn, int power) {
 	}
 }
 
-void ServerGameState::use_power_notification(pawn_ptr pawn, int power) {
+void ServerGameState::use_power_notification(pawn_ptr pawn, int power, unsigned int direction) {
 	for(Server::client_set::iterator i = server.clients.begin(); i != server.clients.end(); i++) {
 		boost::shared_ptr<Server::base_client> client = *i;
 		if(client->colour == NOINIT) continue;
@@ -486,6 +486,7 @@ void ServerGameState::use_power_notification(pawn_ptr pawn, int power) {
 		msg.mutable_pawns(0)->set_col(pawn->cur_tile->col);
 		msg.mutable_pawns(0)->set_row(pawn->cur_tile->row);
 		msg.mutable_pawns(0)->set_use_power(power);
+		msg.set_power_direction(direction);
 		client->Write(msg);
 	}
 }

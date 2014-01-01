@@ -142,7 +142,7 @@ void Pawn::AddPower(int power) {
 	}
 }
 
-bool Pawn::UsePower(int power, const std::vector<Tile *> &area, ServerGameState *state) {
+bool Pawn::UsePower(int power, const std::vector<Tile *> &area, ServerGameState *state, unsigned int direction) {
 	PowerList::iterator p = powers.find(power);
 
 	// Huh?
@@ -154,7 +154,7 @@ bool Pawn::UsePower(int power, const std::vector<Tile *> &area, ServerGameState 
 		return false;
 	}
 
-	state->use_power_notification(shared_from_this(), power);
+	state->use_power_notification(shared_from_this(), power, direction);
 
 	Powers::powers[power].func(shared_from_this(), area, state);
 

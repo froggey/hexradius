@@ -39,7 +39,7 @@ public:
 	void detonate_mine(ServerGameState *state);
 
 	void AddPower(int power);
-	bool UsePower(int power, const std::vector<Tile *> &area, ServerGameState *state);
+	bool UsePower(int power, const std::vector<Tile *> &area, ServerGameState *state, unsigned int direction);
 
 	Tile::List RowTiles() { return RowTiles(this->range); }
 	Tile::List RowTiles(int range);

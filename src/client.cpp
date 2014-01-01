@@ -723,7 +723,9 @@ void Client::handle_message_game(const protocol::message &msg) {
 		assert(tile);
 		tile->power_messages.push_back(Tile::PowerMessage(msg.pawns(0).has_use_power() ?
 								  msg.pawns(0).use_power() :
-								  -1, false));
+								  -1, false,
+								  msg.has_power_direction() ?
+								  msg.power_direction() : 0));
 	} else if(msg.msg() == protocol::SCORE_UPDATE) {
 		for(int i = 0; i < msg.players_size(); ++i) {
 			Player *p = get_player(msg.players(i).id());
@@ -1450,18 +1452,20 @@ void Client::draw_power_message(Tile* tile, Tile::PowerMessage& pm) {
 	bool hide = pm.power == -1;
 
 	std::string str = hide ? "???" : Powers::powers[pm.power].name;
+	std::string direction_text;
 	str = (pm.added ? "+ " : "- ") + str;
+
+	if(!hide && pm.direction) {
+		direction_text += " ";
+		direction_text += direction_symbol(pm.direction);
+	}
 
 	int fh = std::max(TTF_FontLineSkip(font), TTF_FontLineSkip(symbol_font));
 	int fw = FontStuff::TextWidth(font, "0");
 
 	SDL_Rect rect;
 	rect.w = FontStuff::TextWidth(font, str);
-	if (!hide && Powers::powers[pm.power].direction != Powers::Power::undirected) {
-		std::string direction = direction_symbol(Powers::powers[pm.power].direction);
-		rect.w += FontStuff::TextWidth(symbol_font, " ");
-		rect.w += FontStuff::TextWidth(symbol_font, direction);
-	}
+	rect.w += FontStuff::TextWidth(symbol_font, direction_text);
 	rect.w += fw;
 	rect.h = fh;
 	rect.x = tile->screen_x - rect.w / 2 + TILE_WIDTH / 2;
@@ -1472,11 +1476,7 @@ void Client::draw_power_message(Tile* tile, Tile::PowerMessage& pm) {
 	SDL_Color font_colour = {0, 255, 0, 0};
 
 	rect.x += FontStuff::BlitText(screen, rect, font, font_colour, str);
-	if (!hide && Powers::powers[pm.power].direction != Powers::Power::undirected) {
-		std::string direction = direction_symbol(Powers::powers[pm.power].direction);
-		rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, " ");
-		rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction);
-	}
+	rect.x += FontStuff::BlitText(screen, rect, symbol_font, font_colour, direction_text);
 }
 
 void Client::draw_direction_menu(pawn_ptr pawn, int power_id)

@@ -909,7 +909,10 @@ bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, cons
 			client->WriteBasic(protocol::BADMOVE);
 			return true;
 		}
-		switch(msg.power_direction()) {
+
+		unsigned int direction = msg.power_direction();
+
+		switch(direction) {
 		case Powers::Power::undirected:
 			break;
 		case Powers::Power::east_west:
@@ -964,13 +967,13 @@ bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, cons
 			return true;
 		}
 
-		if((msg.power_direction() & Powers::Power::adjacent) && !area[0]) {
+		if((direction & Powers::Power::adjacent) && !area[0]) {
 			fprintf(stderr, "No tile adjacent\n");
 			client->WriteBasic(protocol::BADMOVE);
 			return true;
 		}
 
-		if(!pawn->UsePower(power, area, game_state)) {
+		if(!pawn->UsePower(power, area, game_state, direction)) {
 			client->WriteBasic(protocol::BADMOVE);
 		}else{
 			if(!pawn->destroyed()) {

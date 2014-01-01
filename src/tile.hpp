@@ -39,10 +39,13 @@ struct Tile {
 
 	struct PowerMessage {
 		int power;
+		unsigned int direction;
 		bool added;
 		float time;
 
-		PowerMessage(int p, bool a) : power(p), added(a), time(2) {}
+		PowerMessage(int p, bool a, unsigned int direction = 0) :
+			power(p), direction(direction), added(a), time(2)
+		{}
 	};
 	std::list<PowerMessage> power_messages;
 
