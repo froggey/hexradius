@@ -900,17 +900,31 @@ bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, cons
 
 		std::vector<Tile *> area;
 
-		if(Powers::powers[power].direction != msg.power_direction() &&
-		   (Powers::powers[power].direction & msg.power_direction()) == 0) {
+		Powers::Power &power_info = Powers::powers[power];
+
+		if(power_info.direction != msg.power_direction() &&
+		   (power_info.direction & msg.power_direction()) == 0) {
 			fprintf(stderr, "Power %s does not support direction %x. Supports %x\n",
-				Powers::powers[power].name,
+				power_info.name,
 				msg.power_direction(),
-				Powers::powers[power].direction);
+				power_info.direction);
 			client->WriteBasic(protocol::BADMOVE);
 			return true;
 		}
 
 		unsigned int direction = msg.power_direction();
+		if((pawn->flags & PWR_CONFUSED) &&
+		   power_info.direction != Powers::Power::undirected &&
+		   power_info.direction != Powers::Power::targeted) {
+			std::vector<unsigned int> directions;
+			for(int i = 0; i < 16; ++i) {
+				unsigned int dir = 1 << i;
+				if(dir == Powers::Power::targeted) continue;
+				if((power_info.direction & dir) == 0) continue;
+				directions.push_back(dir);
+			}
+			direction = directions[rand() & directions.size()];
+		}
 
 		switch(direction) {
 		case Powers::Power::undirected:
