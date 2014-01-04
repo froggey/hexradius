@@ -48,12 +48,12 @@ private:
 
 		uint32_t score;
 
-		bool operator()(const Player left, const Player right) {
-			return left.id < right.id;
+		bool operator<(const Player& right) const {
+			return id < right.id;
 		}
 	};
 
-	typedef std::set<Player,Player> player_set;
+	typedef std::set<Player> player_set;
 	typedef std::set<Animators::Generic*> anim_set;
 
 	boost::asio::io_service io_service;
