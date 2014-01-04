@@ -68,7 +68,7 @@ public:
 
 	// Used by the server at the start of a game to convert map colours
 	// to client colours.
-	void recolour_pawns(const std::map<PlayerColour, PlayerColour> &colours);
+	void recolour(const std::map<PlayerColour, PlayerColour> &colours);
 
 	// Serialize to protobuf message.
 	void serialize(protocol::message &msg) const;

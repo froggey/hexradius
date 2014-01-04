@@ -263,7 +263,7 @@ void Server::StartGame(void) {
 		}
 	}
 
-	game_state->recolour_pawns(colour_map);
+	game_state->recolour(colour_map);
 
 	doing_worm_stuff = false;
 

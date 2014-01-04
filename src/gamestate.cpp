@@ -281,13 +281,30 @@ std::set<PlayerColour> GameState::colours() const
 	return colours;
 }
 
-void GameState::recolour_pawns(const std::map<PlayerColour, PlayerColour> &colours)
+void GameState::recolour(const std::map<PlayerColour, PlayerColour> &colours)
 {
 	for(Tile::List::iterator t = tiles.begin(); t != tiles.end(); t++) {
-		if(!(*t)->pawn) continue;
-		std::map<PlayerColour, PlayerColour>::const_iterator i = colours.find((*t)->pawn->colour);
-		if(i == colours.end()) continue;
-		(*t)->pawn->colour = i->second;
+		Tile *tile = *t;
+		if(tile->pawn) {
+			std::map<PlayerColour, PlayerColour>::const_iterator i = colours.find(tile->pawn->colour);
+			if(i == colours.end()) continue;
+			tile->pawn->colour = i->second;
+		}
+		if(tile->has_mine) {
+			std::map<PlayerColour, PlayerColour>::const_iterator i = colours.find(tile->mine_colour);
+			if(i == colours.end()) continue;
+			tile->mine_colour = i->second;
+		}
+		if(tile->has_landing_pad) {
+			std::map<PlayerColour, PlayerColour>::const_iterator i = colours.find(tile->landing_pad_colour);
+			if(i == colours.end()) continue;
+			tile->landing_pad_colour = i->second;
+		}
+		if(tile->has_eye) {
+			std::map<PlayerColour, PlayerColour>::const_iterator i = colours.find(tile->eye_colour);
+			if(i == colours.end()) continue;
+			tile->eye_colour = i->second;
+		}
 	}
 }
 
