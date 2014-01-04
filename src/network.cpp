@@ -923,7 +923,7 @@ bool Server::handle_msg_game(boost::shared_ptr<Server::base_client> client, cons
 				if((power_info.direction & dir) == 0) continue;
 				directions.push_back(dir);
 			}
-			direction = directions[rand() & directions.size()];
+			direction = directions[rand() % directions.size()];
 		}
 
 		switch(direction) {
