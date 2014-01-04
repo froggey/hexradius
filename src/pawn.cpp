@@ -72,7 +72,9 @@ bool Pawn::can_move(Tile *tile, ServerGameState *state) {
 	}
 
 	// Don't walk up cliffs or onto smashed tiles unless hovering or the tile has a landing pad.
-	if((tile->height > cur_tile->height + 1 || tile->smashed) && !(tile->has_landing_pad || (flags & PWR_CLIMB))) {
+	if((tile->height > cur_tile->height + 1 || tile->smashed) &&
+	   !((tile->has_landing_pad && tile->landing_pad_colour == colour) ||
+	     (flags & PWR_CLIMB))) {
 		return false;
 	}
 
