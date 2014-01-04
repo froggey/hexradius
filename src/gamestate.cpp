@@ -4,6 +4,7 @@
 #include "client.hpp"
 #include "animator.hpp"
 #include "tile_anims.hpp"
+#include "powers.hpp"
 #include <stdexcept>
 
 GameState::GameState() {
@@ -529,6 +530,16 @@ void ServerGameState::move_pawn_to(pawn_ptr pawn, Tile *target)
 	// move_pawn_to is also called to recheck tile effects when a pawn's upgrade state changes.
 	if(pawn->cur_tile != target) {
 		if(target->pawn) {
+			if(target->pawn->flags & PWR_BOMB) {
+				Tile::List adjacent = target->pawn->RadialTiles();
+				for(Tile::List::iterator t = adjacent.begin(); t != adjacent.end(); t++) {
+					if((*t)->pawn) {
+						(*t)->pawn->destroy(Pawn::PWR_DESTROY);
+					}
+				}
+				return;
+			}
+			
 			add_animator("crush", target);
 			destroy_pawn(target->pawn, Pawn::STOMP, pawn);
 		}

@@ -15,6 +15,7 @@ const uint32_t PWR_JUMP = 1<<2;
 const uint32_t PWR_INVISIBLE = 1<<3;
 const uint32_t PWR_INFRAVISION = 1<<4;
 const uint32_t PWR_CONFUSED = 1<<5;
+const uint32_t PWR_BOMB = 1<<6;
 const uint32_t PWR_GOOD = (PWR_SHIELD | PWR_CLIMB | PWR_INVISIBLE | PWR_INFRAVISION | PWR_JUMP);
 
 namespace Powers {
