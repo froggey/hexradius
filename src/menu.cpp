@@ -191,7 +191,7 @@ HostMenu::HostMenu() :
 		scenario_input.add_item(name, name);
 	}
 
-	scenario_input.select("hex_2p");
+	scenario_input.select("hex-2p");
 }
 
 void HostMenu::run() {
