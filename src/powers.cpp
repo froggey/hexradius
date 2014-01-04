@@ -571,7 +571,7 @@ void Powers::init_powers()
 	def_upgrade_power("Invisibility", PWR_INVISIBLE,   40);
 	def_upgrade_power("Infravision",  PWR_INFRAVISION, 40);
 	def_upgrade_power("Jump",         PWR_JUMP,        50);
-	def_upgrade_power("Bomb",         PWR_BOMB,        50000);
+	def_upgrade_power("Bomb",         PWR_BOMB,        50);
 
 	// Wrap ends up being a little bit annoying.
 	// It needs to know the axis of wrappage in addition to the tiles.
