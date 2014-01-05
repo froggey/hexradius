@@ -858,9 +858,24 @@ void Client::DrawScreen() {
 	int bs_col, fs_col, diag_row = -1;
 
 	std::set<Tile *> infravision_tiles;
+	bool spectate = my_colour == SPECTATE;
+	if(!spectate) {
+		std::vector<pawn_ptr> player_pawns = game_state->player_pawns(my_colour);
+		spectate = true;
+		for(std::vector<pawn_ptr>::iterator i = player_pawns.begin(); i != player_pawns.end(); ++i) {
+			if(!(*i)->destroyed()) {
+				spectate = false;
+				break;
+			}
+		}
+	}
+
 	for(Tile::List::iterator ti = game_state->tiles.begin(); ti != game_state->tiles.end(); ++ti) {
 		pawn_ptr p = (*ti)->pawn;
-		if(p && p->colour == my_colour && (p->flags & PWR_INFRAVISION)) {
+		if(spectate) {
+			infravision_tiles.insert(*ti);
+		}
+		else if(p && p->colour == my_colour && (p->flags & PWR_INFRAVISION)) {
 			Tile::List tiles;
 			tiles = p->RadialTiles();
 			infravision_tiles.insert(tiles.begin(), tiles.end());
@@ -975,10 +990,11 @@ void Client::DrawScreen() {
 					ensure_SDL_BlitSurface(wrap, &s, screen, &rect);
 				}
 			}
-
+			
 			if((*ti)->render_pawn && (*ti)->render_pawn != dpawn) {
 				draw_pawn_tile((*ti)->render_pawn, *ti, infravision_tiles, visible_tiles);
-			}else if((*ti)->pawn && (*ti)->pawn != dpawn) {
+			}
+			else if((*ti)->pawn && (*ti)->pawn != dpawn) {
 				draw_pawn_tile((*ti)->pawn, *ti, infravision_tiles, visible_tiles);
 			}
 
@@ -1049,7 +1065,8 @@ void Client::DrawPawn(pawn_ptr pawn, SDL_Rect rect, SDL_Rect base, const std::se
 	     (infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end())))
 		return;
 	// fog of war hides pawns.
-	if((fog_of_war && visible_tiles.find(pawn->cur_tile) == visible_tiles.end() && pawn != dpawn))
+	if((fog_of_war && visible_tiles.find(pawn->cur_tile) == visible_tiles.end()
+		&& infravision_tiles.find(pawn->cur_tile) == infravision_tiles.end() && pawn != dpawn))
 		return;
 
 	const ImgStuff::TintValues tint(0, 0, 0, invis ? 128 : 255);
